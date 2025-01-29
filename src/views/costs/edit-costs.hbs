@@ -1,0 +1,41 @@
+
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Costo</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Editar Costo</h1>
+        <form action="/costs/edit/{{cost._id}}" method="POST">
+            <div class="form-group">
+                <label for="codigoCt">Código</label>
+                <input type="text" class="form-control" id="codigoCt" name="codigoCt" value="{{cost.codigoCt}}" required>
+            </div>
+            <div class="form-group">
+                <label for="descCt">Descripción</label>
+                <input type="text" class="form-control" id="descCt" name="descCt" value="{{cost.descCt}}" required>
+            </div>
+            <div class="form-group">
+                <label for="tamanoCt">Tamaño</label>
+                <input type="text" class="form-control" id="tamanoCt" name="tamanoCt" value="{{cost.tamanoCt}}">
+            </div>
+            <div class="form-group">
+                <label for="montoCt">Monto</label>
+                <input type="number" class="form-control" id="montoCt" name="montoCt" value="{{cost.montoCt}}" required>
+            </div>
+            <div class="form-group">
+                <label for="noArtiCt">Número de Artículo</label>
+                <input type="text" class="form-control" id="noArtiCt" name="noArtiCt" value="{{cost.noArtiCt}}">
+            </div>
+            <div class="form-group">
+                <label for="factorCt">Factor</label>
+                <input type="number" class="form-control" id="factorCt" name="factorCt" value="{{cost.factorCt}}">
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        </form>
+    </div>
+</body>
+</html>

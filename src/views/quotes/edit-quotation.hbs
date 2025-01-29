@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Quotation</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script>
+        function redirectToCalculator(detailIndex) {
+            const quotationId = document.getElementById('quotationId').value;
+            const customerId = document.getElementById('customerId').value;
+            window.location.href = `/quotes/calculator?quotationId=${quotationId}&customerId=${customerId}&detailIndex=${detailIndex}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const details = {{{json quotation.detalles}}};
+            console.log(details); // Verifica la estructura en la consola del navegador
+            const detailsContainer = document.getElementById('detailsContainer');
+            details.forEach((detail, index) => {
+                addDetail(detail, index);
+            });
+        });
+
+        function addDetail(detail = {}, index = null) {
+            const detailsContainer = document.getElementById('detailsContainer');
+            const detailIndex = index !== null ? index : detailsContainer.childElementCount;
+
+            const detailTemplate = `
+                <div class="detail mb-2" id="detail-${detailIndex}">
+                    <div class="form-row">
+                        <div class="col-md-2">
+                            <label for="detalles[${detailIndex}][lineaQuo]" class="mb-1">Linea:</label>
+                            <input type="number" id="detalles[${detailIndex}][lineaQuo]" name="detalles[${detailIndex}][lineaQuo]" class="form-control form-control-sm" required value="${detail.lineaQuo || ''}">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="detalles[${detailIndex}][tipoQuo]" class="mb-1">Tipo (P/R):</label>
+                            <select id="detalles[${detailIndex}][tipoQuo]" name="detalles[${detailIndex}][tipoQuo]" class="form-control form-control-sm" required>
+                                <option value="P" ${detail.tipoQuo === 'P' ? 'selected' : ''}>P</option>
+                                <option value="R" ${detail.tipoQuo === 'R' ? 'selected' : ''}>R</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="detalles[${detailIndex}][cantidadQuo]" class="mb-1">Cantidad:</label>
+                            <input type="number" id="detalles[${detailIndex}][cantidadQuo]" name="detalles[${detailIndex}][cantidadQuo]" class="form-control form-control-sm" required value="${detail.cantidadQuo || ''}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="detalles[${detailIndex}][descripcionQuo]" class="mb-1">Descripción:</label>
+                            <textarea id="detalles[${detailIndex}][descripcionQuo]" name="detalles[${detailIndex}][descripcionQuo]" class="form-control form-control-sm" rows="6" required>${detail.descripcionQuo || ''}</textarea>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeDetail(${detailIndex})">Remove</button>
+                            <button type="button" class="btn btn-success btn-sm" onclick="redirectToCalculator(${detailIndex})">Cotizar</button>
+                        </div>
+                    </div>
+                    <hr>
+                </div>
+            `;
+
+            detailsContainer.insertAdjacentHTML('beforeend', detailTemplate);
+        }
+
+        function removeDetail(index) {
+            const detailElement = document.getElementById(`detail-${index}`);
+            detailElement.remove();
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Edit Quotation</h1>
+        <form action="/customers/{{customer._id}}/quotations/edit/{{quotation._id}}" method="POST">
+            <input type="hidden" name="_method" value="PUT"> <!-- Ensure PUT method -->
+            <input type="hidden" id="quotationId" value="{{quotation._id}}">
+            <input type="hidden" id="customerId" value="{{customer._id}}">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Cabecera de la Cotización</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-2">
+                            <label for="fecha" class="mb-1">Fecha:</label>
+                            <input type="date" id="fecha" name="fecha" class="form-control form-control-sm" required value="{{formatDate quotation.fecha}}">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="fechaVence" class="mb-1">Fecha Vence:</label>
+                            <input type="date" id="fechaVence" name="fechaVence" class="form-control form-control-sm" required value="{{formatDate quotation.fechaVence}}">
+                        </div>
+                        <div class="form-group col-md-8">
+                            <label for="descripcionCorta" class="mb-1">Descripción Corta:</label>
+                            <input type="text" id="descripcionCorta" name="descripcionCorta" class="form-control form-control-sm" required value="{{quotation.descripcionCorta}}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <div class="card">
+                <div class="card-header">
+                    <h3>Detalles de la Cotización</h3>
+                </div>
+                <div class="card-body" id="detailsContainer" style="max-height: 300px; overflow-y: auto;">
+                </div>
+                <div class="card-footer">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="addDetail()">Add Detail</button>
+                </div>
+            </div>
+            <br>
+        </form>
+    </div>
+</body>
+</html>

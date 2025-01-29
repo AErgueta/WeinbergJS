@@ -1,0 +1,53 @@
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <input type="text" id="searchInput" class="form-control" placeholder="Buscar por nombre...">
+        </div>
+    </div>
+
+    <div class="row" id="customersContainer">
+        {{#each customers}}
+            <div class="col-md-3 mb-4 customer-card">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">{{aliasCus}}</h5>
+                        <h4 class="card-text nombreCus">{{nombreCus}}</h4>
+                        <p class="card-text">Contacto: {{contactoCus}}</p>
+                        <p class="card-text">Teléfono: {{telefonoCus}}</p>
+                        <a href="/customers/edit/{{_id}}" class="btn btn-primary">Edit</a>
+                        <a href="/customers/delete/{{_id}}?_method=DELETE" class="btn btn-danger">Delete</a>
+                        <a href="/customers/{{_id}}/quotations" class="btn btn-success">Solicitud de Cotización</a>
+                    </div>
+                </div>
+            </div>
+        {{else}}
+            <div class="card mx-auto">
+                <div class="card-body">
+                    {{#if user}}
+                        <h1>Hello, {{user.name}}</h1>
+                    {{else}}
+                        <h1>Hello, Guest</h1>
+                    {{/if}}
+                    <p class="lead">There are no customers yet.</p>
+                    <a href="/customers/add" class="btn btn-success btn-block">Add Customer</a>
+                </div>
+            </div>
+        {{/each}}
+    </div>
+</div>
+
+<script>
+    document.getElementById('searchInput').addEventListener('input', function() {
+        const filter = this.value.toLowerCase();
+        const customerCards = document.querySelectorAll('.customer-card');
+
+        customerCards.forEach(card => {
+            const nombreCus = card.querySelector('.nombreCus').textContent.toLowerCase();
+            if (nombreCus.includes(filter)) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+</script>

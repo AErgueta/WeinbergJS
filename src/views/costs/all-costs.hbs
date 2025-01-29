@@ -1,0 +1,60 @@
+<div class="container">
+    
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <input type="text" id="searchInput" class="form-control" placeholder="Buscar por descripción...">
+        </div>
+    </div>
+    <br>
+    
+    <h1>Lista de Costos</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Descripción</th>
+                <th>Tamaño</th>
+                <th>Monto</th>
+                <th>Número de Artículo</th>
+                <th>Factor</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="costsContainer">
+            {{#each costs}}
+            <tr class="cost-row">
+                <td>{{this.codigoCT}}</td> <!-- Mostrar código -->
+                <td class="descCT">{{this.descCT}}</td> <!-- Mostrar descripción -->
+                <td>{{this.tamanoCT}}</td> <!-- Mostrar tamaño -->
+                <td>{{this.montoCT}}</td> <!-- Mostrar monto -->
+                <td>{{this.noArtiCT}}</td> <!-- Mostrar número de artículo -->
+                <td>{{this.factorCT}}</td> <!-- Mostrar factor -->
+
+                <td>
+                    <a href="/costs/edit/{{this._id}}" class="btn btn-warning">Editar</a>
+                    <form action="/costs/delete/{{this._id}}" method="POST" style="display:inline;">
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Lógica de búsqueda
+    document.getElementById('searchInput').addEventListener('input', function() {
+        const filter = this.value.toLowerCase();
+        const costRows = document.querySelectorAll('.cost-row');
+
+        costRows.forEach(row => {
+            const descCT = row.querySelector('.descCT').textContent.toLowerCase();
+            if (descCT.includes(filter)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+</script>

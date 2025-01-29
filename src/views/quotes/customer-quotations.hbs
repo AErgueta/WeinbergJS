@@ -1,0 +1,52 @@
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Cotizaciones de {{customer.aliasCus}}</h2>
+            <hr>
+        </div>
+    </div>
+
+    {{#if quotations.length}}
+        <div class="row">
+            <div class="col-md-12">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Fecha Vence</th>
+                            <th>Descripción Corta</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each quotations}}
+                            <tr>
+                                <td>{{formatDate this.fecha}}</td>
+                                <td>{{formatDate this.fechaVence}}</td>
+                                <td>{{this.descripcionCorta}}</td>
+                                <td>
+                                    <a href="/customers/{{../customer._id}}/quotations/edit/{{this._id}}" class="btn btn-primary btn-sm">Editar</a>
+                                    <form action="/customers/{{../customer._id}}/quotations/delete/{{this._id}}?_method=DELETE" method="POST" style="display: inline;">
+                                        <button class="btn btn-danger btn-sm" type="submit">Eliminar</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {{else}}
+        <div class="row">
+            <div class="col-md-12">
+                <p>No hay cotizaciones para este cliente.</p>
+            </div>
+        </div>
+    {{/if}}
+
+    <div class="row">
+        <div class="col-md-12">
+            <a href="/customers/{{customer._id}}/quotations/new" class="btn btn-success">Crear Nueva Cotización</a>
+        </div>
+    </div>
+</div>

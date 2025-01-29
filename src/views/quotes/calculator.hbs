@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .equal-card {
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .equal-card .card-body {
+            flex: 1;
+        }
+        .divider {
+            border-bottom: 2px solid #000080; /* Azul marino */
+            margin: 20px 0;
+        }
+        .scrollable-table {
+            overflow-x: auto;
+        }
+        table th, table td {
+            white-space: nowrap;
+        }
+        table th {
+            text-align: center;
+        }
+        .checkbox-cell {
+            text-align: center;
+        }
+        .cost-label {
+            text-align: left;
+        }
+        .add-value-btn {
+            margin-left: 10px;
+        }
+        input[name$='-precio'],
+        input[name$='-monto'] {
+        text-align: right;
+        }
+        input[type="hidden"] {
+            display: none !important;
+        }
+
+
+
+    </style>
+    <!-- Contenedor oculto que contiene todas las opciones del select -->
+    <select id="hidden-options" style="display: none;">
+        {{#each paperCosts}}
+            <option 
+                value="{{this.codigoCT}}" 
+                data-precio="{{this.montoCT}}" 
+                data-desc="{{this.descCT}}" 
+                data-factor="{{this.factorCT}}">
+                {{this.codigoCT}} - {{this.descCT}}
+            </option>
+        {{else}}
+            <option>No data available</option>
+        {{/each}}
+    </select>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log("La pantalla se ha cargado.");
+            // Pasar el detalle al cliente
+            // Verifica si el detalle llega como string y conviértelo a JSON
+            const detailRaw = '{{{detail}}}';
+            const detail = JSON.parse(detailRaw);
+            console.log("Detalle recibido en el cliente:", detail);
+
+            // Agrega el detalle a la UI (esto debería ser manejado en `loadInitialDetail`)
+            if (detail) {
+                loadInitialDetail(detail);
+            } else {
+                console.error("No se encontró el detalle.");
+            }
+            // 1. Carga de la cabecera de la cotización
+            function loadHeader() {
+                console.log("Cargando la cabecera de la cotización...");
+                const fecha = document.getElementById("fecha");
+                const fechaVence = document.getElementById("fechaVence");
+                const descripcionCorta = document.getElementById("descripcionCorta");
+
+                if (!fecha || !fechaVence || !descripcionCorta) {
+                    console.error("No se encontraron los campos de la cabecera. Verifica el HTML.");
+                    return;
+                }
+
+                console.log("Cabecera cargada correctamente:", {
+                    fecha: fecha.value,
+                    fechaVence: fechaVence.value,
+                    descripcionCorta: descripcionCorta.value,
+                });
+            }
+
+            // 2. Carga de un detalle inicial en el contenedor de detalles
+            function loadInitialDetail(detail) {
+                console.log("Cargando detalle inicial...");
+                // Verificar si se recibió un detalle válido
+                if (!detail) {
+                    console.error("No se encontró el detalle para cargar.");
+                    return;
+                }
+
+                // Agregar el detalle a la interfaz
+                addDetail({
+                    lineaQuo: detail.lineaQuo || '',
+                    tipoQuo: detail.tipoQuo || '',
+                    cantidadQuo: detail.cantidadQuo || '',
+                    descripcionQuo: detail.descripcionQuo || '',
+                });
+
+                console.log("Detalle inicial cargado correctamente:", detail);
+            }
+            // 3. Configuración de funcionalidad para la sección de "papel"
+            function configurePapelSection() {
+                console.log("Configurando la sección de 'papel'...");
+
+                const costType = 'papel'; // Define el tipo de costo predeterminado
+                const hiddenOptionsElement = document.getElementById('hidden-options');
+
+                if (!hiddenOptionsElement) {
+                    console.error("No se encontró el elemento #hidden-options. Verifica el HTML.");
+                    return;
+                }
+
+                const hiddenOptions = hiddenOptionsElement.innerHTML;
+
+                // Verificar si las opciones contienen el atributo "data-factor"
+                if (!hiddenOptions.includes('data-factor')) {
+                    console.warn("El contenido de #hidden-options no contiene 'data-factor'. Verifica la carga de datos.");
+                    return; // Detener la ejecución si no contiene "data-factor"
+                }
+
+                // Añadir la primera fila automáticamente solo una vez
+                const costContainer = document.getElementById(`${costType}-container`);
+                if (!costContainer.querySelector('.form-row')) {
+                    console.log("Añadiendo la primera fila...");
+                    addCostRow(costType);
+                }
+
+                // Asignar eventos para calcular el monto en todas las filas
+                costContainer.addEventListener('input', function (event) {
+                    const row = event.target.closest('.form-row'); // Encuentra la fila donde ocurrió el input
+                    if (row) {
+                        updateMonto(row, costType); // Recalcula el monto de la fila
+                    }
+                });
+
+                console.log("Sección de 'papel' configurada correctamente.");
+            }
+
+            // Ejecución por etapas
+            loadHeader(); // Cargar la cabecera de la cotización
+            loadInitialDetail(); // Cargar el detalle inicial
+            configurePapelSection(); // Configurar la sección de "papel"
+        });
+
+
+
+
+        function addDetail(detail = {}) {
+            const detailsContainer = document.getElementById('detailsContainer');
+            const detailTemplate = `
+                <div class="detail mb-2">
+                    <div class="form-row">
+                        <div class="col-md-4">
+                            <label for="lineaQuo" class="mb-1">Línea:</label>
+                            <input type="number" id="lineaQuo" name="lineaQuo" class="form-control form-control-sm" required value="${detail.lineaQuo || ''}" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="tipoQuo" class="mb-1">Tipo (P/R):</label>
+                            <select id="tipoQuo" name="tipoQuo" class="form-control form-control-sm" required disabled>
+                                <option value="P" ${detail.tipoQuo === 'P' ? 'selected' : ''}>P</option>
+                                <option value="R" ${detail.tipoQuo === 'R' ? 'selected' : ''}>R</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="cantidadQuo" class="mb-1">Cantidad:</label>
+                            <input type="number" id="cantidadQuo" name="cantidadQuo" class="form-control form-control-sm" required value="${detail.cantidadQuo || ''}" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row mt-2">
+                        <div class="col-md-12">
+                            <label for="descripcionQuo" class="mb-1">Descripción:</label>
+                            <textarea id="descripcionQuo" name="descripcionQuo" class="form-control form-control-sm" rows="6" required readonly>${detail.descripcionQuo || ''}</textarea>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            detailsContainer.insertAdjacentHTML('beforeend', detailTemplate);
+        }
+
+        // Función para añadir nuevas filas
+        function addCostRow(costType) {
+            const costContainer = document.getElementById(`${costType}-container`);
+            const hiddenOptions = document.getElementById('hidden-options').innerHTML; // Obtenemos las opciones del contenedor oculto
+
+            const newRow = document.createElement('div');
+            newRow.classList.add('form-row', 'mt-2');
+
+            // Si el tipo de costo es "papel", se ajusta el comportamiento
+            if (costType === 'papel') {
+                newRow.innerHTML = `
+                <div class="col-md-2">
+                    <select onchange="updateCostDetails(this, '${costType}')" class="form-control form-control-sm">
+                        <option value="">Seleccione una opción</option>
+                        ${hiddenOptions}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="number" class="form-control form-control-sm" name="${costType}-cantidad" placeholder="Cantidad"
+                        oninput="updateMonto(this.closest('.form-row'), '${costType}')">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" step="0.01" class="form-control form-control-sm text-end" name="${costType}-precio" placeholder="Precio">
+                </div>
+                <div class="col-md-2">
+                    <input type="text" class="form-control form-control-sm" name="${costType}-descripcion" placeholder="Descripción" readonly>
+                </div>
+                <div class="col-md-2">
+                    <input type="number" step="0.01" class="form-control form-control-sm text-end" name="${costType}-monto" placeholder="Monto" readonly>
+                </div>
+                <div class="col-md-2">
+                    <input type="hidden" class="form-control" name="${costType}-factor"> <!-- Campo oculto para el factor -->
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Eliminar</button>
+                </div>
+                `;
+            } else {
+                // Comportamiento genérico para otros tipos de costos
+                newRow.innerHTML = `
+                <div class="col-md-2">
+                    <select onchange="updateCostDetails(this, '${costType}')" class="form-control form-control-sm">
+                        <option value="">Seleccione una opción</option>
+                        ${hiddenOptions}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="number" class="form-control form-control-sm" name="${costType}-cantidad" placeholder="Cantidad">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" step="0.01" class="form-control form-control-sm text-end" name="${costType}-precio" placeholder="Precio">
+                </div>
+                <div class="col-md-2">
+                    <input type="text" class="form-control form-control-sm" name="${costType}-descripcion" placeholder="Descripción">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" step="0.01" class="form-control form-control-sm text-end" name="${costType}-monto" placeholder="Monto">
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Eliminar</button>
+                </div>
+                `;
+            }
+
+            // Agregar la nueva fila al contenedor
+            costContainer.appendChild(newRow);
+        }
+
+
+        // Función para eliminar filas
+        function removeRow(button) {
+            const row = button.closest('.form-row'); // Selecciona la fila contenedora
+            row.remove(); // Elimina la fila
+        }
+
+        function processRow(costType) {
+            const container = document.getElementById(`${costType}-container`);
+            const rows = container.querySelectorAll('.form-row');
+            let total = 0;
+            rows.forEach(row => {
+                const cantidad = parseFloat(row.querySelector(`input[name="${costType}-cantidad"]`).value) || 0;
+                const precio = parseFloat(row.querySelector(`input[name="${costType}-precio"]`).value) || 0;
+                total += cantidad * precio;
+            });
+            alert(`Total de ${costType}: ${total.toFixed(2)}`);
+        }
+
+        // Función para actualizar detalles de costo
+        async function updateCostDetails(selectElement, costType) {
+            const selectedOption = selectElement.options[selectElement.selectedIndex];
+            if (selectedOption) {
+                const papelId = selectedOption.value; // ID del papel seleccionado
+                console.log(`ID del papel seleccionado: ${papelId}`);
+
+                try {
+                    // Realiza una solicitud al backend para obtener los datos del papel
+                    const response = await fetch(`/quotes/get-factor/${papelId}`);
+                    if (!response.ok) {
+                        throw new Error(`Error al obtener los datos del papel: ${response.statusText}`);
+                    }
+
+                    const paperData = await response.json();
+                    console.log("Datos obtenidos desde el backend:", paperData);
+
+                    // Extraer los datos devueltos por el backend
+                    const precio = paperData.precio || 0;
+                    const descripcion = paperData.descripcion || 'Descripción no disponible';
+                    const factor = paperData.factor || 1;
+
+                    // Actualizar los campos correspondientes en la fila
+                    const row = selectElement.closest('.form-row'); // Buscar la fila contenedora
+                    if (row) {
+                        // Actualiza el precio
+                        const precioInput = row.querySelector('input[name="papel-precio"]'); // Buscar por atributo name
+                        if (precioInput) {
+                            precioInput.value = precio; // Asignar el valor al input
+                        } else {
+                            console.warn("No se encontró el input para precio");
+                        }
+
+                        // Actualiza la descripción
+                        const descInput = row.querySelector('input[name="papel-descripcion"]'); // Buscar por atributo name
+                        if (descInput) {
+                            descInput.value = descripcion; // Asignar el valor al input
+                        } else {
+                            console.warn("No se encontró el input para descripción");
+                        }
+
+                        // Actualiza el factor
+                        const factorInput = row.querySelector('input[name="papel-factor"]'); // Buscar por atributo name
+                        if (factorInput) {
+                            factorInput.value = factor; // Asignar el valor al input
+                        } else {
+                            console.warn("No se encontró el input para factor");
+                        }
+                        console.log("Descripción:", descripcion);
+                        console.log("Precio:", precio);
+                        console.log("Factor:", factor);
+                    } else {
+                        console.error("No se encontró la fila contenedora de los inputs.");
+                    }
+                } catch (error) {
+                    console.error("Error al obtener los datos del papel:", error);
+                }
+            } else {
+                console.error("No se seleccionó ninguna opción válida.");
+            }
+        }
+
+
+        // Declaración de la variable global
+        let cantidadm = 0;
+
+        function updateMonto(row, costType) {
+            // Obtener los valores de cantidad, precio y factor desde la fila
+            const cantidad = parseFloat(row.querySelector(`input[name="${costType}-cantidad"]`).value) || 0;
+            const precio = parseFloat(row.querySelector(`input[name="${costType}-precio"]`).value) || 0;
+            const factor = parseFloat(row.querySelector(`input[name="${costType}-factor"]`).value) || 1;
+
+            // Calcular cantidadM y monto
+            const cantidadM = (factor * cantidad) / 1000; // Ejemplo: el factor se divide entre 1000
+            const monto = cantidad * precio; // Monto total
+
+            // Actualizar los campos en la fila
+            row.querySelector(`input[name="${costType}-monto"]`).value = monto.toFixed(2); // Actualizar el monto
+            console.log(`Fila actualizada - Cantidad: ${cantidad}, Precio: ${precio}, Factor: ${factor}, CantidadM: ${cantidadM}, Monto: ${monto}`);
+        }
+
+
+        // Función para usar el factor (si es necesario como independiente)
+        //function useFactor(row) {
+            //const factor = parseFloat(row.getAttribute('data-factor')) || 1; // Tomar el factor de la fila
+            //console.log('FactorCT:', factor);
+            // Aquí puedes realizar operaciones adicionales si las necesitas
+        //}
+    </script>
+
+
+
+</head>
+<body>
+    <div class="container">
+        <h1>Calculadora de Cotización</h1>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card equal-card">
+                    <div class="card-header">
+                        <h3>Cabecera de la Cotización</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <label for="fecha" class="mb-1">Fecha:</label>
+                                <input type="date" id="fecha" name="fecha" class="form-control form-control-sm" required value="{{formatDate quotation.fecha}}" readonly>
+                            </div>
+                            <div class="form-group col-md-12">
+                                <label for="fechaVence" class="mb-1">Fecha Vence:</label>
+                                <input type="date" id="fechaVence" name="fechaVence" class="form-control form-control-sm" required value="{{formatDate quotation.fechaVence}}" readonly>
+                            </div>
+                            <div class="form-group col-md-12">
+                                <label for="descripcionCorta" class="mb-1">Descripción Corta:</label>
+                                <input type="text" id="descripcionCorta" name="descripcionCorta" class="form-control form-control-sm" required value="{{quotation.descripcionCorta}}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card equal-card">
+                    <div class="card-header">
+                        <h3>Detalle de la Cotización</h3>
+                    </div>
+                    <div class="card-body" id="detailsContainer">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="divider"></div>
+        <br>
+        <!-- Nueva tabla de tipos de costos (en forma de columnas) -->
+        <h2 class="mt-4">Cálculo de Costos</h2>
+        <div class="scrollable-table">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Aplicar</th>
+                        <th>Tipo de Costo</th>
+                        <th>Valores</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="checkbox-cell">
+                            <input type="checkbox" name="apply-papel">
+                        </td>
+                        <td class="cost-label">P - Papel</td>
+                        <td>
+                            <div id="papel-container">
+                                <div class="form-row">
+                                    <div class="col-md-2">
+                                        <select onchange="updateCostDetails(this, 'papel')" class="form-control form-control-sm">
+                                            <option value="">Seleccione una opción</option>
+                                            {{#each paperCosts}}
+                                                <option value="{{this.codigoCT}}" data-precio="{{this.montoCT}}" data-desc="{{this.descCT}}" data-factor="{{this.factorCT}}">
+                                                    {{this.codigoCT}} - {{this.descCT}}
+                                                </option>
+                                            {{/each}}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" class="form-control form-control-sm" name="papel-cantidad" placeholder="Cantidad"
+                                            oninput="updateMonto(this.closest('.form-row'), parseFloat(this.closest('.form-row').querySelector('input[name=\'papel-precio\']').value) || 0, 'papel')">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm text-end" name="papel-precio" placeholder="Precio">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="papel-descripcion" placeholder="Descripción" readonly>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm text-end" name="papel-monto" placeholder="Monto" readonly>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="hidden" class="form-control" name="papel-factor"> <!-- Campo oculto para el factor -->
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-secondary btn-sm add-value-btn" onclick="addCostRow('papel')">Añadir</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="processRow('papel')">Procesar</button>
+                        </td>
+                    </tr>
+                    <!-- Modificación -->
+                    <!-- Modificación -->
+                    <div id="hidden-options" style="display: none;">
+                        {{#each paperCosts}}
+                            <option 
+                                value="{{this.codigoCT}}" 
+                                data-precio="{{this.montoCT}}" 
+                                data-desc="{{this.descCT}}" 
+                                data-factor="{{this.factorCT}}">
+                                {{this.codigoCT}} - {{this.descCT}}
+                            </option>
+                        {{/each}}
+                    </div>
+                    <!-- Modificación -->
+                    <!-- Modificación -->
+                    <tr>
+                        <td class="checkbox-cell">
+                            <input type="checkbox" name="apply-tinta">
+                        </td>
+                        <td class="cost-label">T - Tinta</td>
+                        <td>
+                            <div id="tinta-container">
+                                <div class="form-row">
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="tinta-codigo" placeholder="Código">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" class="form-control form-control-sm" name="tinta-cantidad" placeholder="Cantidad">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="tinta-precio" placeholder="Precio">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="tinta-descripcion" placeholder="Descripción">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="tinta-monto" placeholder="Monto">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-secondary btn-sm add-value-btn" onclick="addCostRow('tinta')">Añadir</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="processRow('tinta')">Procesar</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="checkbox-cell">
+                            <input type="checkbox" name="apply-plancha">
+                        </td>
+                        <td class="cost-label">L - Plancha</td>
+                        <td>
+                            <div id="plancha-container">
+                                <div class="form-row">
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="plancha-codigo" placeholder="Código">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" class="form-control form-control-sm" name="plancha-cantidad" placeholder="Cantidad">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="plancha-precio" placeholder="Precio">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="plancha-descripcion" placeholder="Descripción">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="plancha-monto" placeholder="Monto">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-secondary btn-sm add-value-btn" onclick="addCostRow('plancha')">Añadir</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="processRow('plancha')">Procesar</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="checkbox-cell">
+                            <input type="checkbox" name="apply-pelicula">
+                        </td>
+                        <td class="cost-label">C - Película</td>
+                        <td>
+                            <div id="pelicula-container">
+                                <div class="form-row">
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="pelicula-codigo" placeholder="Código">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" class="form-control form-control-sm" name="pelicula-cantidad" placeholder="Cantidad">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="pelicula-precio" placeholder="Precio">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="pelicula-descripcion" placeholder="Descripción">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="pelicula-monto" placeholder="Monto">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-secondary btn-sm add-value-btn" onclick="addCostRow('pelicula')">Añadir</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="processRow('pelicula')">Procesar</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="checkbox-cell">
+                            <input type="checkbox" name="apply-acabado">
+                        </td>
+                        <td class="cost-label">A - Acabado</td>
+                        <td>
+                            <div id="acabado-container">
+                                <div class="form-row">
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="acabado-codigo" placeholder="Código">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" class="form-control form-control-sm" name="acabado-cantidad" placeholder="Cantidad">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="acabado-precio" placeholder="Precio">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="acabado-descripcion" placeholder="Descripción">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="acabado-monto" placeholder="Monto">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-secondary btn-sm add-value-btn" onclick="addCostRow('acabado')">Añadir</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="processRow('acabado')">Procesar</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="checkbox-cell">
+                            <input type="checkbox" name="apply-preprensa">
+                        </td>
+                        <td class="cost-label">R - Preprensa</td>
+                        <td>
+                            <div id="preprensa-container">
+                                <div class="form-row">
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="preprensa-codigo" placeholder="Código">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" class="form-control form-control-sm" name="preprensa-cantidad" placeholder="Cantidad">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="preprensa-precio" placeholder="Precio">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="preprensa-descripcion" placeholder="Descripción">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="preprensa-monto" placeholder="Monto">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-secondary btn-sm add-value-btn" onclick="addCostRow('preprensa')">Añadir</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="processRow('preprensa')">Procesar</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="checkbox-cell">
+                            <input type="checkbox" name="apply-manoobra">
+                        </td>
+                        <td class="cost-label">M - Mano de Obra</td>
+                        <td>
+                            <div id="manoobra-container">
+                                <div class="form-row">
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="manoobra-codigo" placeholder="Código">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" class="form-control form-control-sm" name="manoobra-cantidad" placeholder="Cantidad">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="manoobra-precio" placeholder="Precio">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="manoobra-descripcion" placeholder="Descripción">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="manoobra-monto" placeholder="Monto">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-secondary btn-sm add-value-btn" onclick="addCostRow('manoobra')">Añadir</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="processRow('manoobra')">Procesar</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="checkbox-cell">
+                            <input type="checkbox" name="apply-costosindirectos">
+                        </td>
+                        <td class="cost-label">I - Costos Indirectos</td>
+                        <td>
+                            <div id="costosindirectos-container">
+                                <div class="form-row">
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="costosindirectos-codigo" placeholder="Código">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" class="form-control form-control-sm" name="costosindirectos-cantidad" placeholder="Cantidad">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="costosindirectos-precio" placeholder="Precio">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="costosindirectps-descripcion" placeholder="Descripción">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="costosindirectos-monto" placeholder="Monto">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-secondary btn-sm add-value-btn" onclick="addCostRow('costosindirectos')">Añadir</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="processRow('costosindirectos')">Procesar</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="checkbox-cell">
+                            <input type="checkbox" name="apply-gastosoperativos">
+                        </td>
+                        <td class="cost-label">O - Gastos Operativos</td>
+                        <td>
+                            <div id="gastosoperativos-container">
+                                <div class="form-row">
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="gastosoperativos-codigo" placeholder="Código">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" class="form-control form-control-sm" name="gastosoperativos-cantidad" placeholder="Cantidad">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="gastosoperativos-precio" placeholder="Precio">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="gastosoperativos-descripcion" placeholder="Descripción">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="gastosoperativos-monto" placeholder="Monto">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-secondary btn-sm add-value-btn" onclick="addCostRow('gastosoperativos')">Añadir</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="processRow('gastosoperativos')">Procesar</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="checkbox-cell">
+                            <input type="checkbox" name="apply-plastificado">
+                        </td>
+                        <td class="cost-label">S - Plastificado</td>
+                        <td>
+                            <div id="plastificado-container">
+                                <div class="form-row">
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="plastificado-codigo" placeholder="Código">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" class="form-control form-control-sm" name="plastificado-cantidad" placeholder="Cantidad">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="plastificado-precio" placeholder="Precio">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="plastificado-descripcion" placeholder="Descripción">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="plastificado-monto" placeholder="Monto">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-secondary btn-sm add-value-btn" onclick="addCostRow('plastificado')">Añadir</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="processRow('plastificado')">Procesar</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="checkbox-cell">
+                            <input type="checkbox" name="apply-utilidad">
+                        </td>
+                        <td class="cost-label">U - Utilidad</td>
+                        <td>
+                            <div id="utilidad-container">
+                                <div class="form-row">
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="utilidad-codigo" placeholder="Código">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" class="form-control form-control-sm" name="utilidad-cantidad" placeholder="Cantidad">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="utilidad-precio" placeholder="Precio">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="utilidad-descripcion" placeholder="Descripción">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" step="0.01" class="form-control form-control-sm" name="utilidad-monto" placeholder="Monto">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-secondary btn-sm add-value-btn" onclick="addCostRow('utilidad')">Añadir</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="processRow('utilidad')">Procesar</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

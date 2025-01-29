@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .equal-card {
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .equal-card .card-body {
+            flex: 1;
+        }
+        .divider {
+            border-bottom: 2px solid #000080; /* Azul marino */
+            margin: 20px 0;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const detail = {{{json detail}}};
+            console.log(detail); // Verifica la estructura en la consola del navegador
+            addDetail(detail);
+        });
+
+        function addDetail(detail = {}) {
+            const detailsContainer = document.getElementById('detailsContainer');
+
+            const detailTemplate = `
+                <div class="detail mb-2">
+                    <div class="form-row">
+                        <div class="col-md-4">
+                            <label for="lineaQuo" class="mb-1">Línea:</label>
+                            <input type="number" id="lineaQuo" name="lineaQuo" class="form-control form-control-sm" required value="${detail.lineaQuo || ''}" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="tipoQuo" class="mb-1">Tipo (P/R):</label>
+                            <select id="tipoQuo" name="tipoQuo" class="form-control form-control-sm" required disabled>
+                                <option value="P" ${detail.tipoQuo === 'P' ? 'selected' : ''}>P</option>
+                                <option value="R" ${detail.tipoQuo === 'R' ? 'selected' : ''}>R</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="cantidadQuo" class="mb-1">Cantidad:</label>
+                            <input type="number" id="cantidadQuo" name="cantidadQuo" class="form-control form-control-sm" required value="${detail.cantidadQuo || ''}" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row mt-2">
+                        <div class="col-md-12">
+                            <label for="descripcionQuo" class="mb-1">Descripción:</label>
+                            <textarea id="descripcionQuo" name="descripcionQuo" class="form-control form-control-sm" rows="6" required readonly>${detail.descripcionQuo || ''}</textarea>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            detailsContainer.insertAdjacentHTML('beforeend', detailTemplate);
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Calculator de Cotización</h1>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card equal-card">
+                    <div class="card-header">
+                        <h3>Cabecera de la Cotización</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <label for="fecha" class="mb-1">Fecha:</label>
+                                <input type="date" id="fecha" name="fecha" class="form-control form-control-sm" required value="{{formatDate quotation.fecha}}" readonly>
+                            </div>
+                            <div class="form-group col-md-12">
+                                <label for="fechaVence" class="mb-1">Fecha Vence:</label>
+                                <input type="date" id="fechaVence" name="fechaVence" class="form-control form-control-sm" required value="{{formatDate quotation.fechaVence}}" readonly>
+                            </div>
+                            <div class="form-group col-md-12">
+                                <label for="descripcionCorta" class="mb-1">Descripción Corta:</label>
+                                <input type="text" id="descripcionCorta" name="descripcionCorta" class="form-control form-control-sm" required value="{{quotation.descripcionCorta}}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card equal-card">
+                    <div class="card-header">
+                        <h3>Detalle de la Cotización</h3>
+                    </div>
+                    <div class="card-body" id="detailsContainer">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="divider"></div>
+        <br>
+    </div>
+</body>
+</html>
