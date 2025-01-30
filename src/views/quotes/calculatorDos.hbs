@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Cotización</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* Estilos personalizados para mantener la consistencia */
+        body {
+            background-color: #f8f9fa;
+        }
+        .card {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Contenedor para Cabecera y Detalle (lado a lado) -->
+        <div class="row">
+            <!-- Sección de Cabecera -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Cabecera</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Aquí irán los campos relacionados con la cabecera de la cotización.</p>
+                        <!-- Campos de cabecera con datos cargados -->
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <label for="fecha">Fecha:</label>
+                                <input type="date" id="fecha" name="fecha" class="form-control" value="{{cabecera.fecha}}" required>
+                            </div>
+                            <div class="form-group col-md-12">
+                                <label for="fechaVence">Fecha de Vencimiento:</label>
+                                <input type="date" id="fechaVence" name="fechaVence" class="form-control" value="{{cabecera.fechaVence}}" required>
+                            </div>
+                            <div class="form-group col-md-12">
+                                <label for="descripcionCorta">Descripción Corta:</label>
+                                <input type="text" id="descripcionCorta" name="descripcionCorta" class="form-control" value="{{cabecera.descripcionCorta}}" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección de Detalle -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Detalle</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Aquí irán los campos relacionados con el detalle de la cotización.</p>
+                        <!-- Campos de detalle con datos cargados -->
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <label for="lineaQuo">Línea:</label>
+                                <input type="number" id="lineaQuo" name="lineaQuo" class="form-control" value="{{detalle.lineaQuo}}" required>
+                            </div>
+                            <div class="form-group col-md-12">
+                                <label for="tipoQuo">Tipo (P/R):</label>
+                                <select id="tipoQuo" name="tipoQuo" class="form-control" required>
+                                    <option value="P" {{#eq detalle.tipoQuo 'P'}}selected{{/eq}}>P</option>
+                                    <option value="R" {{#eq detalle.tipoQuo 'R'}}selected{{/eq}}>R</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-12">
+                                <label for="cantidadQuo">Cantidad:</label>
+                                <input type="number" id="cantidadQuo" name="cantidadQuo" class="form-control" value="{{detalle.cantidadQuo}}" required>
+                            </div>
+                            <div class="form-group col-md-12">
+                                <label for="descripcionQuo">Descripción:</label>
+                                <textarea id="descripcionQuo" name="descripcionQuo" class="form-control" rows="2" required>{{detalle.descripcionQuo}}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Espacio para agregar más elementos debajo -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Nuevos Elementos</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Aquí puedes agregar más elementos debajo de la cabecera y el detalle.</p>
+                        <!-- Ejemplo de un nuevo elemento -->
+                        <div class="form-group">
+                            <label for="nuevoElemento">Nuevo Elemento:</label>
+                            <input type="text" id="nuevoElemento" name="nuevoElemento" class="form-control">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -57,7 +57,7 @@ router.get('/quotes/calculator', isAuthenticated, async (req, res) => {
         // Renderiza la vista y envía los datos de los códigos, detalles y cliente
         res.render('quotes/calculator', { 
             quotation, 
-            detail: JSON.stringify(detail), 
+            detail, 
             customer, 
             paperCosts 
         });

@@ -33,6 +33,10 @@ app.engine('.hbs', engine({
             const day = String(d.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
         },
+        // Helper para comparar valores
+        eq: function (a, b) {
+            return a === b;
+        },
         json: function (context) {
             return JSON.stringify(context);
         }
@@ -76,6 +80,11 @@ app.use(require('./routes/customers'));
 app.use(require('./routes/quotation'));
 app.use(require('./routes/calculator'));
 app.use(require('./routes/costs'));
+
+const calculatorDosRoutes = require('./routes/calculatorDos'); // Importa las rutas de calculatorDos
+
+// Usa las rutas de calculatorDos
+app.use('/', calculatorDosRoutes);
 
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));

@@ -65,10 +65,14 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             console.log("La pantalla se ha cargado.");
+            //
+            //console.log("Detalle recibido en la vista:", {{{json detail}}});
+            //
             // Pasar el detalle al cliente
             // Verifica si el detalle llega como string y conviértelo a JSON
-            const detailRaw = '{{{detail}}}';
-            const detail = JSON.parse(detailRaw);
+            //const detailRaw = '{{{detail}}}';
+            //const detail = JSON.parse(detailRaw);
+            const detail = {{{json detail}}};  // Handlebars ya convierte el objeto a JSON
             console.log("Detalle recibido en el cliente:", detail);
 
             // Agrega el detalle a la UI (esto debería ser manejado en `loadInitialDetail`)
@@ -99,11 +103,20 @@
             // 2. Carga de un detalle inicial en el contenedor de detalles
             function loadInitialDetail(detail) {
                 console.log("Cargando detalle inicial...");
-                // Verificar si se recibió un detalle válido
+                console.log("Detalle recibido en loadInitialDetail:", detail);
+
                 if (!detail) {
                     console.error("No se encontró el detalle para cargar.");
                     return;
                 }
+
+                // Verifica los campos del detalle
+                console.log("Campos del detalle:", {
+                    lineaQuo: detail.lineaQuo,
+                    tipoQuo: detail.tipoQuo,
+                    cantidadQuo: detail.cantidadQuo,
+                    descripcionQuo: detail.descripcionQuo,
+                });
 
                 // Agregar el detalle a la interfaz
                 addDetail({
@@ -158,9 +171,6 @@
             loadInitialDetail(); // Cargar el detalle inicial
             configurePapelSection(); // Configurar la sección de "papel"
         });
-
-
-
 
         function addDetail(detail = {}) {
             const detailsContainer = document.getElementById('detailsContainer');

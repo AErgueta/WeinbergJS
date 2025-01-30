@@ -6,10 +6,16 @@
     <title>Edit Quotation</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script>
+        //function redirectToCalculator(detailIndex) {
+            //const quotationId = document.getElementById('quotationId').value;
+            //const customerId = document.getElementById('customerId').value;
+            //window.location.href = `/quotes/calculator?quotationId=${quotationId}&customerId=${customerId}&detailIndex=${detailIndex}`;
+        //}
+
         function redirectToCalculator(detailIndex) {
             const quotationId = document.getElementById('quotationId').value;
             const customerId = document.getElementById('customerId').value;
-            window.location.href = `/quotes/calculator?quotationId=${quotationId}&customerId=${customerId}&detailIndex=${detailIndex}`;
+            window.location.href = `/quotes/calculatorDos?quotationId=${quotationId}&customerId=${customerId}&detailIndex=${detailIndex}`;
         }
 
         document.addEventListener('DOMContentLoaded', function () {
