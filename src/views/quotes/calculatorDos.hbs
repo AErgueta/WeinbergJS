@@ -27,6 +27,9 @@
             background-color: #0056b3;
             border-color: #0056b3;
         }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -39,21 +42,24 @@
                     <div class="card-header">
                         <h5 class="card-title">Cabecera</h5>
                     </div>
-                    <div class="card-body">
-                        <p>Aquí irán los campos relacionados con la cabecera de la cotización.</p>
-                        <!-- Campos de cabecera con datos cargados -->
+                    <div class="card-body" id="cabecera-body">
+                        <!-- Campos de cabecera compactos -->
+                        <div class="form-row">
+                            <!-- Fecha y Fecha de Vencimiento en una sola fila -->
+                            <div class="form-group col-md-6">
+                                <label for="fecha">Fecha:</label>
+                                <input type="date" id="fecha" name="fecha" class="form-control form-control-sm" value="{{cabecera.fecha}}" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="fechaVence">Fecha de Vencimiento:</label>
+                                <input type="date" id="fechaVence" name="fechaVence" class="form-control form-control-sm" value="{{cabecera.fechaVence}}" required>
+                            </div>
+                        </div>
+                        <!-- Descripción Corta en una fila debajo -->
                         <div class="form-row">
                             <div class="form-group col-md-12">
-                                <label for="fecha">Fecha:</label>
-                                <input type="date" id="fecha" name="fecha" class="form-control" value="{{cabecera.fecha}}" required>
-                            </div>
-                            <div class="form-group col-md-12">
-                                <label for="fechaVence">Fecha de Vencimiento:</label>
-                                <input type="date" id="fechaVence" name="fechaVence" class="form-control" value="{{cabecera.fechaVence}}" required>
-                            </div>
-                            <div class="form-group col-md-12">
                                 <label for="descripcionCorta">Descripción Corta:</label>
-                                <input type="text" id="descripcionCorta" name="descripcionCorta" class="form-control" value="{{cabecera.descripcionCorta}}" required>
+                                <input type="text" id="descripcionCorta" name="descripcionCorta" class="form-control form-control-sm" value="{{cabecera.descripcionCorta}}" required>
                             </div>
                         </div>
                     </div>
@@ -66,28 +72,31 @@
                     <div class="card-header">
                         <h5 class="card-title">Detalle</h5>
                     </div>
-                    <div class="card-body">
-                        <p>Aquí irán los campos relacionados con el detalle de la cotización.</p>
-                        <!-- Campos de detalle con datos cargados -->
+                    <div class="card-body" id="detalle-body">
+                        <!-- Campos de detalle compactos -->
                         <div class="form-row">
-                            <div class="form-group col-md-12">
+                            <!-- Línea, Tipo y Cantidad en una sola fila -->
+                            <div class="form-group col-md-4">
                                 <label for="lineaQuo">Línea:</label>
-                                <input type="number" id="lineaQuo" name="lineaQuo" class="form-control" value="{{detalle.lineaQuo}}" required>
+                                <input type="number" id="lineaQuo" name="lineaQuo" class="form-control form-control-sm" value="{{detalle.lineaQuo}}" required>
                             </div>
-                            <div class="form-group col-md-12">
+                            <div class="form-group col-md-4">
                                 <label for="tipoQuo">Tipo (P/R):</label>
-                                <select id="tipoQuo" name="tipoQuo" class="form-control" required>
+                                <select id="tipoQuo" name="tipoQuo" class="form-control form-control-sm" required>
                                     <option value="P" {{#eq detalle.tipoQuo 'P'}}selected{{/eq}}>P</option>
                                     <option value="R" {{#eq detalle.tipoQuo 'R'}}selected{{/eq}}>R</option>
                                 </select>
                             </div>
-                            <div class="form-group col-md-12">
+                            <div class="form-group col-md-4">
                                 <label for="cantidadQuo">Cantidad:</label>
-                                <input type="number" id="cantidadQuo" name="cantidadQuo" class="form-control" value="{{detalle.cantidadQuo}}" required>
+                                <input type="number" id="cantidadQuo" name="cantidadQuo" class="form-control form-control-sm" value="{{detalle.cantidadQuo}}" required>
                             </div>
+                        </div>
+                        <!-- Descripción en una fila debajo -->
+                        <div class="form-row">
                             <div class="form-group col-md-12">
                                 <label for="descripcionQuo">Descripción:</label>
-                                <textarea id="descripcionQuo" name="descripcionQuo" class="form-control" rows="2" required>{{detalle.descripcionQuo}}</textarea>
+                                <textarea id="descripcionQuo" name="descripcionQuo" class="form-control form-control-sm" rows="2" required>{{detalle.descripcionQuo}}</textarea>
                             </div>
                         </div>
                     </div>
@@ -100,19 +109,234 @@
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title">Nuevos Elementos</h5>
+                        <h5 class="card-title">Elementos para el cálculo de Precio</h5>
                     </div>
-                    <div class="card-body">
-                        <p>Aquí puedes agregar más elementos debajo de la cabecera y el detalle.</p>
-                        <!-- Ejemplo de un nuevo elemento -->
-                        <div class="form-group">
-                            <label for="nuevoElemento">Nuevo Elemento:</label>
-                            <input type="text" id="nuevoElemento" name="nuevoElemento" class="form-control">
+                    <div class="card-body" id="elementos-body">
+                        <!-- Primera línea de inputs -->
+                        <div class="form-row">
+                            <!-- Indicador de tipo de línea -->
+                            <div class="form-group col-md-2">
+                                <label for="tipoLinea">Tipo:</label>
+                                <select id="tipoLinea" name="tipoLinea" class="form-control form-control-sm" required>
+                                    <option value="P">P - Papel</option>
+                                    <option value="T">T - Tinta</option>
+                                    <option value="L">L - Plancha</option>
+                                    <option value="C">C - Película</option>
+                                    <option value="A">A - Acabado</option>
+                                    <option value="R">R - Preprensa</option>
+                                    <option value="M">M - Mano de Obra</option>
+                                    <option value="I">I - Costos Indirectos</option>
+                                    <option value="O">O - Gastos Operativos</option>
+                                    <option value="S">S - Plastificado</option>
+                                    <option value="U">U - Utilidad</option>
+                                </select>
+                            </div>
+                            <!-- No. Artículo -->
+                            <div class="form-group col-md-1">
+                                <label for="noArticulo">No. Art.:</label>
+                                <select id="noArticulo" name="noArticulo" class="form-control form-control-sm" required>
+                                    <!-- Aquí se cargarán los artículos desde la base de datos -->
+                                </select>
+                            </div>
+                            <!-- Cantidad -->
+                            <div class="form-group col-md-1">
+                                <label for="cantidad">Cantidad:</label>
+                                <input type="number" id="cantidad" name="cantidad" class="form-control form-control-sm" required>
+                            </div>
+                            <!-- Precio -->
+                            <div class="form-group col-md-1">
+                                <label for="precio">Precio:</label>
+                                <input type="number" id="precio" name="precio" class="form-control form-control-sm" readonly>
+                            </div>
+                            <!-- Detalle -->
+                            <div class="form-group col-md-5">
+                                <label for="detalle">Detalle:</label>
+                                <input type="text" id="detalle" name="detalle" class="form-control form-control-sm" readonly>
+                            </div>
+                            <!-- Monto -->
+                            <div class="form-group col-md-2">
+                                <label for="monto">Monto:</label>
+                                <input type="number" id="monto" name="monto" class="form-control form-control-sm" readonly>
+                            </div>
+                        </div>
+                        <!-- Campos ocultos -->
+                        <div class="form-row hidden">
+                            <!-- Factor -->
+                            <div class="form-group col-md-2">
+                                <label for="factor">Factor:</label>
+                                <input type="number" id="factor" name="factor" class="form-control form-control-sm">
+                            </div>
+                            <!-- CantidadM -->
+                            <div class="form-group col-md-2">
+                                <label for="cantidadM">CantidadM:</label>
+                                <input type="number" id="cantidadM" name="cantidadM" class="form-control form-control-sm">
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Script para manejar la lógica del formulario -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tipoLineaSelect = document.getElementById('tipoLinea');
+            const noArticuloSelect = document.getElementById('noArticulo');
+            const descripcionInput = document.getElementById('detalle');
+            const precioInput = document.getElementById('precio');
+            const factorInput = document.getElementById('factor');
+            const cantidadInput = document.getElementById('cantidad');
+            const montoInput = document.getElementById('monto');
+            const cantidadMInput = document.getElementById('cantidadM');
+
+            // Variable para almacenar la sumatoria de cantidadM
+            let sumatoriaCantidadM = 0;
+
+            // Función para calcular el monto y la cantidadM
+            function calcularMontos() {
+                const cantidad = parseFloat(cantidadInput.value) || 0; // Obtener la cantidad
+                const precio = parseFloat(precioInput.value) || 0; // Obtener el precio
+                const factor = parseFloat(factorInput.value) || 0; // Obtener el factor
+
+                // Calcular el monto
+                const monto = cantidad * precio;
+                montoInput.value = monto.toFixed(2); // Mostrar el monto con 2 decimales
+
+                // Calcular la cantidadM
+                const cantidadM = (factor * cantidad) / 1000;
+                cantidadMInput.value = cantidadM.toFixed(2); // Mostrar la cantidadM con 2 decimales
+
+                // Si es una línea de tipo "Papel", actualizar la sumatoria de cantidadM
+                if (tipoLineaSelect.value === 'P') {
+                    sumatoriaCantidadM += cantidadM;
+                    console.log('Sumatoria de cantidadM:', sumatoriaCantidadM.toFixed(2));
+                }
+            }
+
+            // Función para crear una nueva fila dentro de "Elementos para el Cálculo de Precio"
+            function crearNuevaFila() {
+                console.log("Entró a la función");
+                // Obtener el contenedor de las filas dentro de "Elementos para el Cálculo de Precio"
+                const contenedorFilas = document.getElementById('elementos-body');
+                console.log("contemedorFilas: ", contenedorFilas);
+                // Clonar la última fila dentro del contenedor
+                const ultimaFila = contenedorFilas.querySelector('.form-row:last-child');
+                console.log("ultimaFila: ", ultimaFila);
+                const nuevaFila = ultimaFila.cloneNode(true);
+                console.log("nuevaFila: ", nuevaFila);
+
+                // Limpiar los valores de la nueva fila
+                const inputs = nuevaFila.querySelectorAll('input, select');
+                inputs.forEach(input => {
+                    if (input.type !== 'button') {
+                        input.value = '';
+                    }
+                });
+
+                // Agregar la nueva fila al contenedor
+                contenedorFilas.appendChild(nuevaFila);
+
+                // Enfocar el campo "Tipo" en la nueva fila
+                const nuevoTipoLineaSelect = nuevaFila.querySelector('#tipoLinea');
+                nuevoTipoLineaSelect.focus();
+
+                // Agregar eventos a los campos de la nueva fila
+                agregarEventosNuevaFila(nuevaFila);
+            }
+
+            // Función para agregar eventos a los campos de una nueva fila
+            function agregarEventosNuevaFila(fila) {
+                const cantidadInput = fila.querySelector('#cantidad');
+                const montoInput = fila.querySelector('#monto');
+
+                // Escuchar cambios en la cantidad
+                cantidadInput.addEventListener('input', calcularMontos);
+
+                // Escuchar cuando el campo "Monto" pierde el foco (al presionar TAB)
+                montoInput.addEventListener('blur', function () {
+                    //console.log(tipoLineaSelect.value);
+                    if (tipoLineaSelect.value === 'P') {
+                        crearNuevaFila();
+                    }
+                });
+            }
+
+            // Escuchar cambios en la cantidad
+            cantidadInput.addEventListener('input', calcularMontos);
+
+            // Escuchar cuando el campo "Monto" pierde el foco (al presionar TAB)
+            montoInput.addEventListener('blur', function () {
+                //console.log(tipoLineaSelect.value);
+                if (tipoLineaSelect.value === 'P') {
+                    crearNuevaFila();
+                }
+            });
+
+            // Función para cargar los artículos desde la base de datos
+            async function loadArticles(filter = '') {
+                try {
+                    const response = await fetch(`/api/articles?filter=${filter}`);
+                    if (!response.ok) {
+                        throw new Error('Error al cargar los artículos');
+                    }
+                    const articles = await response.json();
+
+                    // Limpiar el combo de No. Artículo
+                    noArticuloSelect.innerHTML = '';
+
+                    // Llenar el combo con los artículos filtrados
+                    articles.forEach(article => {
+                        const option = document.createElement('option');
+                        option.value = article.codigoCT; // Código del artículo
+                        option.textContent = `${article.codigoCT} - ${article.descCT}`; // Código y descripción
+                        noArticuloSelect.appendChild(option);
+                    });
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+
+            // Escuchar cambios en el tipo de línea
+            tipoLineaSelect.addEventListener('change', function () {
+                const selectedType = tipoLineaSelect.value;
+                if (selectedType === 'P') {
+                    // Si el tipo es "P - Papel", cargar solo artículos que comiencen con "PAP"
+                    loadArticles('PAP');
+                } else {
+                    // Cargar todos los artículos si no es papel
+                    loadArticles();
+                }
+            });
+
+            // Escuchar cambios en el combo de No. Artículo
+            noArticuloSelect.addEventListener('change', async function () {
+                const selectedCode = noArticuloSelect.value;
+                if (selectedCode) {
+                    try {
+                        const response = await fetch(`/api/articles/${selectedCode}`);
+                        if (!response.ok) {
+                            throw new Error('Error al cargar los detalles del artículo');
+                        }
+                        const article = await response.json();
+
+                        // Cargar los datos del artículo seleccionado
+                        noArticuloSelect.value = article.codigoCT;
+                        descripcionInput.value = article.descCT;
+                        precioInput.value = article.montoCT;
+                        factorInput.value = article.factorCT || ''; // Cargar el factor si existe
+
+                        // Calcular montos automáticamente cuando se selecciona un artículo
+                        calcularMontos();
+                    } catch (error) {
+                        console.error('Error:', error);
+                    }
+                }
+            });
+
+            // Llamar a la función para cargar los artículos al inicio
+            loadArticles();
+        });
+    </script>
 </body>
 </html>

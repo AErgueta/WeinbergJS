@@ -81,6 +81,9 @@ app.use(require('./routes/quotation'));
 app.use(require('./routes/calculator'));
 app.use(require('./routes/costs'));
 
+const apiRoutes = require('./routes/api'); // Importa las rutas de la API
+app.use('/api', apiRoutes); // Usa las rutas de la API bajo el prefijo /api
+
 const calculatorDosRoutes = require('./routes/calculatorDos'); // Importa las rutas de calculatorDos
 
 // Usa las rutas de calculatorDos
