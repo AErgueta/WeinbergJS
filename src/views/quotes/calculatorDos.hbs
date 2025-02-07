@@ -217,13 +217,21 @@
             // Función para crear una nueva fila dentro de "Elementos para el Cálculo de Precio"
             function crearNuevaFila() {
                 console.log("Entró a la función");
+
                 // Obtener el contenedor de las filas dentro de "Elementos para el Cálculo de Precio"
                 const contenedorFilas = document.getElementById('elementos-body');
-                console.log("contemedorFilas: ", contenedorFilas);
-                // Clonar la última fila dentro del contenedor
-                const ultimaFila = contenedorFilas.querySelector('.form-row:last-child');
-                console.log("ultimaFila: ", ultimaFila);
-                const nuevaFila = ultimaFila.cloneNode(true);
+                console.log("contenedorFilas: ", contenedorFilas);
+
+                // Clonar la primera fila visible dentro del contenedor
+                const primeraFilaVisible = contenedorFilas.querySelector('.form-row:not(.hidden)');
+                console.log("primeraFilaVisible: ", primeraFilaVisible);
+
+                if (!primeraFilaVisible) {
+                    console.error("No se encontró la fila visible para clonar.");
+                    return;
+                }
+
+                const nuevaFila = primeraFilaVisible.cloneNode(true);
                 console.log("nuevaFila: ", nuevaFila);
 
                 // Limpiar los valores de la nueva fila
@@ -239,7 +247,11 @@
 
                 // Enfocar el campo "Tipo" en la nueva fila
                 const nuevoTipoLineaSelect = nuevaFila.querySelector('#tipoLinea');
-                nuevoTipoLineaSelect.focus();
+                if (nuevoTipoLineaSelect) {
+                    nuevoTipoLineaSelect.focus();
+                } else {
+                    console.error("No se encontró el campo 'Tipo' en la nueva fila.");
+                }
 
                 // Agregar eventos a los campos de la nueva fila
                 agregarEventosNuevaFila(nuevaFila);
