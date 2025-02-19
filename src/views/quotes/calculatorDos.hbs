@@ -182,172 +182,158 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const tipoLineaSelect = document.getElementById('tipoLinea');
-            const noArticuloSelect = document.getElementById('noArticulo');
-            const descripcionInput = document.getElementById('detalle');
-            const precioInput = document.getElementById('precio');
-            const factorInput = document.getElementById('factor');
-            const cantidadInput = document.getElementById('cantidad');
-            const montoInput = document.getElementById('monto');
-            const cantidadMInput = document.getElementById('cantidadM');
+            const elementosBody = document.getElementById('elementos-body');
+            let filaIndex = 0; // Contador de filas
 
-            // Variable para almacenar la sumatoria de cantidadM
-            let sumatoriaCantidadM = 0;
-
-            // Función para calcular el monto y la cantidadM
-            function calcularMontos() {
-                const cantidad = parseFloat(cantidadInput.value) || 0; // Obtener la cantidad
-                const precio = parseFloat(precioInput.value) || 0; // Obtener el precio
-                const factor = parseFloat(factorInput.value) || 0; // Obtener el factor
-
-                // Calcular el monto
-                const monto = cantidad * precio;
-                montoInput.value = monto.toFixed(2); // Mostrar el monto con 2 decimales
-
-                // Calcular la cantidadM
-                const cantidadM = (factor * cantidad) / 1000;
-                cantidadMInput.value = cantidadM.toFixed(2); // Mostrar la cantidadM con 2 decimales
-
-                // Si es una línea de tipo "Papel", actualizar la sumatoria de cantidadM
-                if (tipoLineaSelect.value === 'P') {
-                    sumatoriaCantidadM += cantidadM;
-                    console.log('Sumatoria de cantidadM:', sumatoriaCantidadM.toFixed(2));
-                }
+            // 🔹 Función para actualizar los ID de una fila
+            function actualizarIdsFila(fila, index) {
+                fila.querySelectorAll('input, select').forEach(input => {
+                    if (input.id) {
+                        input.id = `${input.id.split('-')[0]}-${index}`;
+                    }
+                });
             }
 
-            // Función para crear una nueva fila dentro de "Elementos para el Cálculo de Precio"
-            function crearNuevaFila() {
-                console.log("Entró a la función");
+            // 🔹 Función para calcular los montos
+            function calcularMontos(fila, index) {
+                const cantidadInput = fila.querySelector(`#cantidad-${index}`);
+                const precioInput = fila.querySelector(`#precio-${index}`);
+                const montoInput = fila.querySelector(`#monto-${index}`);
+                const factorInput = fila.querySelector(`#factor-${index}`);
+                const cantidadMInput = fila.querySelector(`#cantidadM-${index}`);
 
-                // Obtener el contenedor de las filas dentro de "Elementos para el Cálculo de Precio"
-                const contenedorFilas = document.getElementById('elementos-body');
-                console.log("contenedorFilas: ", contenedorFilas);
-
-                // Clonar la primera fila visible dentro del contenedor
-                const primeraFilaVisible = contenedorFilas.querySelector('.form-row:not(.hidden)');
-                console.log("primeraFilaVisible: ", primeraFilaVisible);
-
-                if (!primeraFilaVisible) {
-                    console.error("No se encontró la fila visible para clonar.");
+                if (!cantidadInput || !precioInput || !montoInput || !factorInput || !cantidadMInput) {
+                    console.error(`⚠️ Faltan elementos en la fila ${index}`);
                     return;
                 }
 
-                const nuevaFila = primeraFilaVisible.cloneNode(true);
-                console.log("nuevaFila: ", nuevaFila);
+                const cantidad = parseFloat(cantidadInput.value) || 0;
+                const precio = parseFloat(precioInput.value) || 0;
+                const factor = parseFloat(factorInput.value) || 0;
 
-                // Limpiar los valores de la nueva fila
-                const inputs = nuevaFila.querySelectorAll('input, select');
-                inputs.forEach(input => {
-                    if (input.type !== 'button') {
-                        input.value = '';
-                    }
-                });
+                montoInput.value = (cantidad * precio).toFixed(2);
+                cantidadMInput.value = ((cantidad * factor) / 1000).toFixed(2);
+            }
 
-                // Agregar la nueva fila al contenedor
-                contenedorFilas.appendChild(nuevaFila);
+            // 🔹 Función para crear una nueva fila
+            function crearNuevaFila() {
+                const primeraFilaVisible = elementosBody.querySelector('.form-row:not(.hidden)');
+                const filaOculta = elementosBody.querySelector('.form-row.hidden');
 
-                // Enfocar el campo "Tipo" en la nueva fila
-                const nuevoTipoLineaSelect = nuevaFila.querySelector('#tipoLinea');
-                if (nuevoTipoLineaSelect) {
-                    nuevoTipoLineaSelect.focus();
-                } else {
-                    console.error("No se encontró el campo 'Tipo' en la nueva fila.");
+                if (!primeraFilaVisible || !filaOculta) {
+                    console.error("⚠️ No se encontraron filas para clonar.");
+                    return;
                 }
 
-                // Agregar eventos a los campos de la nueva fila
-                agregarEventosNuevaFila(nuevaFila);
+                filaIndex++;
+
+                const nuevaFilaVisible = primeraFilaVisible.cloneNode(true);
+                const nuevaFilaOculta = filaOculta.cloneNode(true);
+
+                actualizarIdsFila(nuevaFilaVisible, filaIndex);
+                actualizarIdsFila(nuevaFilaOculta, filaIndex);
+
+                elementosBody.appendChild(nuevaFilaVisible);
+                elementosBody.appendChild(nuevaFilaOculta);
+
+                nuevaFilaVisible.querySelector(`#tipoLinea-${filaIndex}`).focus();
             }
 
-            // Función para agregar eventos a los campos de una nueva fila
-            function agregarEventosNuevaFila(fila) {
-                const cantidadInput = fila.querySelector('#cantidad');
-                const montoInput = fila.querySelector('#monto');
+            // 🔹 Escuchar cambios en todos los selects "No. Artículo" (EVENTO DELEGADO)
+            document.addEventListener('change', async function (event) {
+                if (event.target && event.target.matches('[id^="noArticulo-"]')) {
+                    console.log("🔹 Evento 'change' disparado en:", event.target);
 
-                // Escuchar cambios en la cantidad
-                cantidadInput.addEventListener('input', calcularMontos);
+                    const selectedCode = event.target.value;
+                    if (!selectedCode) return;
 
-                // Escuchar cuando el campo "Monto" pierde el foco (al presionar TAB)
-                montoInput.addEventListener('blur', function () {
-                    //console.log(tipoLineaSelect.value);
-                    if (tipoLineaSelect.value === 'P') {
-                        crearNuevaFila();
+                    try {
+                        const response = await fetch(`/api/articles/${selectedCode}`);
+                        if (!response.ok) throw new Error('⚠️ Error al cargar artículo');
+
+                        const article = await response.json();
+                        console.log("📌 Artículo cargado:", article);
+
+                        // 🔹 Buscar la fila donde está el select
+                        const fila = event.target.closest('.form-row');
+                        console.log("🔍 FILA ENCONTRADA:", fila.innerHTML);  
+
+                        if (!fila) {
+                            console.error("❌ No se encontró la fila.");
+                            return;
+                        }
+
+                        // 🔹 Ver todo lo que hay en la fila
+                        console.log("🔍 TODOS LOS ELEMENTOS DENTRO DE FILA:");
+                        fila.querySelectorAll('*').forEach(el => console.log(el.tagName, el.id, el.className));
+
+                        // 🔹 Intentar encontrar los inputs dentro de la fila
+                        const descripcionInput = fila.querySelector('input[name="detalle"]') || fila.querySelector('#detalle');
+                        const precioInput = fila.querySelector('input[name="precio"]') || fila.querySelector('#precio');
+                        const factorInput = fila.querySelector('input[name="factor"]') || fila.querySelector('#factor');
+
+                        console.log("🔍 Inputs encontrados:");
+                        console.log("➡️ Descripción input:", descripcionInput);
+                        console.log("➡️ Precio input:", precioInput);
+                        console.log("➡️ Factor input:", factorInput);
+
+                        if (!descripcionInput || !precioInput || !factorInput) {
+                            console.error("❌ No se encontraron los inputs dentro de la fila.");
+                            return;
+                        }
+
+                        // 🔹 Asignar valores
+                        descripcionInput.value = article.descCT || '';
+                        precioInput.value = article.montoCT || 0;
+                        factorInput.value = (tipoLineaSelect.value === 'P') ? article.factorCT || 0 : '';
+
+                        calcularMontos(fila, 0);
+                    } catch (error) {
+                        console.error("❌ Error al cargar artículo:", error);
                     }
-                });
-            }
-
-            // Escuchar cambios en la cantidad
-            cantidadInput.addEventListener('input', calcularMontos);
-
-            // Escuchar cuando el campo "Monto" pierde el foco (al presionar TAB)
-            montoInput.addEventListener('blur', function () {
-                //console.log(tipoLineaSelect.value);
-                if (tipoLineaSelect.value === 'P') {
-                    crearNuevaFila();
                 }
             });
 
-            // Función para cargar los artículos desde la base de datos
+
+            // 🔹 Escuchar cambios en el tipo de línea para cargar artículos filtrados
+            tipoLineaSelect.addEventListener('change', function () {
+                console.log("🔹 Tipo de línea cambiado a:", tipoLineaSelect.value);
+                loadArticles(tipoLineaSelect.value === 'P' ? 'PAP' : '');
+            });
+
+            // 🔹 Función para cargar artículos en el select
             async function loadArticles(filter = '') {
                 try {
                     const response = await fetch(`/api/articles?filter=${filter}`);
-                    if (!response.ok) {
-                        throw new Error('Error al cargar los artículos');
-                    }
+                    if (!response.ok) throw new Error('⚠️ Error al cargar artículos');
+
                     const articles = await response.json();
+                    const noArticuloSelect = document.getElementById('noArticulo-0');
 
-                    // Limpiar el combo de No. Artículo
+                    if (!noArticuloSelect) {
+                        console.error("⚠️ No se encontró el select de No. Artículo.");
+                        return;
+                    }
+
                     noArticuloSelect.innerHTML = '';
-
-                    // Llenar el combo con los artículos filtrados
                     articles.forEach(article => {
                         const option = document.createElement('option');
-                        option.value = article.codigoCT; // Código del artículo
-                        option.textContent = `${article.codigoCT} - ${article.descCT}`; // Código y descripción
+                        option.value = article.codigoCT;
+                        option.textContent = `${article.codigoCT} - ${article.descCT}`;
                         noArticuloSelect.appendChild(option);
                     });
                 } catch (error) {
-                    console.error('Error:', error);
+                    console.error("❌ Error al cargar artículos:", error);
                 }
             }
 
-            // Escuchar cambios en el tipo de línea
-            tipoLineaSelect.addEventListener('change', function () {
-                const selectedType = tipoLineaSelect.value;
-                if (selectedType === 'P') {
-                    // Si el tipo es "P - Papel", cargar solo artículos que comiencen con "PAP"
-                    loadArticles('PAP');
-                } else {
-                    // Cargar todos los artículos si no es papel
-                    loadArticles();
-                }
-            });
-
-            // Escuchar cambios en el combo de No. Artículo
-            noArticuloSelect.addEventListener('change', async function () {
-                const selectedCode = noArticuloSelect.value;
-                if (selectedCode) {
-                    try {
-                        const response = await fetch(`/api/articles/${selectedCode}`);
-                        if (!response.ok) {
-                            throw new Error('Error al cargar los detalles del artículo');
-                        }
-                        const article = await response.json();
-
-                        // Cargar los datos del artículo seleccionado
-                        noArticuloSelect.value = article.codigoCT;
-                        descripcionInput.value = article.descCT;
-                        precioInput.value = article.montoCT;
-                        factorInput.value = article.factorCT || ''; // Cargar el factor si existe
-
-                        // Calcular montos automáticamente cuando se selecciona un artículo
-                        calcularMontos();
-                    } catch (error) {
-                        console.error('Error:', error);
-                    }
-                }
-            });
-
-            // Llamar a la función para cargar los artículos al inicio
-            loadArticles();
+            // 🔹 Inicializar eventos en la primera fila si existe
+            const primeraFila = elementosBody.querySelector('.form-row:not(.hidden)');
+            if (primeraFila) {
+                actualizarIdsFila(primeraFila, filaIndex);
+            } else {
+                console.error("⚠️ No se encontró la primera fila.");
+            }
         });
     </script>
 </body>

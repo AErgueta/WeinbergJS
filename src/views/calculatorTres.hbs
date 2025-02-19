@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculador de Precio</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .info-box {
+            border: 1px solid #ddd;
+            padding: 10px;
+            font-size: 12px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .info-title {
+            font-weight: bold;
+            background-color: #007bff;
+            color: white;
+            padding: 5px;
+            font-size: 14px;
+            text-align: center;
+            border-radius: 3px;
+        }
+        .detalle-largo {
+            width: 100%;
+            min-height: 4em; /* 4 líneas de altura */
+            resize: vertical; /* Permite agrandar con el mouse */
+            border: 1px solid #ccc;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-3">
+        <h2 class="text-center">Calculador de Precio</h2>
+        
+        <!-- Contenedor de Cabecera y Detalle -->
+        <div class="row">
+            <!-- Cabecera -->
+            <div class="col-md-6">
+                <div class="info-box">
+                    <div class="info-title">Cabecera</div>
+                    <p><strong>Fecha:</strong> {{quotation.fecha}}</p>
+                    <p><strong>Fecha Vence:</strong> {{quotation.fechaVence}}</p>
+                    <p><strong>Descripción:</strong> {{quotation.descripcionCorta}}</p>
+                </div>
+            </div>
+
+            <!-- Detalle -->
+            <div class="col-md-6">
+                <div class="info-box">
+                    <div class="info-title">Detalle</div>
+                    <p><strong>Línea:</strong> {{detalle.lineaQuo}} | <strong>Tipo:</strong> {{detalle.tipoQuo}} | <strong>Cantidad:</strong> {{detalle.cantidadQuo}}</p>
+                    <p><strong>Descripción:</strong></p>
+                    <textarea class="detalle-largo" readonly>{{detalle.descripcionQuo}}</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

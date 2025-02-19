@@ -84,12 +84,15 @@ app.use(require('./routes/costs'));
 const apiRoutes = require('./routes/api'); // Importa las rutas de la API
 app.use('/api', apiRoutes); // Usa las rutas de la API bajo el prefijo /api
 
-const calculatorDosRoutes = require('./routes/calculatorDos'); // Importa las rutas de calculatorDos
+//const calculatorDosRoutes = require('./routes/calculatorDos'); // Importa las rutas de calculatorDos
 
 // Usa las rutas de calculatorDos
-app.use('/', calculatorDosRoutes);
+//app.use('/', calculatorDosRoutes);
 
+const calculatorTresRoutes = require('./routes/calculatorTres'); // Importa las rutas de calculatorTres
+app.use('/quotes', calculatorTresRoutes);
 // Static files
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Server is listening
