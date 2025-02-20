@@ -29,6 +29,29 @@
             border: 1px solid #ccc;
             padding: 5px;
         }
+        .scrollable-table {
+            max-height: 300px; /* Ajustable según necesidad */
+            overflow-y: auto;
+            border: 1px solid #ddd;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 5px;
+            text-align: center;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        select, input {
+            width: 100%;
+            padding: 5px;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -55,6 +78,60 @@
                     <p><strong>Descripción:</strong></p>
                     <textarea class="detalle-largo" readonly>{{detalle.descripcionQuo}}</textarea>
                 </div>
+            </div>
+        </div>
+
+        <!-- GRID DE 10 LÍNEAS -->
+        <div class="mt-4">
+            <div class="info-title">Detalles del Cálculo</div>
+            <div class="scrollable-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tipo Material</th>
+                            <th>No. Artículo</th>
+                            <th>Cantidad</th>
+                            <th>Precio</th>
+                            <th>Detalle</th>
+                            <th>Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each detalles}}
+                        <tr>
+                            <td>
+                                <select name="tipoMaterial">
+                                    <option value="P">P - Papel</option>
+                                    <option value="T">T - Tinta</option>
+                                    <option value="L">L - Plancha</option>
+                                    <option value="C">C - Película</option>
+                                    <option value="A">A - Acabado</option>
+                                    <option value="R">R - Preprensa</option>
+                                    <option value="M">M - Mano de Obra</option>
+                                    <option value="I">I - Costos Indirectos</option>
+                                    <option value="O">O - Gastos Operativos</option>
+                                    <option value="S">S - Plastificado</option>
+                                    <option value="U">U - Utilidad</option>
+                                </select>
+                            </td>
+                            <td>
+                                <select name="noArticulo">
+                                    <option value="">Seleccione</option>
+                                    <!-- Opciones dinámicas irán aquí -->
+                                </select>
+                            </td>
+                            <td><input type="number" name="cantidad" min="0" step="0.01"></td>
+                            <td><input type="number" name="precio" min="0" step="0.01"></td>
+                            <td><input type="text" name="detalle"></td>
+                            <td><input type="number" name="monto" min="0" step="0.01" readonly></td>
+                            
+                            <!-- Inputs ocultos -->
+                            <input type="hidden" name="factor" value="1">
+                            <input type="hidden" name="cantidadM" value="0">
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
