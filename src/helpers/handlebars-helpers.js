@@ -29,6 +29,15 @@ const handlebarsHelpers = {
     // Helper para convertir un objeto a JSON en la vista
     json: function (context) {
         return JSON.stringify(context, null, 2); // Formatea el JSON con indentación
+    },
+
+    // 🔹 Helper para generar un rango de números en Handlebars
+    range: function (start, end, options) {
+        let result = '';
+        for (let i = start; i <= end; i++) {
+            result += options.fn(i);
+        }
+        return result;
     }
 };
 

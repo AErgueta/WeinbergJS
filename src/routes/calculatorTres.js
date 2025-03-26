@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Customer = require('../models/customer'); // Importamos el modelo correcto
+const Cost = require('../models/cost'); // Importamos el modelo Cost
 
 // Función para formatear fechas a dd/mm/yyyy
 function formatDate(date) {
@@ -59,6 +60,17 @@ router.get('/calculatorTres', async (req, res) => {
     } catch (error) {
         console.error("Error en calculatorTres:", error);
         res.status(500).send("Error interno del servidor");
+    }
+});
+
+// Ruta para obtener artículos de tipo PAPEL
+router.get('/api/articulos/papel', async (req, res) => {
+    try {
+        const articulos = await Cost.find({ codigoCT: /^PAP/ }); // Filtrar códigos que inicien con "PAP"
+        res.json(articulos);
+    } catch (error) {
+        console.error("Error al obtener artículos de Papel:", error);
+        res.status(500).json({ error: "Error al obtener datos" });
     }
 });
 

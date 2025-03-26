@@ -97,10 +97,11 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {{#each detalles}}
+                        {{#range 1 10}}
                         <tr>
                             <td>
-                                <select name="tipoMaterial">
+                                <select name="tipoMaterial" class="tipo-material">
+                                    <option value="" selected>Seleccione</option>
                                     <option value="P">P - Papel</option>
                                     <option value="T">T - Tinta</option>
                                     <option value="L">L - Plancha</option>
@@ -115,11 +116,12 @@
                                 </select>
                             </td>
                             <td>
-                                <select name="noArticulo">
+                                <select name="noArticulo" id="noArticulo">
                                     <option value="">Seleccione</option>
-                                    <!-- Opciones dinámicas irán aquí -->
+                                    <!-- Aquí se cargarán dinámicamente las opciones -->
                                 </select>
                             </td>
+
                             <td><input type="number" name="cantidad" min="0" step="0.01"></td>
                             <td><input type="number" name="precio" min="0" step="0.01"></td>
                             <td><input type="text" name="detalle"></td>
@@ -129,11 +131,45 @@
                             <input type="hidden" name="factor" value="1">
                             <input type="hidden" name="cantidadM" value="0">
                         </tr>
-                        {{/each}}
+                        {{/range}}
                     </tbody>
+
                 </table>
             </div>
         </div>
     </div>
+    <!-- Lógica del formulario -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Seleccionamos todos los select de tipo de material
+            document.querySelectorAll(".tipo-material").forEach(select => {
+                select.addEventListener("change", async function() {
+                    let row = this.closest("tr"); // Obtiene la fila actual
+                    let noArticuloSelect = row.querySelector("#noArticulo"); // Encuentra el combo de No. Artículo
+
+                    // Limpiar opciones previas
+                    noArticuloSelect.innerHTML = '<option value="">Seleccione</option>';
+
+                    if (this.value === "P") { // Si elige Papel
+                        try {
+                            let response = await fetch('/api/articulos/papel'); // Petición a la API
+                            let articulos = await response.json();
+
+                            // Llenamos el combo con los datos obtenidos
+                            articulos.forEach(articulo => {
+                                let option = document.createElement("option");
+                                option.value = articulo.codigoCT;
+                                option.textContent = `${articulo.codigoCT} - ${articulo.descCT}`;
+                                noArticuloSelect.appendChild(option);
+                            });
+                        } catch (error) {
+                            console.error("Error al cargar artículos de Papel:", error);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+
 </body>
 </html>
