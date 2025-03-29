@@ -116,7 +116,7 @@
                                 </select>
                             </td>
                             <td>
-                                <select name="noArticulo" id="noArticulo">
+                                <select name="noArticulo" class="no_articulo">
                                     <option value="">Seleccione</option>
                                     <!-- Aquí se cargarán dinámicamente las opciones -->
                                 </select>
@@ -141,18 +141,18 @@
     <!-- Lógica del formulario -->
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Seleccionamos todos los select de tipo de material
-            document.querySelectorAll(".tipo-material").forEach(select => {
-                select.addEventListener("change", async function() {
-                    let row = this.closest("tr"); // Obtiene la fila actual
-                    let noArticuloSelect = row.querySelector("#noArticulo"); // Encuentra el combo de No. Artículo
+            // Delegación de eventos para "tipoMaterial"
+            document.addEventListener("change", async function(event) {
+                if (event.target.classList.contains("tipo-material")) {
+                    let row = event.target.closest("tr"); 
+                    let noArticuloSelect = row.querySelector("select[name='noArticulo']");
 
                     // Limpiar opciones previas
                     noArticuloSelect.innerHTML = '<option value="">Seleccione</option>';
 
-                    if (this.value === "P") { // Si elige Papel
+                    if (event.target.value === "P") { // Si elige Papel
                         try {
-                            let response = await fetch('/api/articulos/papel'); // Petición a la API
+                            let response = await fetch('/api/articulos/papel'); 
                             let articulos = await response.json();
 
                             // Llenamos el combo con los datos obtenidos
@@ -166,7 +166,58 @@
                             console.error("Error al cargar artículos de Papel:", error);
                         }
                     }
-                });
+                }
+            });
+
+            // Delegación de eventos para "noArticulo"
+            document.addEventListener("change", async function(event) {
+                if (event.target.classList.contains("no_articulo")) {
+                    let row = event.target.closest("tr"); 
+                    let codigoCT = event.target.value; // Código del artículo seleccionado
+                    if (!codigoCT) return; // Si no hay código, no hacemos nada
+
+                    try {
+                        let response = await fetch(`/api/articulo/${codigoCT}`);
+                        let data = await response.json();
+
+                        if (data) {
+                            row.querySelector("input[name='precio']").value = data.montoCT || 0;
+                            row.querySelector("input[name='detalle']").value = data.descCT || "";
+                            row.querySelector("input[name='factor']").value = data.factorCT || 1;
+
+                            console.log("DEtalle cargado:", data.descCT); // 👈 Muestra el descripción en la consola
+                            console.log("Precio cargado:", data.montoCT); // 👈 Muestra el precio en la consola
+                            console.log("Factor cargado:", data.factorCT); // 👈 Muestra el factor en la consola
+                        }
+                    } catch (error) {
+                        console.error("Error al obtener detalles del artículo:", error);
+                    }
+                }
+            });
+            // Evento para calcular "monto" y "cantidadM" solo si tipoMaterial es "P - Papel"
+            document.addEventListener("input", function(event) {
+                if (event.target.name === "cantidad") {
+                    let row = event.target.closest("tr");
+
+                    // Verificar si el tipo de material es "P"
+                    let tipoMaterial = row.querySelector("select[name='tipoMaterial']").value;
+                    if (tipoMaterial !== "P") return;
+
+                    let cantidad = parseFloat(event.target.value) || 0;
+                    let precio = parseFloat(row.querySelector("input[name='precio']").value) || 0;
+                    let factor = parseFloat(row.querySelector("input[name='factor']").value) || 1;
+
+                    // Cálculo de valores
+                    let monto = cantidad * precio;
+                    let cantidadM = (factor * cantidad) / 1000;
+
+                    // Asignar valores a los inputs correspondientes
+                    row.querySelector("input[name='monto']").value = monto.toFixed(2);
+                    row.querySelector("input[name='cantidadM']").value = cantidadM.toFixed(3);
+
+                    console.log(`Cantidad: ${cantidad}, Precio: ${precio}, Factor: ${factor}`);
+                    console.log(`Monto: ${monto.toFixed(2)}, CantidadM: ${cantidadM.toFixed(3)}`);
+                }
             });
         });
     </script>

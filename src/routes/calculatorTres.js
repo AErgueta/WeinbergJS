@@ -1,5 +1,6 @@
 const express = require('express');
-const router = express.Router();
+//const router = express.Router();
+const router = express.Router({ mergeParams: true });
 const Customer = require('../models/customer'); // Importamos el modelo correcto
 const Cost = require('../models/cost'); // Importamos el modelo Cost
 
@@ -66,11 +67,54 @@ router.get('/calculatorTres', async (req, res) => {
 // Ruta para obtener artículos de tipo PAPEL
 router.get('/api/articulos/papel', async (req, res) => {
     try {
-        const articulos = await Cost.find({ codigoCT: /^PAP/ }); // Filtrar códigos que inicien con "PAP"
+        const articulos = await Cost.find({ codigoCT: /^PAP/ }); // Buscar códigos que inicien con "PAP"
         res.json(articulos);
     } catch (error) {
         console.error("Error al obtener artículos de Papel:", error);
         res.status(500).json({ error: "Error al obtener datos" });
+    }
+});
+
+// Ruta para obtener detalles del artículo por código
+router.get('/api/articulos/detalle', async (req, res) => {
+    try {
+        const codigo = req.query.codigo; // Obtener el código del artículo desde la query string
+        if (!codigo) {
+            return res.status(400).json({ error: "Código de artículo no proporcionado" });
+        }
+
+        // Buscar el artículo en la base de datos por el código
+        const articulo = await Cost.findOne({ codigoCT: codigo });
+
+        if (!articulo) {
+            return res.status(404).json({ error: "Artículo no encontrado" });
+        }
+
+        // Devolver los detalles del artículo
+        res.json({
+            montoCT: articulo.montoCT,
+            descCT: articulo.descCT,
+            factorCT: articulo.factorCT
+        });
+    } catch (error) {
+        console.error("Error al obtener detalles del artículo:", error);
+        res.status(500).json({ error: "Error interno del servidor" });
+    }
+});
+
+// Nueva API para obtener detalles de un artículo específico
+router.get('/api/articulo/:codigoCT', async (req, res) => {
+    try {
+        const articulo = await Cost.findOne({ codigoCT: req.params.codigoCT });
+
+        if (!articulo) {
+            return res.status(404).json({ error: "Artículo no encontrado" });
+        }
+
+        res.json(articulo);
+    } catch (error) {
+        console.error("Error al obtener detalles del artículo:", error);
+        res.status(500).json({ error: "Error interno del servidor" });
     }
 });
 

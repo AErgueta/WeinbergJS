@@ -90,7 +90,9 @@ app.use('/api', apiRoutes); // Usa las rutas de la API bajo el prefijo /api
 //app.use('/', calculatorDosRoutes);
 
 const calculatorTresRoutes = require('./routes/calculatorTres'); // Importa las rutas de calculatorTres
-app.use('/quotes', calculatorTresRoutes);
+//app.use('/quotes', calculatorTresRoutes);
+app.use(calculatorTresRoutes);
+
 // Static files
 
 app.use(express.static(path.join(__dirname, 'public')));
