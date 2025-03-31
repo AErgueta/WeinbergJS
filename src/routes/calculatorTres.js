@@ -140,6 +140,26 @@ router.get('/api/articulos/plancha', async (req, res) => {
     }
 });
 
+// Ruta para obtener artículos de tipo PELICULA
+router.get('/api/articulos/pelicula', async (req, res) => {
+    try {
+        const articulos = await Cost.find({ codigoCT: /^PLX/ }); // Buscar códigos que inicien con "PLX"
+        res.json(articulos);
+    } catch (error) {
+        console.error("Error al obtener artículos de Película:", error);
+        res.status(500).json({ error: "Error al obtener datos" });
+    }
+});
+// Ruta para obtener artículos de tipo ACABADO
+router.get('/api/articulos/acabado', async (req, res) => {
+    try {
+        const articulos = await Cost.find({ codigoCT: /^ACA/ }); // Buscar códigos que inicien con "ACA"
+        res.json(articulos);
+    } catch (error) {
+        console.error("Error al obtener artículos de Acabado:", error);
+        res.status(500).json({ error: "Error al obtener datos" });
+    }
+});
 
 
 module.exports = router;

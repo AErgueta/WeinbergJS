@@ -147,25 +147,30 @@
                 if (event.target.classList.contains("tipo-material")) {
                     let row = event.target.closest("tr"); 
                     let noArticuloSelect = row.querySelector("select[name='noArticulo']");
-                    let tipoMaterial = event.target.value;
 
                     // Limpiar opciones previas
                     noArticuloSelect.innerHTML = '<option value="">Seleccione</option>';
 
+                    let tipoMaterial = event.target.value;
                     let endpoint = "";
-                    if (tipoMaterial === "P") {
+
+                    if (tipoMaterial === "P") { 
                         endpoint = "/api/articulos/papel";
                     } else if (tipoMaterial === "T") {
                         endpoint = "/api/articulos/tinta";
                     } else if (tipoMaterial === "L") {
-                        endpoint = "/api/articulos/plancha"; // 🔹 Nuevo endpoint para Plancha
+                        endpoint = "/api/articulos/plancha";
+                    } else if (tipoMaterial === "C") {
+                        endpoint = "/api/articulos/pelicula";
+                    } else if (tipoMaterial === "A") { 
+                        endpoint = "/api/articulos/acabado";
                     }
 
                     if (endpoint) {
                         try {
-                            let response = await fetch(endpoint);
+                            let response = await fetch(endpoint); 
                             let articulos = await response.json();
-                            
+
                             // Llenamos el combo con los datos obtenidos
                             articulos.forEach(articulo => {
                                 let option = document.createElement("option");
@@ -184,8 +189,8 @@
             document.addEventListener("change", async function(event) {
                 if (event.target.classList.contains("no_articulo")) {
                     let row = event.target.closest("tr"); 
-                    let codigoCT = event.target.value; 
-                    if (!codigoCT) return; 
+                    let codigoCT = event.target.value;
+                    if (!codigoCT) return;
 
                     try {
                         let response = await fetch(`/api/articulo/${codigoCT}`);
@@ -242,7 +247,7 @@
                     } else if (tipoMaterial === "T") {
                         if (cantidad !== 1 && cantidad !== 2) {
                             alert("Para Tinta, la cantidad solo puede ser 1 o 2.");
-                            cantidadInput.value = ""; 
+                            cantidadInput.value = "";
                             return;
                         }
 
@@ -254,9 +259,23 @@
                     } else if (tipoMaterial === "L") {
                         let monto = cantidad * precio;
                         row.querySelector("input[name='monto']").value = monto.toFixed(2);
+                        console.log(`Monto calculado para Planchas: ${monto.toFixed(2)}`);
+                    } else if (tipoMaterial === "C") {
+                        let noArticulo = row.querySelector("select[name='noArticulo']").value;
 
-                        console.log(`Cantidad: ${cantidad}, Precio: ${precio}`);
-                        console.log(`Monto calculado para Plancha: ${monto.toFixed(2)}`);
+                        let monto = 0;
+                        if (noArticulo === "PLX001") {
+                            monto = Math.round((precio * cantidad) + 9, 2);
+                        } else if (noArticulo === "PLX002") {
+                            monto = Math.round(precio * (cantidad + (cantidad * 10 / 100)), 2);
+                        }
+
+                        row.querySelector("input[name='monto']").value = monto.toFixed(2);
+                        console.log(`Monto calculado para Película: ${monto.toFixed(2)}`);
+                    } else if (tipoMaterial === "A") {
+                        let monto = cantidad * precio;
+                        row.querySelector("input[name='monto']").value = monto.toFixed(2);
+                        console.log(`Monto calculado para Acabado: ${monto.toFixed(2)}`);
                     }
                 }
             });
