@@ -118,4 +118,28 @@ router.get('/api/articulo/:codigoCT', async (req, res) => {
     }
 });
 
+// Ruta para obtener artículos de tipo TINTA
+router.get('/api/articulos/tinta', async (req, res) => {
+    try {
+        const articulos = await Cost.find({ codigoCT: /^TINF/ }); // Buscar códigos que inicien con "TINF"
+        res.json(articulos);
+    } catch (error) {
+        console.error("Error al obtener artículos de Tinta:", error);
+        res.status(500).json({ error: "Error al obtener datos" });
+    }
+});
+
+// Ruta para obtener artículos de tipo PLANCHA
+router.get('/api/articulos/plancha', async (req, res) => {
+    try {
+        const articulos = await Cost.find({ codigoCT: /^PLA/ }); // Buscar códigos que inicien con "PLA"
+        res.json(articulos);
+    } catch (error) {
+        console.error("Error al obtener artículos de Plancha:", error);
+        res.status(500).json({ error: "Error al obtener datos" });
+    }
+});
+
+
+
 module.exports = router;

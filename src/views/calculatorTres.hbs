@@ -130,6 +130,7 @@
                             <!-- Inputs ocultos -->
                             <input type="hidden" name="factor" value="1">
                             <input type="hidden" name="cantidadM" value="0">
+                            <input type="hidden" name="cantidadMtot" value="0">
                         </tr>
                         {{/range}}
                     </tbody>
@@ -146,15 +147,25 @@
                 if (event.target.classList.contains("tipo-material")) {
                     let row = event.target.closest("tr"); 
                     let noArticuloSelect = row.querySelector("select[name='noArticulo']");
+                    let tipoMaterial = event.target.value;
 
                     // Limpiar opciones previas
                     noArticuloSelect.innerHTML = '<option value="">Seleccione</option>';
 
-                    if (event.target.value === "P") { // Si elige Papel
-                        try {
-                            let response = await fetch('/api/articulos/papel'); 
-                            let articulos = await response.json();
+                    let endpoint = "";
+                    if (tipoMaterial === "P") {
+                        endpoint = "/api/articulos/papel";
+                    } else if (tipoMaterial === "T") {
+                        endpoint = "/api/articulos/tinta";
+                    } else if (tipoMaterial === "L") {
+                        endpoint = "/api/articulos/plancha"; // 🔹 Nuevo endpoint para Plancha
+                    }
 
+                    if (endpoint) {
+                        try {
+                            let response = await fetch(endpoint);
+                            let articulos = await response.json();
+                            
                             // Llenamos el combo con los datos obtenidos
                             articulos.forEach(articulo => {
                                 let option = document.createElement("option");
@@ -163,7 +174,7 @@
                                 noArticuloSelect.appendChild(option);
                             });
                         } catch (error) {
-                            console.error("Error al cargar artículos de Papel:", error);
+                            console.error(`Error al cargar artículos de ${tipoMaterial}:`, error);
                         }
                     }
                 }
@@ -173,8 +184,8 @@
             document.addEventListener("change", async function(event) {
                 if (event.target.classList.contains("no_articulo")) {
                     let row = event.target.closest("tr"); 
-                    let codigoCT = event.target.value; // Código del artículo seleccionado
-                    if (!codigoCT) return; // Si no hay código, no hacemos nada
+                    let codigoCT = event.target.value; 
+                    if (!codigoCT) return; 
 
                     try {
                         let response = await fetch(`/api/articulo/${codigoCT}`);
@@ -185,42 +196,71 @@
                             row.querySelector("input[name='detalle']").value = data.descCT || "";
                             row.querySelector("input[name='factor']").value = data.factorCT || 1;
 
-                            console.log("DEtalle cargado:", data.descCT); // 👈 Muestra el descripción en la consola
-                            console.log("Precio cargado:", data.montoCT); // 👈 Muestra el precio en la consola
-                            console.log("Factor cargado:", data.factorCT); // 👈 Muestra el factor en la consola
+                            console.log("Detalle cargado:", data.descCT);
+                            console.log("Precio cargado:", data.montoCT);
+                            console.log("Factor cargado:", data.factorCT);
                         }
                     } catch (error) {
                         console.error("Error al obtener detalles del artículo:", error);
                     }
                 }
             });
-            // Evento para calcular "monto" y "cantidadM" solo si tipoMaterial es "P - Papel"
+
+            // Evento para calcular "monto" y "cantidadM"
             document.addEventListener("input", function(event) {
                 if (event.target.name === "cantidad") {
                     let row = event.target.closest("tr");
-
-                    // Verificar si el tipo de material es "P"
                     let tipoMaterial = row.querySelector("select[name='tipoMaterial']").value;
-                    if (tipoMaterial !== "P") return;
+                    let cantidadInput = event.target;
 
-                    let cantidad = parseFloat(event.target.value) || 0;
+                    let cantidad = parseFloat(cantidadInput.value) || 0;
                     let precio = parseFloat(row.querySelector("input[name='precio']").value) || 0;
                     let factor = parseFloat(row.querySelector("input[name='factor']").value) || 1;
+                    let cantidadMtotInput = document.querySelector("input[name='cantidadMtot']");
+                    let cantidadMtot = parseFloat(cantidadMtotInput.value) || 0;
 
-                    // Cálculo de valores
-                    let monto = cantidad * precio;
-                    let cantidadM = (factor * cantidad) / 1000;
+                    if (tipoMaterial === "P") {
+                        let monto = cantidad * precio;
+                        let cantidadM = (factor * cantidad) / 1000;
 
-                    // Asignar valores a los inputs correspondientes
-                    row.querySelector("input[name='monto']").value = monto.toFixed(2);
-                    row.querySelector("input[name='cantidadM']").value = cantidadM.toFixed(3);
+                        row.querySelector("input[name='monto']").value = monto.toFixed(2);
+                        row.querySelector("input[name='cantidadM']").value = cantidadM.toFixed(3);
 
-                    console.log(`Cantidad: ${cantidad}, Precio: ${precio}, Factor: ${factor}`);
-                    console.log(`Monto: ${monto.toFixed(2)}, CantidadM: ${cantidadM.toFixed(3)}`);
+                        let nuevoCantidadMtot = 0;
+                        document.querySelectorAll("tr").forEach(tr => {
+                            let tipo = tr.querySelector("select[name='tipoMaterial']")?.value;
+                            if (tipo === "P") {
+                                let cantidadMValue = parseFloat(tr.querySelector("input[name='cantidadM']")?.value) || 0;
+                                nuevoCantidadMtot += cantidadMValue;
+                            }
+                        });
+
+                        cantidadMtotInput.value = nuevoCantidadMtot.toFixed(3);
+                        console.log(`Cantidad: ${cantidad}, Precio: ${precio}, Factor: ${factor}`);
+                        console.log(`Monto: ${monto.toFixed(2)}, CantidadM: ${cantidadM.toFixed(3)}`);
+                        console.log(`Nuevo CantidadMtot: ${nuevoCantidadMtot.toFixed(3)}`);
+                    } else if (tipoMaterial === "T") {
+                        if (cantidad !== 1 && cantidad !== 2) {
+                            alert("Para Tinta, la cantidad solo puede ser 1 o 2.");
+                            cantidadInput.value = ""; 
+                            return;
+                        }
+
+                        let monto = Math.round((cantidad * cantidadMtot) * precio * 100) / 100;
+                        row.querySelector("input[name='monto']").value = monto.toFixed(2);
+
+                        console.log(`Cantidad: ${cantidad}, Precio: ${precio}, CantidadMtot: ${cantidadMtot}`);
+                        console.log(`Monto calculado para Tinta: ${monto.toFixed(2)}`);
+                    } else if (tipoMaterial === "L") {
+                        let monto = cantidad * precio;
+                        row.querySelector("input[name='monto']").value = monto.toFixed(2);
+
+                        console.log(`Cantidad: ${cantidad}, Precio: ${precio}`);
+                        console.log(`Monto calculado para Plancha: ${monto.toFixed(2)}`);
+                    }
                 }
             });
         });
     </script>
-
 </body>
 </html>
