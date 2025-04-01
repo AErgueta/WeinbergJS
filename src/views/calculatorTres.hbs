@@ -164,6 +164,8 @@
                         endpoint = "/api/articulos/pelicula";
                     } else if (tipoMaterial === "A") { 
                         endpoint = "/api/articulos/acabado";
+                    } else if (tipoMaterial === "R") { 
+                        endpoint = "/api/articulos/preprensa";
                     }
 
                     if (endpoint) {
@@ -200,10 +202,6 @@
                             row.querySelector("input[name='precio']").value = data.montoCT || 0;
                             row.querySelector("input[name='detalle']").value = data.descCT || "";
                             row.querySelector("input[name='factor']").value = data.factorCT || 1;
-
-                            console.log("Detalle cargado:", data.descCT);
-                            console.log("Precio cargado:", data.montoCT);
-                            console.log("Factor cargado:", data.factorCT);
                         }
                     } catch (error) {
                         console.error("Error al obtener detalles del artículo:", error);
@@ -217,17 +215,18 @@
                     let row = event.target.closest("tr");
                     let tipoMaterial = row.querySelector("select[name='tipoMaterial']").value;
                     let cantidadInput = event.target;
-
                     let cantidad = parseFloat(cantidadInput.value) || 0;
                     let precio = parseFloat(row.querySelector("input[name='precio']").value) || 0;
-                    let factor = parseFloat(row.querySelector("input[name='factor']").value) || 1;
                     let cantidadMtotInput = document.querySelector("input[name='cantidadMtot']");
                     let cantidadMtot = parseFloat(cantidadMtotInput.value) || 0;
+                    let codigoCT = row.querySelector("select[name='noArticulo']").value;
+                    let monto = 0;
 
                     if (tipoMaterial === "P") {
-                        let monto = cantidad * precio;
+                        // Cálculo para Papel
+                        let factor = parseFloat(row.querySelector("input[name='factor']").value) || 1;
+                        monto = cantidad * precio;
                         let cantidadM = (factor * cantidad) / 1000;
-
                         row.querySelector("input[name='monto']").value = monto.toFixed(2);
                         row.querySelector("input[name='cantidadM']").value = cantidadM.toFixed(3);
 
@@ -241,44 +240,31 @@
                         });
 
                         cantidadMtotInput.value = nuevoCantidadMtot.toFixed(3);
-                        console.log(`Cantidad: ${cantidad}, Precio: ${precio}, Factor: ${factor}`);
-                        console.log(`Monto: ${monto.toFixed(2)}, CantidadM: ${cantidadM.toFixed(3)}`);
-                        console.log(`Nuevo CantidadMtot: ${nuevoCantidadMtot.toFixed(3)}`);
-                    } else if (tipoMaterial === "T") {
+                    } 
+                    else if (tipoMaterial === "T") {
                         if (cantidad !== 1 && cantidad !== 2) {
                             alert("Para Tinta, la cantidad solo puede ser 1 o 2.");
                             cantidadInput.value = "";
                             return;
                         }
-
-                        let monto = Math.round((cantidad * cantidadMtot) * precio * 100) / 100;
+                        monto = Math.round((cantidad * cantidadMtot) * precio * 100) / 100;
                         row.querySelector("input[name='monto']").value = monto.toFixed(2);
-
-                        console.log(`Cantidad: ${cantidad}, Precio: ${precio}, CantidadMtot: ${cantidadMtot}`);
-                        console.log(`Monto calculado para Tinta: ${monto.toFixed(2)}`);
-                    } else if (tipoMaterial === "L") {
-                        let monto = cantidad * precio;
+                    } 
+                    else if (tipoMaterial === "L" || tipoMaterial === "A" || tipoMaterial === "R") {
+                        monto = cantidad * precio;
                         row.querySelector("input[name='monto']").value = monto.toFixed(2);
-                        console.log(`Monto calculado para Planchas: ${monto.toFixed(2)}`);
-                    } else if (tipoMaterial === "C") {
-                        let noArticulo = row.querySelector("select[name='noArticulo']").value;
-
-                        let monto = 0;
-                        if (noArticulo === "PLX001") {
-                            monto = Math.round((precio * cantidad) + 9, 2);
-                        } else if (noArticulo === "PLX002") {
-                            monto = Math.round(precio * (cantidad + (cantidad * 10 / 100)), 2);
+                    } 
+                    else if (tipoMaterial === "C") {
+                        if (codigoCT === "PLX001") {
+                            monto = (precio * cantidad) + 9;
+                        } else if (codigoCT === "PLX002") {
+                            monto = precio * (cantidad + (cantidad * 10 / 100));
                         }
-
                         row.querySelector("input[name='monto']").value = monto.toFixed(2);
-                        console.log(`Monto calculado para Película: ${monto.toFixed(2)}`);
-                    } else if (tipoMaterial === "A") {
-                        let monto = cantidad * precio;
-                        row.querySelector("input[name='monto']").value = monto.toFixed(2);
-                        console.log(`Monto calculado para Acabado: ${monto.toFixed(2)}`);
                     }
                 }
             });
+
         });
     </script>
 </body>

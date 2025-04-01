@@ -160,6 +160,16 @@ router.get('/api/articulos/acabado', async (req, res) => {
         res.status(500).json({ error: "Error al obtener datos" });
     }
 });
+// Ruta para obtener artículos de tipo PREPRENSA
+router.get('/api/articulos/preprensa', async (req, res) => {
+    try {
+        const articulos = await Cost.find({ codigoCT: /^PRE/ }); // Buscar códigos que inicien con "PRE"
+        res.json(articulos);
+    } catch (error) {
+        console.error("Error al obtener artículos de Preprensa:", error);
+        res.status(500).json({ error: "Error al obtener datos" });
+    }
+});
 
 
 module.exports = router;
