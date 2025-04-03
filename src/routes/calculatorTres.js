@@ -170,6 +170,25 @@ router.get('/api/articulos/preprensa', async (req, res) => {
         res.status(500).json({ error: "Error al obtener datos" });
     }
 });
-
+// Ruta para obtener artículos de tipo PLASTIFICADO
+router.get('/api/articulos/plastificado', async (req, res) => {
+    try {
+        const articulos = await Cost.find({ codigoCT: /^PLS/ }); // Buscar códigos que inicien con "PLS"
+        res.json(articulos);
+    } catch (error) {
+        console.error("Error al obtener artículos de Plastificado:", error);
+        res.status(500).json({ error: "Error al obtener datos" });
+    }
+});
+// Ruta para obtener artículos de tipo MANO DE OBRA
+router.get('/api/articulos/mano-obra', async (req, res) => {
+    try {
+        const articulos = await Cost.find({ codigoCT: /^MO2/ }); // Buscar códigos que inicien con "MO2"
+        res.json(articulos);
+    } catch (error) {
+        console.error("Error al obtener artículos de Mano de Obra:", error);
+        res.status(500).json({ error: "Error al obtener datos" });
+    }
+});
 
 module.exports = router;

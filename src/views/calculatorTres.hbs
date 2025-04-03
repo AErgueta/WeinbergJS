@@ -166,6 +166,10 @@
                         endpoint = "/api/articulos/acabado";
                     } else if (tipoMaterial === "R") { 
                         endpoint = "/api/articulos/preprensa";
+                    } else if (tipoMaterial === "S") { 
+                        endpoint = "/api/articulos/plastificado";
+                    } else if (tipoMaterial === "M") { 
+                        endpoint = "/api/articulos/mano-obra";
                     }
 
                     if (endpoint) {
@@ -250,7 +254,8 @@
                         monto = Math.round((cantidad * cantidadMtot) * precio * 100) / 100;
                         row.querySelector("input[name='monto']").value = monto.toFixed(2);
                     } 
-                    else if (tipoMaterial === "L" || tipoMaterial === "A" || tipoMaterial === "R") {
+                    else if (["L", "A", "R", "S", "M"].includes(tipoMaterial)) {
+                        // Cálculo para Plancha, Acabado, Preprensa, Plastificado y Mano de Obra
                         monto = cantidad * precio;
                         row.querySelector("input[name='monto']").value = monto.toFixed(2);
                     } 
