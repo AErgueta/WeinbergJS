@@ -190,5 +190,14 @@ router.get('/api/articulos/mano-obra', async (req, res) => {
         res.status(500).json({ error: "Error al obtener datos" });
     }
 });
-
+// Ruta para obtener artículos de tipo GASTOS INDIRECTOS
+router.get('/api/articulos/gastosindirectos', async (req, res) => {
+    try {
+        const articulos = await Cost.find({ codigoCT: /^CI2/ }); // Buscar códigos que inicien con "CI2"
+        res.json(articulos);
+    } catch (error) {
+        console.error("Error al obtener artículos de Costos Indirectos:", error);
+        res.status(500).json({ error: "Error al obtener datos" });
+    }
+});
 module.exports = router;

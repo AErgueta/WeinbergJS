@@ -85,7 +85,7 @@
         <div class="mt-4">
             <div class="info-title">Detalles del Cálculo</div>
             <div class="scrollable-table">
-                <table>
+                <table id="tabla-detalles">
                     <thead>
                         <tr>
                             <th>Tipo Material</th>
@@ -97,7 +97,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {{#range 1 10}}
+                        {{#range 1 15}}
                         <tr>
                             <td>
                                 <select name="tipoMaterial" class="tipo-material">
@@ -147,37 +147,27 @@
                 if (event.target.classList.contains("tipo-material")) {
                     let row = event.target.closest("tr"); 
                     let noArticuloSelect = row.querySelector("select[name='noArticulo']");
-
+                    
                     // Limpiar opciones previas
                     noArticuloSelect.innerHTML = '<option value="">Seleccione</option>';
 
                     let tipoMaterial = event.target.value;
                     let endpoint = "";
 
-                    if (tipoMaterial === "P") { 
-                        endpoint = "/api/articulos/papel";
-                    } else if (tipoMaterial === "T") {
-                        endpoint = "/api/articulos/tinta";
-                    } else if (tipoMaterial === "L") {
-                        endpoint = "/api/articulos/plancha";
-                    } else if (tipoMaterial === "C") {
-                        endpoint = "/api/articulos/pelicula";
-                    } else if (tipoMaterial === "A") { 
-                        endpoint = "/api/articulos/acabado";
-                    } else if (tipoMaterial === "R") { 
-                        endpoint = "/api/articulos/preprensa";
-                    } else if (tipoMaterial === "S") { 
-                        endpoint = "/api/articulos/plastificado";
-                    } else if (tipoMaterial === "M") { 
-                        endpoint = "/api/articulos/mano-obra";
-                    }
+                    if (tipoMaterial === "P") endpoint = "/api/articulos/papel";
+                    else if (tipoMaterial === "T") endpoint = "/api/articulos/tinta";
+                    else if (tipoMaterial === "L") endpoint = "/api/articulos/plancha";
+                    else if (tipoMaterial === "C") endpoint = "/api/articulos/pelicula";
+                    else if (tipoMaterial === "A") endpoint = "/api/articulos/acabado";
+                    else if (tipoMaterial === "R") endpoint = "/api/articulos/preprensa";
+                    else if (tipoMaterial === "S") endpoint = "/api/articulos/plastificado";
+                    else if (tipoMaterial === "M") endpoint = "/api/articulos/mano-obra";
+                    else if (tipoMaterial === "I") endpoint = "/api/articulos/gastosindirectos";
 
                     if (endpoint) {
                         try {
                             let response = await fetch(endpoint); 
                             let articulos = await response.json();
-
-                            // Llenamos el combo con los datos obtenidos
                             articulos.forEach(articulo => {
                                 let option = document.createElement("option");
                                 option.value = articulo.codigoCT;
@@ -201,7 +191,6 @@
                     try {
                         let response = await fetch(`/api/articulo/${codigoCT}`);
                         let data = await response.json();
-
                         if (data) {
                             row.querySelector("input[name='precio']").value = data.montoCT || 0;
                             row.querySelector("input[name='detalle']").value = data.descCT || "";
@@ -227,7 +216,6 @@
                     let monto = 0;
 
                     if (tipoMaterial === "P") {
-                        // Cálculo para Papel
                         let factor = parseFloat(row.querySelector("input[name='factor']").value) || 1;
                         monto = cantidad * precio;
                         let cantidadM = (factor * cantidad) / 1000;
@@ -255,7 +243,6 @@
                         row.querySelector("input[name='monto']").value = monto.toFixed(2);
                     } 
                     else if (["L", "A", "R", "S", "M"].includes(tipoMaterial)) {
-                        // Cálculo para Plancha, Acabado, Preprensa, Plastificado y Mano de Obra
                         monto = cantidad * precio;
                         row.querySelector("input[name='monto']").value = monto.toFixed(2);
                     } 
@@ -267,10 +254,76 @@
                         }
                         row.querySelector("input[name='monto']").value = monto.toFixed(2);
                     }
+
+                    if (tipoMaterial === "M" && codigoCT === "MO2003") {
+                        console.log("EL tipo de Material es ", tipoMaterial);
+                        console.log("EL Código es ", codigoCT);
+                        agregarGastosIndirectos(cantidad);
+                    }
                 }
             });
 
+            function agregarGastosIndirectos(cantidadMO) {
+                const filas = document.querySelectorAll("#tabla-detalles tbody tr");
+                const nuevosDatos = [
+                    { codigo: "CI2001", cantidad: cantidadMO * 2 },
+                    { codigo: "CI2002", cantidad: cantidadMO },
+                    { codigo: "CI2003", cantidad: cantidadMO - 1 }
+                ];
+
+                let usadas = 0;
+                //
+                //console.log("El valor de filas es: ",filas);
+                //console.log("Los nuevos datos son: ",nuevosDatos);
+                //
+                filas.forEach((fila) => {
+                    if (usadas >= nuevosDatos.length) return; // Ya insertamos los 3
+
+                    const tipoMaterialSelect = fila.querySelector("select[name='tipoMaterial']");
+                    const articuloSelect = fila.querySelector("select[name='noArticulo']");
+                    const cantidadInput = fila.querySelector("input[name='cantidad']");
+                    const precioInput = fila.querySelector("input[name='precio']");
+                    const detalleInput = fila.querySelector("input[name='detalle']");
+                    const montoInput = fila.querySelector("input[name='monto']");
+
+                    if (!tipoMaterialSelect.value) {
+                        // Rellenar esta fila
+                        const dato = nuevosDatos[usadas];
+                        usadas++;
+
+                        tipoMaterialSelect.innerHTML = `<option value="I" selected>I - Gastos Indirectos</option>`;
+
+                        fetch("/api/articulos/gastosindirectos")
+                            .then(response => response.json())
+                            .then(articulos => {
+                                articuloSelect.innerHTML = "";
+                                articulos.forEach(articulo => {
+                                    const option = document.createElement("option");
+                                    option.value = articulo.codigoCT;
+                                    option.textContent = `${articulo.codigoCT} - ${articulo.descCT}`;
+                                    articuloSelect.appendChild(option);
+                                });
+
+                                articuloSelect.value = dato.codigo;
+
+                                const seleccionado = articulos.find(a => a.codigoCT === dato.codigo);
+                                if (seleccionado) {
+                                    cantidadInput.value = dato.cantidad;
+                                    precioInput.value = seleccionado.montoCT || 0;
+                                    detalleInput.value = seleccionado.descCT || "";
+                                    fila.querySelector("input[name='factor']").value = seleccionado.factorCT || 1;
+                                    montoInput.value = (dato.cantidad * (seleccionado.montoCT || 0)).toFixed(2);
+                                }
+                            })
+                            .catch(error => {
+                                console.error("❌ Error al cargar artículos de gastos indirectos:", error);
+                            });
+                    }
+                });
+            }
+
         });
     </script>
+
 </body>
 </html>
