@@ -320,6 +320,51 @@
                             });
                     }
                 });
+                // Esperar un poco para que las filas estén creadas y completadas antes de procesar
+                setTimeout(() => {
+                    let s = 0;
+                    let ss = 0;
+
+                    document.querySelectorAll("#tabla-detalles tbody tr").forEach(tr => {
+                        let tipo = tr.querySelector("select[name='tipoMaterial']")?.value;
+                        let monto = parseFloat(tr.querySelector("input[name='monto']")?.value) || 0;
+
+                        if (["I", "M"].includes(tipo)) {
+                            s += monto;
+                        }
+
+                        if (["P", "T", "L", "C", "A", "S"].includes(tipo)) {
+                            ss += monto;
+                        }
+                    });
+
+                    s = s + ss;
+                    let scalculo2 = s;
+                    let scalculomp = ss;
+
+                    console.log("✅ Resultado de los cálculos:");
+                    console.log("s =", s.toFixed(2));
+                    console.log("ss =", ss.toFixed(2));
+                    console.log("scalculo2 =", scalculo2.toFixed(2));
+                    console.log("scalculomp =", scalculomp.toFixed(2));
+                    
+                    // Buscar todos los <p> dentro de info-box y encontrar el que contenga "Cantidad:"
+                    let parrafos = document.querySelectorAll(".info-box p");
+                    let lineaCantidad = 0;
+
+                    parrafos.forEach(p => {
+                        if (p.textContent.includes("Cantidad:")) {
+                            // Ejemplo del contenido: "Línea: 001 | Tipo: ABC | Cantidad: 900"
+                            let match = p.textContent.match(/Cantidad:\s*(\d+)/);
+                            if (match) {
+                                lineaCantidad = parseInt(match[1], 10);
+                            }
+                        }
+                    });
+
+                    console.log("📦 líneaCantidad =", lineaCantidad);
+                }, 2000); // Esperamos 300ms para asegurar que los datos estén cargados
+                
             }
 
         });
