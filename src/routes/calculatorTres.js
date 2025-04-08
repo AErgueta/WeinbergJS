@@ -200,4 +200,16 @@ router.get('/api/articulos/gastosindirectos', async (req, res) => {
         res.status(500).json({ error: "Error al obtener datos" });
     }
 });
+// Ruta para obtener artículos de tipo GASTOS OPERATIVOS
+router.get('/api/articulos/gastosoperativos', async (req, res) => {
+    try {
+        const articulos = await Cost.find({ codigoCT: /^GOP/ }); // Buscar códigos que inicien con "GOP"
+        res.json(articulos);
+    } catch (error) {
+        console.error("Error al obtener artículos de Gastos Operativos:", error);
+        res.status(500).json({ error: "Error al obtener datos" });
+    }
+});
+
+
 module.exports = router;
