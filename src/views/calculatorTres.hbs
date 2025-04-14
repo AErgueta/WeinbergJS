@@ -165,6 +165,7 @@
                     else if (tipoMaterial === "M") endpoint = "/api/articulos/mano-obra";
                     else if (tipoMaterial === "I") endpoint = "/api/articulos/gastosindirectos";
                     else if (tipoMaterial === "O") endpoint = "/api/articulos/gastosoperativos";
+                    else if (tipoMaterial === "U") endpoint = "/api/articulos/utilidad";
 
                     if (endpoint) {
                         try {
@@ -377,73 +378,228 @@
 
                 
                 setTimeout(() => {
-                // Determinar p
-                let p = (lineaCantidad >= 10001 && lineaCantidad <= 50000000) ? 10 : 15;
+                    // Determinar p
+                    let p = (lineaCantidad >= 10001 && lineaCantidad <= 50000000) ? 10 : 15;
 
-                // Calcular precio y monto
-                let porcentaje = (s * p) / 100;
-                let precio = parseFloat(porcentaje.toFixed(2));
-                let monto = precio;
+                    // Calcular precio y monto
+                    let porcentaje = (s * p) / 100;
+                    let precio = parseFloat(porcentaje.toFixed(2));
+                    let monto = precio;
 
-                console.log("✅ Paso siguiente: Gastos Operativos");
-                console.log("p =", p);
-                console.log("precio =", precio);
-                console.log("monto =", monto);
+                    console.log("✅ Paso siguiente: Gastos Operativos");
+                    console.log("p =", p);
+                    console.log("precio =", precio);
+                    console.log("monto =", monto);
 
-                // Buscar una fila vacía en la tabla
-                let filas = document.querySelectorAll("#tabla-detalles tbody tr");
-                let filaDisponible = Array.from(filas).find(fila => {
-                    let tipo = fila.querySelector("select[name='tipoMaterial']");
-                    return tipo && !tipo.value;
-                });
+                    // Buscar una fila vacía en la tabla
+                    let filas = document.querySelectorAll("#tabla-detalles tbody tr");
+                    let filaDisponible = Array.from(filas).find(fila => {
+                        let tipo = fila.querySelector("select[name='tipoMaterial']");
+                        return tipo && !tipo.value;
+                    });
 
-                if (!filaDisponible) {
-                    console.warn("❌ No hay fila vacía disponible para Gastos Operativos");
-                    return;
-                }
+                    if (!filaDisponible) {
+                        console.warn("❌ No hay fila vacía disponible para Gastos Operativos");
+                        return;
+                    }
 
-                // Rellenar datos en la fila
-                let tipoSelect = filaDisponible.querySelector("select[name='tipoMaterial']");
-                tipoSelect.value = "O"; // Gastos Operativos
+                    // Rellenar datos en la fila
+                    let tipoSelect = filaDisponible.querySelector("select[name='tipoMaterial']");
+                    tipoSelect.value = "O"; // Gastos Operativos
 
-                // Disparar cambio para cargar artículos
-                tipoSelect.dispatchEvent(new Event("change"));
+                    // Disparar cambio para cargar artículos
+                    tipoSelect.dispatchEvent(new Event("change"));
 
-                // Luego de cargar los artículos, seleccionar GOP001
+                    // Luego de cargar los artículos, seleccionar GOP001
+                    setTimeout(() => {
+                        let noArticuloSelect = filaDisponible.querySelector("select[name='noArticulo']");
+
+                        fetch("/api/articulos/gastosoperativos")
+                            .then(res => res.json())
+                            .then(articulos => {
+                                if (!articulos || articulos.length === 0) {
+                                    console.warn("⚠️ No se encontraron artículos de gastos operativos");
+                                    return;
+                                }
+
+                                articulos.forEach(articulo => {
+                                    let option = document.createElement("option");
+                                    option.value = articulo.codigoCT;
+                                    option.textContent = `${articulo.codigoCT} - ${articulo.descCT}`;
+                                    noArticuloSelect.appendChild(option);
+                                });
+
+                                noArticuloSelect.value = "GOP001";
+                                let articulo = articulos.find(a => a.codigoCT === "GOP001");
+
+                                if (articulo) {
+                                    filaDisponible.querySelector("input[name='detalle']").value = articulo.descCT || "";
+                                    filaDisponible.querySelector("input[name='precio']").value = precio;
+                                    filaDisponible.querySelector("input[name='cantidad']").value = 1;
+                                    filaDisponible.querySelector("input[name='monto']").value = monto;
+                                    filaDisponible.querySelector("input[name='factor']").value = articulo.factorCT || 1;
+                                }
+                            })
+                            .catch(err => console.error("❌ Error al obtener artículo GOP001:", err));
+
+                    }, 500); // Pequeño delay para asegurar que el cambio de tipoMaterial fue procesado
+
+                }, 2000); // Esperamos que se hayan calculado los valores previos
+
+                // Esperar un poco para que las filas estén creadas y completadas antes de procesar
+                // --------------------------------------------------------------------------------
                 setTimeout(() => {
-                    let noArticuloSelect = filaDisponible.querySelector("select[name='noArticulo']");
+                    let s = 0;
+                    let ss = 0;
 
-                    fetch("/api/articulos/gastosoperativos")
-                        .then(res => res.json())
-                        .then(articulos => {
-                            if (!articulos || articulos.length === 0) {
-                                console.warn("⚠️ No se encontraron artículos de gastos operativos");
-                                return;
+                    document.querySelectorAll("#tabla-detalles tbody tr").forEach(tr => {
+                        let tipo = tr.querySelector("select[name='tipoMaterial']")?.value;
+                        let monto = parseFloat(tr.querySelector("input[name='monto']")?.value) || 0;
+
+                        if (["I", "M"].includes(tipo)) {
+                            s += monto;
+                        }
+
+                        if (["P", "T", "L", "C", "A", "S"].includes(tipo)) {
+                            ss += monto;
+                        }
+                    });
+
+                    s = s + ss;
+                    let scalculo2 = s;
+                    let scalculomp = ss;
+
+                    console.log("✅ Resultado de los cálculos:");
+                    console.log("s =", s.toFixed(2));
+                    console.log("ss =", ss.toFixed(2));
+                    console.log("scalculo2 =", scalculo2.toFixed(2));
+                    console.log("scalculomp =", scalculomp.toFixed(2));
+
+                    // Buscar todos los <p> dentro de info-box y encontrar el que contenga "Cantidad:"
+                    let parrafos = document.querySelectorAll(".info-box p");
+                    let lineaCantidad = 0;
+
+                    parrafos.forEach(p => {
+                        if (p.textContent.includes("Cantidad:")) {
+                            let match = p.textContent.match(/Cantidad:\s*(\d+)/);
+                            if (match) {
+                                lineaCantidad = parseInt(match[1], 10);
+                                console.log("✅ líneaCantidad obtenida:", lineaCantidad);
+                            } else {
+                                console.warn("❌ No se pudo extraer el número de la línea.");
                             }
+                        }
+                    });
 
-                            articulos.forEach(articulo => {
-                                let option = document.createElement("option");
-                                option.value = articulo.codigoCT;
-                                option.textContent = `${articulo.codigoCT} - ${articulo.descCT}`;
-                                noArticuloSelect.appendChild(option);
-                            });
+                    console.log("📦 líneaCantidad =", lineaCantidad);
 
-                            noArticuloSelect.value = "GOP001";
-                            let articulo = articulos.find(a => a.codigoCT === "GOP001");
+                    setTimeout(() => {
+                        let codigoCT = "";
+                        let porcentaje = 0;
 
-                            if (articulo) {
-                                filaDisponible.querySelector("input[name='detalle']").value = articulo.descCT || "";
-                                filaDisponible.querySelector("input[name='precio']").value = precio;
-                                filaDisponible.querySelector("input[name='cantidad']").value = 1;
-                                filaDisponible.querySelector("input[name='monto']").value = monto;
-                                filaDisponible.querySelector("input[name='factor']").value = articulo.factorCT || 1;
-                            }
-                        })
-                        .catch(err => console.error("❌ Error al obtener artículo GOP001:", err));
+                        if (lineaCantidad <= 200) {
+                            codigoCT = "MAU001"; porcentaje = 75;
+                        } else if (lineaCantidad <= 500) {
+                            codigoCT = "MAU002"; porcentaje = 70;
+                        } else if (lineaCantidad <= 1000) {
+                            codigoCT = "MAU003"; porcentaje = 65;
+                        } else if (lineaCantidad <= 5000) {
+                            codigoCT = "MAU004"; porcentaje = 60;
+                        } else if (lineaCantidad <= 10000) {
+                            codigoCT = "MAU005"; porcentaje = 56;
+                        } else if (lineaCantidad <= 30000) {
+                            codigoCT = "MAU006"; porcentaje = 49;
+                        } else if (lineaCantidad <= 60000) {
+                            codigoCT = "MAU007"; porcentaje = 43;
+                        } else {
+                            codigoCT = "MAU008"; porcentaje = 75;
+                        }
 
-                }, 500); // Pequeño delay para asegurar que el cambio de tipoMaterial fue procesado
+                        console.log("EL código que será tomado en cuenta es: ", codigoCT);
+                        console.log("El porcentaje será: ", porcentaje);
 
-            }, 2000); // Esperamos que se hayan calculado los valores previos
+                        const filas = document.querySelectorAll("#tabla-detalles tbody tr");
+                        let filaDisponible = Array.from(filas).find(fila => {
+                            const tipoSelect = fila.querySelector("select[name='tipoMaterial']");
+                            return tipoSelect && !tipoSelect.value;
+                        });
+
+                        if (!filaDisponible) {
+                            console.warn("❌ No se encontró una fila vacía para asignar la Utilidad.");
+                            return;
+                        }
+
+                        const tipoSelect = filaDisponible.querySelector("select[name='tipoMaterial']");
+                        const noArticuloSelect = filaDisponible.querySelector("select[name='noArticulo']");
+                        const inputCantidad = filaDisponible.querySelector("input[name='cantidad']");
+                        const inputPrecio = filaDisponible.querySelector("input[name='precio']");
+                        const inputMonto = filaDisponible.querySelector("input[name='monto']");
+                        const inputDetalle = filaDisponible.querySelector("input[name='detalle']");
+                        const inputFactor = filaDisponible.querySelector("input[name='factor']");
+
+                        if (!tipoSelect || !noArticuloSelect || !inputCantidad || !inputPrecio || !inputMonto) {
+                            console.warn("⚠️ No se encontraron todos los campos necesarios en la fila U.");
+                            return;
+                        }
+
+                        tipoSelect.value = "U";
+                        tipoSelect.dispatchEvent(new Event("change")); // esto carga los artículos de utilidad
+
+                        // Esperamos a que los artículos se carguen
+                        setTimeout(() => {
+                            fetch("/api/articulos/utilidad")
+                                .then(response => response.json())
+                                .then(articulos => {
+                                    noArticuloSelect.innerHTML = "";
+                                    articulos.forEach(articulo => {
+                                        const option = document.createElement("option");
+                                        option.value = articulo.codigoCT;
+                                        option.textContent = `${articulo.codigoCT} - ${articulo.descCT}`;
+                                        noArticuloSelect.appendChild(option);
+                                    });
+
+                                    noArticuloSelect.value = codigoCT;
+                                    const articulo = articulos.find(a => a.codigoCT === codigoCT);
+
+                                    if (articulo) {
+                                        const precio = parseFloat(((s * porcentaje) / 100).toFixed(2));
+
+                                        inputCantidad.value = porcentaje;
+                                        inputPrecio.value = precio;
+                                        inputMonto.value = precio;
+                                        inputDetalle.value = articulo.descCT || "";
+                                        inputFactor.value = articulo.factorCT || 1;
+
+                                        // 🔒 Bloquear todas las cantidades excepto la de Utilidad
+                                        filas.forEach(f => {
+                                            let input = f.querySelector("input[name='cantidad']");
+                                            if (input) input.setAttribute("readonly", true);
+                                        });
+
+                                        inputCantidad.removeAttribute("readonly");
+
+                                        // 🔁 Recalcular precio y monto al cambiar porcentaje
+                                        inputCantidad.addEventListener("input", () => {
+                                            let nuevoPorcentaje = parseFloat(inputCantidad.value) || 0;
+                                            let nuevoPrecio = parseFloat(((s * nuevoPorcentaje) / 100).toFixed(2));
+                                            inputPrecio.value = nuevoPrecio;
+                                            inputMonto.value = nuevoPrecio;
+                                        });
+
+                                        console.log("✅ Línea de Utilidad cargada correctamente.");
+                                    } else {
+                                        console.warn("⚠️ No se encontró el artículo con código", codigoCT);
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error("❌ Error al obtener artículos de utilidad:", err);
+                                });
+                        }, 500); // delay para esperar la carga del tipo "U"
+                    }, 500);
+
+
+                }, 2000); // Primer timeout para esperar carga de datos
+
 
             }
 

@@ -210,6 +210,15 @@ router.get('/api/articulos/gastosoperativos', async (req, res) => {
         res.status(500).json({ error: "Error al obtener datos" });
     }
 });
-
+// Ruta para obtener artículos de tipo UTILIDAD
+router.get('/api/articulos/utilidad', async (req, res) => {
+    try {
+        const articulos = await Cost.find({ codigoCT: /^MAU/ }); // Buscar códigos que inicien con "MAU"
+        res.json(articulos);
+    } catch (error) {
+        console.error("Error al obtener artículos de Utilidad:", error);
+        res.status(500).json({ error: "Error al obtener datos" });
+    }
+});
 
 module.exports = router;
