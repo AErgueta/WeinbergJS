@@ -130,13 +130,15 @@
                             <!-- Inputs ocultos -->
                             <input type="hidden" name="factor" value="1">
                             <input type="hidden" name="cantidadM" value="0">
-                            <input type="hidden" name="cantidadMtot" value="0">
+                            <!--<input type="hidden" name="cantidadMtot" value="0">-->
                         </tr>
                         {{/range}}
                     </tbody>
 
                 </table>
             </div>
+            <!-- Campo oculto para acumular cantidadMtot -->
+            <input type="hidden" name="cantidadMtot" id="cantidadMtotGlobal" value="0">
         </div>
     </div>
     <!-- Lógica del formulario -->
@@ -213,7 +215,8 @@
                     let cantidadInput = event.target;
                     let cantidad = parseFloat(cantidadInput.value) || 0;
                     let precio = parseFloat(row.querySelector("input[name='precio']").value) || 0;
-                    let cantidadMtotInput = document.querySelector("input[name='cantidadMtot']");
+                    //let cantidadMtotInput = document.querySelector("input[name='cantidadMtot']");
+                    let cantidadMtotInput = document.querySelector("#cantidadMtotGlobal");
                     let cantidadMtot = parseFloat(cantidadMtotInput.value) || 0;
                     let codigoCT = row.querySelector("select[name='noArticulo']").value;
                     let monto = 0;
@@ -221,21 +224,33 @@
                     if (tipoMaterial === "P") {
                         let factor = parseFloat(row.querySelector("input[name='factor']").value) || 1;
                         monto = cantidad * precio;
+
                         let cantidadM = (factor * cantidad) / 1000;
                         row.querySelector("input[name='monto']").value = monto.toFixed(2);
                         row.querySelector("input[name='cantidadM']").value = cantidadM.toFixed(3);
 
-                        let nuevoCantidadMtot = 0;
-                        document.querySelectorAll("tr").forEach(tr => {
-                            let tipo = tr.querySelector("select[name='tipoMaterial']")?.value;
-                            if (tipo === "P") {
-                                let cantidadMValue = parseFloat(tr.querySelector("input[name='cantidadM']")?.value) || 0;
-                                nuevoCantidadMtot += cantidadMValue;
-                            }
-                        });
+                        console.log("Factor = ", factor);
+                        console.log("cantidadM = ", cantidadM);
 
-                        cantidadMtotInput.value = nuevoCantidadMtot.toFixed(3);
-                    } 
+                        // 🕐 Asegurarse que todos los valores se hayan actualizado antes de sumar
+                        setTimeout(() => {
+                            let nuevoCantidadMtot = 0;
+
+                            document.querySelectorAll("#tabla-detalles tbody tr").forEach(tr => {
+                                let tipo = tr.querySelector("select[name='tipoMaterial']")?.value;
+
+                                if (tipo === "P") {
+                                    let cantidadMValue = parseFloat(tr.querySelector("input[name='cantidadM']")?.value) || 0;
+                                    console.log("➡️ cantidadM en fila:", cantidadMValue);
+                                    nuevoCantidadMtot += cantidadMValue;
+                                }
+                            });
+
+                            const cantidadMtotInput = document.getElementById("cantidadMtotGlobal");
+                            cantidadMtotInput.value = nuevoCantidadMtot.toFixed(2);
+                            console.log("✅ cantidadMtot actualizado =", nuevoCantidadMtot.toFixed(2));
+                        }, 150); // Esperamos un poquito para asegurar que cantidadM esté seteado
+                    }
                     else if (tipoMaterial === "T") {
                         if (cantidad !== 1 && cantidad !== 2) {
                             alert("Para Tinta, la cantidad solo puede ser 1 o 2.");
