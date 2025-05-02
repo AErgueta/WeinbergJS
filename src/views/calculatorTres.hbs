@@ -257,7 +257,9 @@
                             cantidadInput.value = "";
                             return;
                         }
-                        monto = Math.round((cantidad * cantidadMtot) * precio * 100) / 100;
+                        console.log("cantidad = ", cantidad, "; cantidadMtot = ", cantidadMtot, "; precio = ", precio);
+                        monto = parseFloat(((cantidad * cantidadMtot) * precio + 4).toFixed(2));
+                        console.log("monto = ", monto);
                         row.querySelector("input[name='monto']").value = monto.toFixed(2);
                     } 
                     else if (["L", "A", "R", "S", "M"].includes(tipoMaterial)) {
@@ -403,6 +405,7 @@
 
                     console.log("✅ Paso siguiente: Gastos Operativos");
                     console.log("p =", p);
+                    console.log("s = ", s);
                     console.log("precio =", precio);
                     console.log("monto =", monto);
 
