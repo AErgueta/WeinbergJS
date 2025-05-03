@@ -137,6 +137,15 @@
 
                 </table>
             </div>
+            <!-- Sección para mostrar la suma total -->
+            <div class="mt-3 text-right">
+                <button id="btnCalcularTotal" class="btn btn-success mb-2">Calcular Total</button>
+                <div class="form-group d-inline-block ml-3">
+                    <label for="sumaTotalCostos"><strong>Suma Total de los Costos:</strong></label>
+                    <!--<input type="text" id="sumaTotalCostos" class="form-control d-inline-block" style="width: 150px; display: inline;" readonly>-->
+                    <input type="text" id="sumaTotalCostos" class="form-control d-inline-block text-right" style="width: 150px;" readonly>
+                </div>
+            </div>
             <!-- Campo oculto para acumular cantidadMtot -->
             <input type="hidden" name="cantidadMtot" id="cantidadMtotGlobal" value="0">
         </div>
@@ -403,6 +412,9 @@
                     let precio = parseFloat(porcentaje.toFixed(2));
                     let monto = precio;
 
+
+
+
                     console.log("✅ Paso siguiente: Gastos Operativos");
                     console.log("p =", p);
                     console.log("s = ", s);
@@ -620,9 +632,19 @@
 
 
             }
-
+            document.getElementById("btnCalcularTotal").addEventListener("click", function () {
+                let totalMontos = 0;
+                document.querySelectorAll("input[name='monto']").forEach(input => {
+                    let valor = parseFloat(input.value) || 0;
+                    totalMontos += valor;
+                });
+                document.getElementById("sumaTotalCostos").value = new Intl.NumberFormat('es-BO', {
+                    style: 'decimal',
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(totalMontos);
+            });
         });
     </script>
-
 </body>
 </html>
