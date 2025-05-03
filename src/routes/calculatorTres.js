@@ -67,7 +67,7 @@ router.get('/calculatorTres', async (req, res) => {
 // Ruta para obtener artículos de tipo PAPEL
 router.get('/api/articulos/papel', async (req, res) => {
     try {
-        const articulos = await Cost.find({ codigoCT: /^PAP/ }); // Buscar códigos que inicien con "PAP"
+        const articulos = await Cost.find({ codigoCT: /^PAP/ }).sort({ descCT: 1 }); // Buscar códigos que inicien con "PAP"
         res.json(articulos);
     } catch (error) {
         console.error("Error al obtener artículos de Papel:", error);
