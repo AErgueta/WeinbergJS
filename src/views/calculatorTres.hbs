@@ -152,6 +152,12 @@
 
             <!-- Campo oculto para acumular cantidadMtot -->
             <input type="hidden" name="cantidadMtot" id="cantidadMtotGlobal" value="0">
+            <!-- -->
+            <input type="hidden" id="customerId" value="{{customerId}}">
+            <input type="hidden" id="quotationId" value="{{quotationId}}">
+            <input type="hidden" id="detalleId" value="{{detalleId}}">
+            <input type="hidden" id="usuarioActual" value="{{user.name}}">
+            <!-- -->
         </div>
     </div>
     <!-- Lógica del formulario -->
@@ -652,8 +658,17 @@
     </script>
     <script>
         document.getElementById('btnGuardarCostos').addEventListener('click', () => {
-            const customerId = "{{customerId}}";      // Asegúrate de que el servidor inyecte esto
-            const quotationId = "{{quotationId}}";    // Lo mismo para este
+            const customerId = document.getElementById('customerId').value;
+            const quotationId = document.getElementById('quotationId').value;
+            const detalleId = document.getElementById('detalleId').value;
+
+            const titulo = prompt("Ingrese un nombre para este cálculo de costos (ej: 'Versión A'):");
+            if (!titulo || titulo.trim() === '') {
+                alert("Debe ingresar un título válido para identificar este cálculo.");
+                return;
+            }
+
+            const usuario = document.getElementById('usuarioActual').value || 'sistema';
 
             const rows = document.querySelectorAll('#tabla-detalles tbody tr');
             const detalles = [];
@@ -693,7 +708,7 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ customerId, quotationId, detalles })
+                body: JSON.stringify({ customerId, quotationId, detalleId, titulo, usuario, detalles })
             })
             .then(res => res.json())
             .then(data => {
@@ -704,6 +719,6 @@
                 alert("Ocurrió un error al guardar los costos.");
             });
         });
-        </script>
+    </script>
 </body>
 </html>

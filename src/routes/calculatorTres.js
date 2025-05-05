@@ -49,13 +49,15 @@ router.get('/calculatorTres', async (req, res) => {
             fecha: formatDate(quotation.fecha),
             fechaVence: formatDate(quotation.fechaVence)
         };
-
+        const detalleId = detalle && detalle._id ? detalle._id.toString() : '';
         // 🔍 4. Enviar los datos a la vista
         res.render('calculatorTres', {
             quotationId,
             customerId,
             quotation: formattedQuotation,
-            detalle
+            detalle,
+            detalleId,
+            user: req.user //Para almacenar usuario
         });
 
     } catch (error) {

@@ -2,8 +2,10 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-// Subdocumento: una línea individual de cálculo
-const costLineSchema = new Schema({
+const quotationCostDetailSchema = new Schema({
+    customer: { type: Schema.Types.ObjectId, ref: 'Customer', required: true },
+    quotationId: { type: Schema.Types.ObjectId, required: true },
+    detalleId: { type: Schema.Types.ObjectId, required: true }, // Nuevo campo
     lineaQuo: { type: Number, required: true },
     tipoMaterial: { type: String, enum: ['P', 'T', 'L', 'C', 'A', 'R', 'M', 'I', 'O', 'S', 'U'], required: true },
     noArticulo: { type: String, required: true },
@@ -14,24 +16,6 @@ const costLineSchema = new Schema({
     detalle: { type: String },
     factor: { type: Number, default: 0 },
     cantidadM: { type: Number, default: 0 }
-});
-
-// Subdocumento: un cálculo completo
-const calculoSchema = new Schema({
-    titulo: { type: String, required: true },
-    fecha: { type: Date, default: Date.now },
-    usuario: { type: String },
-    lineas: [costLineSchema]
-}, {
-    timestamps: true
-});
-
-// Documento principal: relación con cliente, cotización y detalle
-const quotationCostDetailSchema = new Schema({
-    customer: { type: Schema.Types.ObjectId, ref: 'Customer', required: true },
-    quotationId: { type: Schema.Types.ObjectId, required: true },
-    detalleId: { type: Schema.Types.ObjectId, required: true },
-    calculos: [calculoSchema]
 }, {
     timestamps: true
 });

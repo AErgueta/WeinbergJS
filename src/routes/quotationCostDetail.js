@@ -3,18 +3,15 @@ const express = require('express');
 const router = express.Router();
 const QuotationCostDetail = require('../models/quotationCostDetail');
 
-// Ruta para guardar múltiples líneas de costo
 router.post('/guardar-costos', async (req, res) => {
     try {
-        const { customerId, quotationId, detalles } = req.body;
+        const { customerId, quotationId, detalleId, titulo, usuario, detalles } = req.body;
 
-        if (!customerId || !quotationId || !Array.isArray(detalles)) {
+        if (!customerId || !quotationId || !detalleId || !titulo || !Array.isArray(detalles)) {
             return res.status(400).json({ message: 'Datos incompletos o malformados.' });
         }
 
-        const detallesFormateados = detalles.map(linea => ({
-            customer: customerId,
-            quotationId: quotationId,
+        const lineasFormateadas = detalles.map(linea => ({
             lineaQuo: linea.lineaQuo,
             tipoMaterial: linea.tipoMaterial,
             noArticulo: linea.noArticulo,
@@ -27,10 +24,37 @@ router.post('/guardar-costos', async (req, res) => {
             cantidadM: linea.cantidadM || 0
         }));
 
-        // Guardar múltiples documentos de una vez
-        await QuotationCostDetail.insertMany(detallesFormateados);
+        // Construimos la cabecera de cálculo con las líneas
+        const nuevoCalculo = {
+            titulo,
+            usuario,
+            lineas: lineasFormateadas
+        };
 
-        res.status(200).json({ message: 'Costos guardados correctamente.' });
+        // Buscamos si ya existe un documento principal para ese customer/quotation/detalle
+        let registro = await QuotationCostDetail.findOne({
+            customer: customerId,
+            quotationId: quotationId,
+            detalleId: detalleId
+        });
+
+        if (registro) {
+            // Si existe, agregamos un nuevo cálculo
+            registro.calculos.push(nuevoCalculo);
+        } else {
+            // Si no existe, lo creamos
+            registro = new QuotationCostDetail({
+                customer: customerId,
+                quotationId,
+                detalleId,
+                calculos: [nuevoCalculo]
+            });
+        }
+
+        await registro.save();
+
+        res.status(200).json({ message: 'Cálculo guardado correctamente.' });
+
     } catch (error) {
         console.error('Error al guardar los costos:', error);
         res.status(500).json({ message: 'Error interno del servidor.' });
