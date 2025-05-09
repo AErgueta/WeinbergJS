@@ -222,5 +222,24 @@ router.get('/api/articulos/utilidad', async (req, res) => {
         res.status(500).json({ error: "Error al obtener datos" });
     }
 });
+// Ruta para mostrar el resumen de costos por detalle de cotizaciones
+router.get('/quotes/:quotationId/detalle/:detalleId/resumen-costos/:costoId', async (req, res) => {
+    const { quotationId, detalleId, costoId } = req.params;
+    try {
+        const quotation = await Quotation.findById(quotationId);
+        const detalle = quotation.detalles.id(detalleId);
+        const costo = await QuotationCost.findById(costoId);
+
+        res.render('calculatorResumen', {
+            quotation,
+            detalle,
+            costo
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error al generar el resumen.");
+    }
+});
+
 
 module.exports = router;

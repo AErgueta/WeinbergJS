@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Resumen de Cálculo de Costos</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+        <style>
+            .info-box {
+                border: 1px solid #ddd;
+                padding: 10px;
+                font-size: 12px;
+                background-color: #f9f9f9;
+                border-radius: 5px;
+            }
+            .info-title {
+                font-weight: bold;
+                background-color: #007bff;
+                color: white;
+                padding: 5px;
+                font-size: 14px;
+                border-radius: 3px;
+            }
+            .scrollable-table {
+                max-height: 300px;
+                overflow-y: auto;
+                border: 1px solid #ddd;
+            }
+
+            .table thead th {
+                background-color: #007bff;
+                color: white;
+                font-weight: bold;
+                text-align: center;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 5px;
+                text-align: center;
+            }
+            th {
+                background-color: #007bff;
+                color: white;
+            }
+            .no-print {
+                margin-top: 20px;
+            }
+            @media print {
+                .no-print {
+                    display: none;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container mt-3">
+
+            <h3 class="text-center mt-3 mb-4">Resumen del Cálculo de Costos</h3>
+
+            <!-- CABECERA -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-box">
+                        <div class="info-title">Cabecera</div>
+                        <p><strong>Fecha:</strong> {{quotation.fecha}}</p>
+                        <p><strong>Fecha Vence:</strong> {{quotation.fechaVence}}</p>
+                        <p><strong>Descripción:</strong> {{quotation.descripcionCorta}}</p>
+                    </div>
+                </div>
+
+                <!-- DETALLE -->
+                <div class="col-md-6">
+                    <div class="info-box">
+                        <div class="info-title">Detalle</div>
+                        <p><strong>Línea:</strong> {{detalle.lineaQuo}} | <strong>Tipo:</strong> {{detalle.tipoQuo}} | <strong>Cantidad:</strong> {{detalle.cantidadQuo}}</p>
+                        <p><strong>Descripción:</strong></p>
+                        <textarea class="detalle-largo" readonly style="width: 100%; min-height: 4em; border: 1px solid #ccc; padding: 5px;">{{detalle.descripcionQuo}}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MOSTRAR TODAS LAS VERSIONES DE CÁLCULOS -->
+            {{#each calculos}}
+                <div class="mt-5">
+                    <div class="info-box">
+                        <div class="info-title">
+                            Versión: {{this.titulo}} | Usuario: {{this.usuario}} | Fecha: {{this.fecha}}
+                        </div>
+
+                        <!-- ✅ Enlace dentro del flujo, alineado a la derecha -->
+                        <div class="text-right no-print" style="margin-top: 5px;">
+                            <a href="#" style="font-size: 13px; text-decoration: underline; color: #dc3545;">
+                                Exportar a PDF
+                            </a>
+                        </div>
+
+                        <div class="scrollable-table mb-2">
+                            <table class="table table-bordered table-sm">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Tipo Material</th>
+                                        <th>No. Artículo</th>
+                                        <th>Detalle</th>
+                                        <th>Cantidad</th>
+                                        <th>Precio</th>
+                                        <th>Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{#each this.lineas}}
+                                        <tr>
+                                            <td>{{lineaQuo}}</td>
+                                            <td>{{tipoMaterial}}</td>
+                                            <td>{{noArticulo}}</td>
+                                            <td>{{detalle}}</td>
+                                            <td>{{cantidad}}</td>
+                                            <td>{{precio}}</td>
+                                            <td>{{monto}}</td>
+                                        </tr>
+                                    {{/each}}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="6" class="text-right"><strong>Total</strong></td>
+                                        <td><strong>{{sum this.lineas "monto"}}</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {{/each}}
+        </div>
+    </body>
+</html>
