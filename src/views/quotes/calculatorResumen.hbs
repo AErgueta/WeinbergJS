@@ -25,7 +25,6 @@
                 overflow-y: auto;
                 border: 1px solid #ddd;
             }
-
             .table thead th {
                 background-color: #007bff;
                 color: white;
@@ -36,10 +35,6 @@
                 border: 1px solid #ddd;
                 padding: 5px;
                 text-align: center;
-            }
-            th {
-                background-color: #007bff;
-                color: white;
             }
             .no-print {
                 margin-top: 20px;
@@ -77,25 +72,23 @@
                     </div>
                 </div>
             </div>
-
             <!-- MOSTRAR TODAS LAS VERSIONES DE CÁLCULOS -->
             {{#each calculos}}
                 <div class="mt-5">
                     <div class="info-box">
-                        <div class="info-title">
-                            Versión: {{this.titulo}} | Usuario: {{this.usuario}} | Fecha: {{this.fecha}}
-                        </div>
-
-                        <!-- ✅ Enlace dentro del flujo, alineado a la derecha -->
-                        <div class="text-right no-print" style="margin-top: 5px;">
-                            <a href="#" style="font-size: 13px; text-decoration: underline; color: #dc3545;">
-                                Exportar a PDF
-                            </a>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="info-title m-0 p-2 w-100">
+                                Versión: {{this.titulo}} | Usuario: {{this.usuario}} | Fecha: {{this.fecha}}
+                                <a href="#" class="btn btn-sm btn-outline-danger">Exportar a PDF</a>
+                            </div>
+                            <div class="ml-2 no-print">
+                                <a href="#" class="btn btn-sm btn-outline-danger">Exportar a PDF</a>
+                            </div>
                         </div>
 
                         <div class="scrollable-table mb-2">
                             <table class="table table-bordered table-sm">
-                                <thead class="thead-dark">
+                                <thead>
                                     <tr>
                                         <th>#</th>
                                         <th>Tipo Material</th>
