@@ -96,6 +96,9 @@ app.use(calculatorTresRoutes);
 const quotationCostRoutes = require('./routes/quotationCostDetail');
 app.use('/api/quotation-costs', quotationCostRoutes);
 
+const exportaPDFRoutes = require('./routes/exportaPDF');
+app.use('/pdf', exportaPDFRoutes);
+
 // Static files
 
 app.use(express.static(path.join(__dirname, 'public')));
