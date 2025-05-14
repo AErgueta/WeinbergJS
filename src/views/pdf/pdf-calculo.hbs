@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Versión: {{version.titulo}}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            margin: 30px;
+            color: #000;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .info {
+            margin-bottom: 15px;
+        }
+        .info p {
+            margin: 4px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #aaa;
+            padding: 6px;
+            text-align: center;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tfoot td {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h2>Cálculo de Costos - Versión: {{version.titulo}}</h2>
+
+    <div class="info">
+        <p><strong>Usuario:</strong> {{version.usuario}}</p>
+        <p><strong>Fecha:</strong> {{version.fecha}}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Tipo Material</th>
+                <th>No. Artículo</th>
+                <th>Detalle</th>
+                <th>Cantidad</th>
+                <th>Precio</th>
+                <th>Monto</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each version.lineas}}
+                <tr>
+                    <td>{{lineaQuo}}</td>
+                    <td>{{tipoMaterial}}</td>
+                    <td>{{noArticulo}}</td>
+                    <td>{{detalle}}</td>
+                    <td>{{cantidad}}</td>
+                    <td>{{precio}}</td>
+                    <td>{{monto}}</td>
+                </tr>
+            {{/each}}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="6">Total</td>
+                <td>{{sum version.lineas "monto"}}</td>
+            </tr>
+        </tfoot>
+    </table>
+</body>
+</html>
