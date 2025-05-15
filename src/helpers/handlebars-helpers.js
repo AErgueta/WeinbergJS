@@ -44,8 +44,20 @@ const handlebarsHelpers = {
             const value = parseFloat(item[field]) || 0;
             return total + value;
         }, 0).toFixed(2); // Con 2 decimales
-    }
-    
+    },
+    formatCurrency: function (value) {
+        const num = parseFloat(value);
+        if (isNaN(num)) return value;
+        return num.toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    },
+    formatDateLong: function (date) {
+        const d = new Date(date);
+        return d.toLocaleDateString('es-BO', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric'
+        });
+    }   
 };
 
 module.exports = handlebarsHelpers;

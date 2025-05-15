@@ -4,11 +4,20 @@
     <meta charset="UTF-8">
     <title>Proforma</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            font-size: 13px;
-            margin: 40px;
+       body {
+            margin: 0; /* <- elimina los márgenes del body */
+            background-color: #fff;
             color: #000;
+        }
+        .page {
+            width: 21cm;
+            height: 29.7cm; /* tamaño fijo para asegurar ubicación del footer */
+            margin: auto;
+            background: white;
+            padding: 2cm;
+            box-sizing: border-box;
+            position: relative; /* <- esto es necesario para que el footer se posicione dentro */
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
         }
         .row {
             display: flex;
@@ -26,64 +35,69 @@
             margin-top: 10px;
         }
         .footer {
-            margin-top: 80px;
+            position: absolute;
+            bottom: 2cm;
+            left: 2cm;
+            right: 2cm;
+            font-size: 11px;
             display: flex;
             justify-content: space-between;
-            font-size: 11px;
         }
     </style>
 </head>
 <body>
-
-    <!-- Encabezado -->
-    <div class="row section">
-        <div>
-            <div><span class="bold">Cliente:</span> {{customer.nombreCus}}</div>
-            <div><span class="bold">Teléfono:</span> {{customer.telefonoCus}}</div>
+    <div class="page">
+        <!-- Encabezado -->
+        <div class="row section">
+            <div>
+                <div><span class="bold">Cliente:</span> {{customer.nombreCus}}</div>
+                <div><span class="bold">Teléfono:</span> {{customer.telefonoCus}}</div>
+            </div>
+            <div style="text-align: right;">
+                <div>La Paz, {{formatDateLong version.fecha}}</div>
+                <div><span class="bold">Cód:</span> {{customer.alias}}</div>
+            </div>
         </div>
-        <div style="text-align: right;">
-            <div>La Paz, {{version.fecha}}</div>
-            <div><span class="bold">Cód:</span> {{customer.alias}}</div>
-        </div>
-    </div>
 
-    <!-- Detalle principal -->
-    <div class="box">
-        <div class="bold">Proforma</div>
-        <table style="width: 100%; margin-top: 10px;">
-            <thead>
-                <tr>
-                    <th style="text-align: left;">Cantidad</th>
-                    <th style="text-align: left;">Producto</th>
-                    <th style="text-align: right;">Precio en Bolivianos</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>{{detalle.cantidadQuo}}</td>
-                    <td>
-                        {{detalle.descripcionQuo}}
-                    </td>
-                    <td style="text-align: right;">
-                        {{sum version.lineas "monto"}}
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Pie de página -->
-    <div class="footer">
-        <div>
-            Tiempo de entrega: 3 a 5 días hábiles.<br>
-            Validez de la cotización: 15 días.
+        <!-- Detalle principal -->
+        <div class="box">
+            <div class="bold">Proforma</div>
+            <table style="width: 100%; margin-top: 10px;">
+                <thead>
+                    <tr>
+                        <th style="text-align: left;">Cantidad</th>
+                        <th style="text-align: left;">Producto</th>
+                        <th style="text-align: right;">Precio en Bolivianos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{detalle.cantidadQuo}}</td>
+                        <td>
+                            {{detalle.descripcionQuo}}
+                        </td>
+                        <td style="text-align: right;">
+                            {{formatCurrency (sum version.lineas "monto")}}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-        <div style="text-align: right;">
-            Jorge Weinberg<br>
-            Director<br>
-            Página 1 de 1
-        </div>
-    </div>
 
+        <!-- Pie de página -->
+        <div class="footer">
+            <div>
+                Tiempo de entrega: 3 a 5 días hábiles.<br>
+                Validez de la cotización: 15 días.
+            </div>
+            <div style="text-align: right;">
+                Jorge Weinberg<br>
+                Director<br>
+                Página 1 de 1
+            </div>
+        </div>
+
+    </div> <!-- cierre de .page -->
 </body>
+
 </html>
