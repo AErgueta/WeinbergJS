@@ -1,60 +1,59 @@
-<div class="container">
-    
+<div class="container mt-4">
+
+    <!-- Campo de búsqueda -->
     <div class="row mb-4">
         <div class="col-md-12">
             <input type="text" id="searchInput" class="form-control" placeholder="Buscar por descripción...">
         </div>
     </div>
-    <br>
-    
-    <h1>Lista de Costos</h1>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Código</th>
-                <th>Descripción</th>
-                <th>Tamaño</th>
-                <th>Monto</th>
-                <th>Número de Artículo</th>
-                <th>Factor</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody id="costsContainer">
-            {{#each costs}}
-            <tr class="cost-row">
-                <td>{{this.codigoCT}}</td> <!-- Mostrar código -->
-                <td class="descCT">{{this.descCT}}</td> <!-- Mostrar descripción -->
-                <td>{{this.tamanoCT}}</td> <!-- Mostrar tamaño -->
-                <td>{{this.montoCT}}</td> <!-- Mostrar monto -->
-                <td>{{this.noArtiCT}}</td> <!-- Mostrar número de artículo -->
-                <td>{{this.factorCT}}</td> <!-- Mostrar factor -->
 
-                <td>
-                    <a href="/costs/edit/{{this._id}}" class="btn btn-warning">Editar</a>
-                    <form action="/costs/delete/{{this._id}}" method="POST" style="display:inline;">
-                        <button type="submit" class="btn btn-danger">Eliminar</button>
-                    </form>
-                </td>
-            </tr>
-            {{/each}}
-        </tbody>
-    </table>
+    <!-- Título -->
+    <h3 class="text-center mb-3">Lista de Costos</h3>
+
+    <!-- Tabla -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover table-sm">
+            <thead class="thead-dark text-center">
+                <tr>
+                    <th>Código</th>
+                    <th>Descripción</th>
+                    <th>Tamaño</th>
+                    <th>Monto</th>
+                    <th>No. Artículo</th>
+                    <th>Factor</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="costsContainer">
+                {{#each costs}}
+                <tr class="cost-row text-center">
+                    <td>{{codigoCT}}</td>
+                    <td class="text-left descCT">{{descCT}}</td>
+                    <td>{{tamanoCT}}</td>
+                    <td>{{montoCT}}</td>
+                    <td>{{noArtiCT}}</td>
+                    <td>{{factorCT}}</td>
+                    <td>
+                        <a href="/costs/edit/{{_id}}" class="btn btn-sm btn-outline-warning">Editar</a>
+                        <form action="/costs/delete/{{_id}}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
-    // Lógica de búsqueda
-    document.getElementById('searchInput').addEventListener('input', function() {
+    document.getElementById('searchInput').addEventListener('input', function () {
         const filter = this.value.toLowerCase();
         const costRows = document.querySelectorAll('.cost-row');
 
         costRows.forEach(row => {
             const descCT = row.querySelector('.descCT').textContent.toLowerCase();
-            if (descCT.includes(filter)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
+            row.style.display = descCT.includes(filter) ? '' : 'none';
         });
     });
 </script>

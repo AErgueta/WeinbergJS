@@ -45,16 +45,16 @@ router.get('/costs/edit/:id', isAuthenticated, async (req, res) => {
 
 // Ruta para procesar la edición del costo
 router.post('/costs/edit/:id', isAuthenticated, async (req, res) => {
-    const { codigoCt, descCt, tamanoCt, montoCt, noArtiCt, factorCt } = req.body;
+    const { codigoCT, descCT, tamanoCT, montoCT, noArtiCT, factorCT } = req.body;
 
     try {
         await Cost.findByIdAndUpdate(req.params.id, {
-            codigoCt,
-            descCt,
-            tamanoCt,
-            montoCt,
-            noArtiCt,
-            factorCt
+            codigoCT,
+            descCT,
+            tamanoCT,
+            montoCT,
+            noArtiCT,
+            factorCT
         });
         res.redirect('/costs');
     } catch (error) {

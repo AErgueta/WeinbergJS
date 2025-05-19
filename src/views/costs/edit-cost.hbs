@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Costo</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Editar Costo</h4>
+            </div>
+            <div class="card-body">
+                <form action="/costs/edit/{{cost._id}}" method="POST">
+                    <div class="form-group">
+                        <label for="codigoCT">Código</label>
+                        <input type="text" class="form-control" id="codigoCT" name="codigoCT" value="{{cost.codigoCT}}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="descCT">Descripción</label>
+                        <input type="text" class="form-control" id="descCT" name="descCT" value="{{cost.descCT}}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tamanoCT">Tamaño</label>
+                        <input type="text" class="form-control" id="tamanoCT" name="tamanoCT" value="{{cost.tamanoCT}}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="montoCT">Monto</label>
+                        <input type="number" step="0.01" class="form-control" id="montoCT" name="montoCT" value="{{cost.montoCT}}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="noArtiCT">Número de Artículo</label>
+                        <input type="text" class="form-control" id="noArtiCT" name="noArtiCT" value="{{cost.noArtiCT}}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="factorCT">Factor</label>
+                        <input type="number" step="0.01" class="form-control" id="factorCT" name="factorCT" value="{{cost.factorCT}}">
+                    </div>
+
+                    <div class="text-right">
+                        <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                        <a href="/costs" class="btn btn-secondary ml-2">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
