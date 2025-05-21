@@ -1,0 +1,99 @@
+<style>
+    .canvas-wrapper {
+        background-color: #b9b8b8d3;
+        padding: 15px;
+        border-radius: 5px;
+        display: inline-block;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="text-center mb-4">
+        <h3>📐 Cálculo Referencial de Pliegos</h3>
+        <p class="text-muted">Herramienta auxiliar para estimar uso de papel en impresión.</p>
+        <hr>
+    </div>
+
+    <div class="row">
+        <!-- Datos del Pliego -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    Datos del Pliego
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Tamaño del Pliego (ancho):</label>
+                        <input type="number" class="form-control" id="input1">
+                    </div>
+                    <div class="form-group">
+                        <label>Tamaño del Pliego (alto):</label>
+                        <input type="number" class="form-control" id="input2">
+                    </div>
+                    <div class="form-group">
+                        <label>Tamaño del Corte (ancho):</label>
+                        <input type="number" class="form-control" id="input3">
+                    </div>
+                    <div class="form-group">
+                        <label>Tamaño del Corte (alto):</label>
+                        <input type="number" class="form-control" id="input4">
+                    </div>
+                    <div class="form-group">
+                        <label>Cantidad de Unidades:</label>
+                        <input type="number" class="form-control" id="input5">
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-3 mb-3">
+                        <button class="btn btn-outline-primary w-100 mr-1" id="calculate-btn1">Horizontal</button>
+                        <button class="btn btn-outline-secondary w-100 ml-1" id="calculate-btn2">Vertical</button>
+                    </div>
+
+                    <hr>
+
+                    <div class="form-group">
+                        <label>Cantidad por pliego:</label>
+                        <input type="number" class="form-control" id="resultC" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Pliegos necesarios:</label>
+                        <input type="number" class="form-control" id="result" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Porcentaje Ocupado:</label>
+                        <input type="number" class="form-control" id="porO" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Porcentaje Libre:</label>
+                        <input type="number" class="form-control" id="porL" readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfica -->
+        <div class="col-md-8 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    Visualización del Corte
+                </div>
+                <div class="card-body text-center">
+                    <div class="canvas-wrapper">
+                        <canvas id="myCanvas" width="500" height="500" class="border border-secondary rounded"></canvas>
+                    </div>
+                    <hr>
+                    <h6 class="text-muted mt-3">Unidades que ingresan por pliego</h6>
+                    <div class="form-row justify-content-center">
+                        <div class="col-md-4">
+                            <input type="number" class="form-control text-center" id="width" placeholder="Ancho" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="number" class="form-control text-center" id="height" placeholder="Alto" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/calculator-paper.js"></script>

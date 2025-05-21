@@ -71,4 +71,8 @@ router.get('/quotes', (req, res) => {
     res.send('Clientes de la Base de Datos');
 });
 
+router.get('/quotes/calculator-paper', (req, res) => {
+    res.render('quotes/calculator-paper');
+});
+
 module.exports = router;

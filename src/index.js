@@ -93,6 +93,8 @@ const calculatorTresRoutes = require('./routes/calculatorTres'); // Importa las 
 //app.use('/quotes', calculatorTresRoutes);
 app.use(calculatorTresRoutes);
 
+app.use(express.static(path.join(__dirname, 'public')));
+
 const quotationCostRoutes = require('./routes/quotationCostDetail');
 app.use('/api/quotation-costs', quotationCostRoutes);
 
