@@ -4,27 +4,34 @@
     <meta charset="UTF-8">
     <title>Proforma</title>
     <style>
-       body {
-            margin: 0; /* <- elimina los márgenes del body */
+        body {
+            margin: 0;
             background-color: #fff;
             color: #000;
         }
         .page {
             width: 21cm;
-            height: 29.7cm; /* tamaño fijo para asegurar ubicación del footer */
+            height: 29.7cm;
             margin: auto;
             background: white;
             padding: 2cm;
             box-sizing: border-box;
-            position: relative; /* <- esto es necesario para que el footer se posicione dentro */
+            position: relative;
             box-shadow: 0 0 5px rgba(0,0,0,0.1);
         }
-        .row {
+        .header {
             display: flex;
             justify-content: space-between;
-        }
-        .section {
+            align-items: flex-start;
             margin-bottom: 20px;
+        }
+        .logo {
+            width: 120px;
+            height: auto;
+        }
+        .info-cliente {
+            text-align: right;
+            font-size: 13px;
         }
         .bold {
             font-weight: bold;
@@ -33,6 +40,16 @@
             border: 1px solid #000;
             padding: 10px;
             margin-top: 10px;
+        }
+        table {
+            width: 100%;
+            margin-top: 10px;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 5px;
+            text-align: left;
+            border: 1px solid #ddd;
         }
         .footer {
             position: absolute;
@@ -47,35 +64,35 @@
 </head>
 <body>
     <div class="page">
-        <!-- Encabezado -->
-        <div class="row section">
-            <div>
-                <div><span class="bold">Cliente:</span> {{customer.nombreCus}}</div>
-                <div><span class="bold">Teléfono:</span> {{customer.telefonoCus}}</div>
-            </div>
-            <div style="text-align: right;">
+
+        <!-- Encabezado con logo e info cliente -->
+        <div class="header">
+            
+            <img src="{{logoDataUrl}}" class="logo" alt="Logo">
+
+            <div class="info-cliente">
                 <div>La Paz, {{formatDateLong version.fecha}}</div>
                 <div><span class="bold">Cód:</span> {{customer.alias}}</div>
+                <div><span class="bold">Cliente:</span> {{customer.nombreCus}}</div>
+                <div><span class="bold">Teléfono:</span> {{customer.telefonoCus}}</div>
             </div>
         </div>
 
         <!-- Detalle principal -->
         <div class="box">
             <div class="bold">Proforma</div>
-            <table style="width: 100%; margin-top: 10px;">
+            <table>
                 <thead>
                     <tr>
-                        <th style="text-align: left;">Cantidad</th>
-                        <th style="text-align: left;">Producto</th>
+                        <th>Cantidad</th>
+                        <th>Producto</th>
                         <th style="text-align: right;">Precio en Bolivianos</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>{{detalle.cantidadQuo}}</td>
-                        <td>
-                            {{detalle.descripcionQuo}}
-                        </td>
+                        <td>{{detalle.descripcionQuo}}</td>
                         <td style="text-align: right;">
                             {{formatCurrency (sum version.lineas "monto")}}
                         </td>
@@ -84,7 +101,6 @@
             </table>
         </div>
 
-        <!-- Pie de página -->
         <!-- Pie de página -->
         <div class="footer">
             <div>
@@ -95,7 +111,7 @@
                 {{version.usuario}}
             </div>
         </div>
-    </div> <!-- cierre de .page -->
-</body>
 
+    </div>
+</body>
 </html>

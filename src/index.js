@@ -1,30 +1,33 @@
 const express = require('express');
 const path = require('path');
-const { engine } = require('express-handlebars'); // Importar correctamente express-handlebars
+const { engine } = require('express-handlebars');
 const methodOverride = require('method-override');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const flash = require('connect-flash');
 const passport = require('passport');
-const handlebarsHelpers = require('./helpers/handlebars-helpers'); // Importar el archivo de helpers
+const handlebarsHelpers = require('./helpers/handlebars-helpers'); // Helpers personalizados
 
 // Initializations
 const app = express();
 require('./database');
 require('./config/passport');
 
+// ✅ Static files (debe estar antes de las rutas)
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Settings
 app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
 
-// Configuración del motor de plantillas de Handlebars
+// Handlebars engine
 app.engine('.hbs', engine({
     extname: '.hbs',
     defaultLayout: 'main',
     layoutsDir: path.join(app.get('views'), 'layouts'),
     partialsDir: path.join(app.get('views'), 'partials'),
     helpers: {
-        ...handlebarsHelpers, // Registrar los helpers adicionales
+        ...handlebarsHelpers,
         formatDate: function(date) {
             if (!date) return '';
             const d = new Date(date);
@@ -33,7 +36,6 @@ app.engine('.hbs', engine({
             const day = String(d.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
         },
-        // Helper para comparar valores
         eq: function (a, b) {
             return a === b;
         },
@@ -41,7 +43,6 @@ app.engine('.hbs', engine({
             return JSON.stringify(context);
         }
     },
-    // Agrega esta opción para permitir acceso a propiedades no directas
     runtimeOptions: {
         allowProtoPropertiesByDefault: true,
         allowProtoMethodsByDefault: true,
@@ -49,7 +50,7 @@ app.engine('.hbs', engine({
 }));
 app.set('view engine', '.hbs');
 
-// Middleware
+// Middlewares
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: false }));
@@ -63,7 +64,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
 
-// Global Variables
+// Global variables
 app.use((req, res, next) => {
     res.locals.success_msg = req.flash('success_msg');
     res.locals.error_msg = req.flash('errors');
@@ -80,32 +81,12 @@ app.use(require('./routes/customers'));
 app.use(require('./routes/quotation'));
 app.use(require('./routes/calculator'));
 app.use(require('./routes/costs'));
+app.use('/api', require('./routes/api'));
+app.use(require('./routes/calculatorTres'));
+app.use('/api/quotation-costs', require('./routes/quotationCostDetail'));
+app.use('/pdf', require('./routes/exportaPDF'));
 
-const apiRoutes = require('./routes/api'); // Importa las rutas de la API
-app.use('/api', apiRoutes); // Usa las rutas de la API bajo el prefijo /api
-
-//const calculatorDosRoutes = require('./routes/calculatorDos'); // Importa las rutas de calculatorDos
-
-// Usa las rutas de calculatorDos
-//app.use('/', calculatorDosRoutes);
-
-const calculatorTresRoutes = require('./routes/calculatorTres'); // Importa las rutas de calculatorTres
-//app.use('/quotes', calculatorTresRoutes);
-app.use(calculatorTresRoutes);
-
-app.use(express.static(path.join(__dirname, 'public')));
-
-const quotationCostRoutes = require('./routes/quotationCostDetail');
-app.use('/api/quotation-costs', quotationCostRoutes);
-
-const exportaPDFRoutes = require('./routes/exportaPDF');
-app.use('/pdf', exportaPDFRoutes);
-
-// Static files
-
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Server is listening
+// Server start
 app.listen(app.get('port'), () => {
-    console.log('Server on port ', app.get('port'));
+    console.log('Server on port', app.get('port'));
 });
