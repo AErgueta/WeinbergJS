@@ -79,6 +79,29 @@
                     <textarea class="detalle-largo" readonly>{{detalle.descripcionQuo}}</textarea>
                 </div>
             </div>
+            <!--****************-->
+            <!-- Leyenda de Tipos de Material -->
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="info-box bg-light border p-3">
+                        <div class="info-title">Tipos de Material</div>
+                        <p class="text-danger d-flex flex-wrap justify-content-between" style="line-height: 1.4;">
+                            <span class="mr-4"><strong>P</strong> - Papel</span>
+                            <span class="mr-4"><strong>T</strong> - Tinta</span>
+                            <span class="mr-4"><strong>L</strong> - Plancha</span>
+                            <span class="mr-4"><strong>C</strong> - Película</span>
+                            <span class="mr-4"><strong>A</strong> - Acabado</span>
+                            <span class="mr-4"><strong>R</strong> - Preprensa</span>
+                            <span class="mr-4"><strong>M</strong> - Mano de Obra</span>
+                            <span class="mr-4"><strong>I</strong> - C. Indirectos</span>
+                            <span class="mr-4"><strong>O</strong> - G. Operativos</span>
+                            <span class="mr-4"><strong>S</strong> - Plastificado</span>
+                            <span><strong>U</strong> - Utilidad</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <!--****************-->
         </div>
         <!-- Botón para ir al cálculo de pliegos -->
         <div class="text-right mt-4 mb-3"> <!-- ← margen superior agregado -->
@@ -118,6 +141,7 @@
                                     <option value="O">O - Gastos Operativos</option>
                                     <option value="S">S - Plastificado</option>
                                     <option value="U">U - Utilidad</option>
+                                    <option value="B">B - Borrar línea</option>
                                 </select>
                             </td>
                             <td>
@@ -179,8 +203,23 @@
                     noArticuloSelect.innerHTML = '<option value="">Seleccione</option>';
 
                     let tipoMaterial = event.target.value;
-                    let endpoint = "";
 
+                    // Si seleccionó "B" - Borrar línea
+                    if (tipoMaterial === "B") {
+                        // Reiniciar todos los campos de esa fila
+                        row.querySelector("select[name='tipoMaterial']").value = "";
+                        row.querySelector("select[name='noArticulo']").innerHTML = '<option value="">Seleccione</option>';
+                        row.querySelector("input[name='cantidad']").value = "";
+                        row.querySelector("input[name='precio']").value = "";
+                        row.querySelector("input[name='detalle']").value = "";
+                        row.querySelector("input[name='monto']").value = "";
+                        row.querySelector("input[name='factor']").value = 1;
+                        row.querySelector("input[name='cantidadM']").value = "";
+
+                        return; // Salir del handler, no hacer más nada
+                    }
+
+                    let endpoint = "";
                     if (tipoMaterial === "P") endpoint = "/api/articulos/papel";
                     else if (tipoMaterial === "T") endpoint = "/api/articulos/tinta";
                     else if (tipoMaterial === "L") endpoint = "/api/articulos/plancha";
@@ -231,6 +270,9 @@
                 }
             });
 
+            // Variable para controlar el debounce
+            let debounceTimer = null;
+
             // Evento para calcular "monto" y "cantidadM"
             document.addEventListener("input", function(event) {
                 if (event.target.name === "cantidad") {
@@ -239,7 +281,6 @@
                     let cantidadInput = event.target;
                     let cantidad = parseFloat(cantidadInput.value) || 0;
                     let precio = parseFloat(row.querySelector("input[name='precio']").value) || 0;
-                    //let cantidadMtotInput = document.querySelector("input[name='cantidadMtot']");
                     let cantidadMtotInput = document.querySelector("#cantidadMtotGlobal");
                     let cantidadMtot = parseFloat(cantidadMtotInput.value) || 0;
                     let codigoCT = row.querySelector("select[name='noArticulo']").value;
@@ -253,10 +294,6 @@
                         row.querySelector("input[name='monto']").value = monto.toFixed(2);
                         row.querySelector("input[name='cantidadM']").value = cantidadM.toFixed(3);
 
-                        console.log("Factor = ", factor);
-                        console.log("cantidadM = ", cantidadM);
-
-                        // 🕐 Asegurarse que todos los valores se hayan actualizado antes de sumar
                         setTimeout(() => {
                             let nuevoCantidadMtot = 0;
 
@@ -265,25 +302,20 @@
 
                                 if (tipo === "P") {
                                     let cantidadMValue = parseFloat(tr.querySelector("input[name='cantidadM']")?.value) || 0;
-                                    console.log("➡️ cantidadM en fila:", cantidadMValue);
                                     nuevoCantidadMtot += cantidadMValue;
                                 }
                             });
 
-                            const cantidadMtotInput = document.getElementById("cantidadMtotGlobal");
                             cantidadMtotInput.value = nuevoCantidadMtot.toFixed(2);
-                            console.log("✅ cantidadMtot actualizado =", nuevoCantidadMtot.toFixed(2));
-                        }, 150); // Esperamos un poquito para asegurar que cantidadM esté seteado
-                    }
+                        }, 150);
+                    } 
                     else if (tipoMaterial === "T") {
                         if (cantidad !== 1 && cantidad !== 2) {
                             alert("Para Tinta, la cantidad solo puede ser 1 o 2.");
                             cantidadInput.value = "";
                             return;
                         }
-                        console.log("cantidad = ", cantidad, "; cantidadMtot = ", cantidadMtot, "; precio = ", precio);
                         monto = parseFloat(((cantidad * cantidadMtot) * precio + 4).toFixed(2));
-                        console.log("monto = ", monto);
                         row.querySelector("input[name='monto']").value = monto.toFixed(2);
                     } 
                     else if (["L", "A", "R", "S", "M"].includes(tipoMaterial)) {
@@ -299,13 +331,17 @@
                         row.querySelector("input[name='monto']").value = monto.toFixed(2);
                     }
 
+                    // 🛠 Aquí aplicamos debounce para MO2003
                     if (tipoMaterial === "M" && codigoCT === "MO2003") {
-                        console.log("EL tipo de Material es ", tipoMaterial);
-                        console.log("EL Código es ", codigoCT);
-                        agregarGastosIndirectos(cantidad);
+                        clearTimeout(debounceTimer);
+                        debounceTimer = setTimeout(() => {
+                            console.log("⏳ Ejecutando agregarGastosIndirectos con:", cantidad);
+                            agregarGastosIndirectos(cantidad);
+                        }, 1000); // Espera medio segundo tras dejar de escribir
                     }
                 }
             });
+
 
             function agregarGastosIndirectos(cantidadMO) {
                 const filas = document.querySelectorAll("#tabla-detalles tbody tr");
@@ -318,7 +354,7 @@
                 let usadas = 0;
                 //
                 //console.log("El valor de filas es: ",filas);
-                //console.log("Los nuevos datos son: ",nuevosDatos);
+                console.log("Los nuevos datos son: ",nuevosDatos);
                 //
                 filas.forEach((fila) => {
                     if (usadas >= nuevosDatos.length) return; // Ya insertamos los 3
@@ -357,6 +393,8 @@
                                     detalleInput.value = seleccionado.descCT || "";
                                     fila.querySelector("input[name='factor']").value = seleccionado.factorCT || 1;
                                     montoInput.value = (dato.cantidad * (seleccionado.montoCT || 0)).toFixed(2);
+
+                                    //usadas++;
                                 }
                             })
                             .catch(error => {
