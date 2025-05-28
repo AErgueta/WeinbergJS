@@ -1,0 +1,88 @@
+<div class="container mt-4">
+    <h3 class="text-center mt-3 mb-4">✔️ Aceptación de Trabajo</h3>
+
+    <!-- Recuadro principal -->
+    <div class="info-box">
+        <div class="info-title"></div>
+
+        <!-- Tabla de resumen estilo sistema -->
+        <table class="table table-bordered bg-white">
+            <thead class="thead-light">
+                <tr>
+                    <th>Cantidad</th>
+                    <th>Producto</th>
+                    <th class="text-right">Precio en Bolivianos</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{detalle.cantidadQuo}}</td>
+                    <td>{{detalle.descripcionQuo}}</td>
+                    <td class="text-right">
+                        {{formatCurrency (sum version.lineas "monto")}}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Recuadro adicional para estado de trabajo -->
+    <div class="info-box mt-4">
+        <div class="info-title">Seguimiento del Trabajo</div>
+
+        <!-- Aceptar Cotización -->
+        <div class="form-row mb-3">
+            <div class="col-md-6 d-flex align-items-center">
+                <input type="checkbox" id="chkAprobar" class="mr-2">
+                <label for="chkAprobar" class="mb-0 text-danger font-weight-bold">Aceptar Cotización</label>
+            </div>
+            <div class="col-md-6">
+                <label for="fechaAprobacion" class="mb-0">Fecha de Aceptación:</label>
+                <input type="date" id="fechaAprobacion" class="form-control" />
+            </div>
+        </div>
+
+        <!-- Fecha prevista de entrega -->
+        <div class="form-row mb-3">
+            <div class="col-md-6 offset-md-6">
+                <label for="fechaPrevista" class="mb-0">Fecha prevista de entrega:</label>
+                <input type="date" id="fechaPrevista" class="form-control" />
+            </div>
+        </div>
+
+        <!-- Trabajo Terminado -->
+        <div class="form-row">
+            <div class="col-md-6 d-flex align-items-center">
+                <input type="checkbox" id="chkTerminado" class="mr-2">
+                <label for="chkTerminado" class="mb-0 text-primary font-weight-bold">Trabajo Terminado</label>
+            </div>
+            <div class="col-md-6">
+                <label for="fechaTerminado" class="mb-0">Fecha de Terminación:</label>
+                <input type="date" id="fechaTerminado" class="form-control" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const chkAprobar = document.getElementById('chkAprobar');
+    const fechaAprobacion = document.getElementById('fechaAprobacion');
+    const fechaPrevista = document.getElementById('fechaPrevista');
+
+    chkAprobar.addEventListener('change', () => {
+        if (chkAprobar.checked) {
+            // Establecer la fecha actual
+            const hoy = new Date().toISOString().split('T')[0];
+            fechaAprobacion.value = hoy;
+
+            // Enfocar en fecha prevista de entrega
+            setTimeout(() => fechaPrevista.focus(), 100);
+        } else {
+            // Limpiar si se desmarca
+            fechaAprobacion.value = '';
+            fechaPrevista.value = '';
+        }
+    });
+});
+</script>

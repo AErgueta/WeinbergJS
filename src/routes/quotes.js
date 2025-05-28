@@ -75,4 +75,31 @@ router.get('/quotes/calculator-paper', (req, res) => {
     res.render('quotes/calculator-paper');
 });
 
+router.get('/quotes/aceptar-trabajo/:detalleId/:versionIndex', async (req, res) => {
+    const { detalleId, versionIndex } = req.params;
+    try {
+        const calculo = await QuotationCostDetail.findOne({ detalleId }).lean();
+        if (!calculo) return res.status(404).send('❌ Cálculo no encontrado.');
+
+        const version = calculo.calculos[versionIndex];
+        if (!version) return res.status(404).send('❌ Versión no encontrada.');
+
+        const customer = await Customer.findById(calculo.customer).lean();
+        if (!customer) return res.status(404).send('❌ Cliente no encontrado.');
+
+        const quotation = customer.solicitudesCotizacion.find(q => q._id.toString() === calculo.quotationId.toString());
+        if (!quotation) return res.status(404).send('❌ Cotización no encontrada.');
+
+        const detalle = quotation.detalles.find(d => d._id.toString() === calculo.detalleId.toString());
+        if (!detalle) return res.status(404).send('❌ Detalle no encontrado.');
+
+        res.render('quotes/aceptar-trabajo', {
+            customer, quotation, detalle, version
+        });
+    } catch (error) {
+        console.error("❌ Error en aceptar-trabajo:", error);
+        res.status(500).send("Error interno al cargar la aceptación.");
+    }
+});
+
 module.exports = router;
