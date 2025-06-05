@@ -3,9 +3,6 @@
 
     <!-- Recuadro principal -->
     <div class="info-box">
-        <div class="info-title"></div>
-
-        <!-- Tabla de resumen estilo sistema -->
         <table class="table table-bordered bg-white">
             <thead class="thead-light">
                 <tr>
@@ -26,27 +23,38 @@
         </table>
     </div>
 
-    <!-- Recuadro adicional para estado de trabajo -->
+    <!-- Seguimiento del Trabajo -->
     <div class="info-box mt-4 border border-primary rounded">
         <div class="info-title">Seguimiento del Trabajo</div>
 
         <!-- Aceptar Cotización -->
         <div class="form-row mb-3">
             <div class="col-md-6 d-flex align-items-center">
-                <input type="checkbox" id="chkAprobar" class="mr-2">
+                <input type="checkbox" id="chkAprobar" class="mr-2" {{#if version.aceptada}}checked{{/if}}>
                 <label for="chkAprobar" class="mb-0 text-danger font-weight-bold">Aceptar Cotización</label>
             </div>
             <div class="col-md-6">
                 <label for="fechaAprobacion" class="mb-0">Fecha de Aceptación:</label>
-                <input type="date" id="fechaAprobacion" class="form-control" />
+                <input type="date" id="fechaAprobacion" class="form-control" value="{{fechaAceptacion}}" />
             </div>
         </div>
 
-        <!-- Fecha prevista de entrega -->
-        <div class="form-row mb-3">
+        <!-- Fecha prevista + botones -->
+        <div class="form-row mb-4">
             <div class="col-md-6 offset-md-6">
-                <label for="fechaPrevista" class="mb-0">Fecha prevista de entrega:</label>
-                <input type="date" id="fechaPrevista" class="form-control" />
+                <label for="fechaPrevista" class="mb-1 font-weight-bold">📅 Fecha prevista de entrega:</label>
+                <input type="date" id="fechaPrevista" class="form-control mb-3" value="{{fechaPrevistaEntrega}}" />
+
+                <button id="btnGuardarOrden" class="btn btn-success btn-block font-weight-bold mb-2">
+                    💾 Guardar Orden de Trabajo
+                </button>
+
+                <a id="btnGenerarOrden"
+                   href="/pdf/ver-orden-trabajo/{{detalle._id}}/{{versionIndex}}"
+                   class="btn btn-primary btn-block font-weight-bold"
+                   target="_blank">
+                    📝 Generar Orden
+                </a>
             </div>
         </div>
 
@@ -62,7 +70,15 @@
             </div>
         </div>
     </div>
+
+    <!-- Campos ocultos necesarios -->
+    <input type="hidden" id="customerId" value="{{customerId}}">
+    <input type="hidden" id="quotationId" value="{{quotationId}}">
+    <input type="hidden" id="detalleIndex" value="{{detalleIndex}}">
+    <input type="hidden" id="detalleId" value="{{detalle._id}}">
+    <input type="hidden" id="versionIndex" value="{{versionIndex}}">
 </div>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const chkAprobar = document.getElementById('chkAprobar');
@@ -71,16 +87,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
     chkAprobar.addEventListener('change', () => {
         if (chkAprobar.checked) {
-            // Establecer la fecha actual
             const hoy = new Date().toISOString().split('T')[0];
-            fechaAprobacion.value = hoy;
-
-            // Enfocar en fecha prevista de entrega
-            setTimeout(() => fechaPrevista.focus(), 100);
+            if (!fechaAprobacion.value) fechaAprobacion.value = hoy;
+            if (!fechaPrevista.value) fechaPrevista.focus();
         } else {
-            // Limpiar si se desmarca
             fechaAprobacion.value = '';
             fechaPrevista.value = '';
+        }
+    });
+
+    document.getElementById("btnGuardarOrden").addEventListener("click", async () => {
+        const customerId = document.getElementById("customerId").value;
+        const quotationId = document.getElementById("quotationId").value;
+        const detalleIndex = document.getElementById("detalleIndex").value;
+        const detalleId = document.getElementById("detalleId").value;
+        const versionIndex = document.getElementById("versionIndex").value;
+
+        const aceptada = document.getElementById("chkAprobar").checked;
+        const fechaAceptacion = document.getElementById("fechaAprobacion").value;
+        const fechaPrevistaEntrega = document.getElementById("fechaPrevista").value;
+
+        try {
+            const response = await fetch(`/guardar-orden-trabajo/${customerId}/${quotationId}/${detalleIndex}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    aceptada,
+                    fechaAceptacion,
+                    fechaPrevistaEntrega,
+                    detalleId,
+                    versionIndex
+                })
+            });
+
+            if (response.ok) {
+                alert("✅ Orden de trabajo guardada correctamente.");
+            } else {
+                alert("❌ Error al guardar la orden.");
+            }
+        } catch (error) {
+            console.error("❌ Error en el guardado:", error);
+            alert("❌ Fallo al conectar con el servidor.");
         }
     });
 });

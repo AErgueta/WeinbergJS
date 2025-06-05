@@ -57,7 +57,22 @@ const handlebarsHelpers = {
             month: 'long',
             year: 'numeric'
         });
-    }   
+    }, 
+    groupByTipo: function (lineas, tipo) {
+        if (!Array.isArray(lineas)) return [];
+        return lineas.filter(linea => linea.tipoMaterial === tipo);
+    },
+    formatDateLocal: function (date) {
+        if (!date) return '';
+        const d = new Date(date);
+
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+
+        return `${year}-${month}-${day}`; // Formato requerido por <input type="date">
+    }
+  
 };
 
 module.exports = handlebarsHelpers;

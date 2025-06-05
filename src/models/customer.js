@@ -6,7 +6,10 @@ const quotationSchema = new Schema({
     lineaQuo: { type: Number, required: true },
     tipoQuo: { type: String, enum: ['P', 'R'], required: true },
     cantidadQuo: { type: Number },
-    descripcionQuo: { type: String, required: true }
+    descripcionQuo: { type: String, required: true },
+    aceptada: { type: Boolean, default: false },
+    fechaAceptacion: { type: Date },
+    fechaPrevistaEntrega: { type: Date }
 });
 
 const quotationHeaderSchema = new Schema({

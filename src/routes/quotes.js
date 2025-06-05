@@ -6,6 +6,8 @@ const Cost = require('../models/cost');         // Modelo de costos
 
 const QuotationCostDetail = require('../models/quotationCostDetail'); // ✅ Líneas del cálculo
 
+const handlebarsHelpers = require('../helpers/handlebars-helpers');
+
 
 // 👉 Ruta para formulario de nuevo cliente
 router.get('/quotes/add', (req, res) => {
@@ -75,10 +77,12 @@ router.get('/quotes/calculator-paper', (req, res) => {
     res.render('quotes/calculator-paper');
 });
 
+// Ruta: aceptar-trabajo
 router.get('/quotes/aceptar-trabajo/:detalleId/:versionIndex', async (req, res) => {
     const { detalleId, versionIndex } = req.params;
+
     try {
-        const calculo = await QuotationCostDetail.findOne({ detalleId }).lean();
+        const calculo = await QuotationCostDetail.findOne({ detalleId });
         if (!calculo) return res.status(404).send('❌ Cálculo no encontrado.');
 
         const version = calculo.calculos[versionIndex];
@@ -90,16 +94,109 @@ router.get('/quotes/aceptar-trabajo/:detalleId/:versionIndex', async (req, res) 
         const quotation = customer.solicitudesCotizacion.find(q => q._id.toString() === calculo.quotationId.toString());
         if (!quotation) return res.status(404).send('❌ Cotización no encontrada.');
 
-        const detalle = quotation.detalles.find(d => d._id.toString() === calculo.detalleId.toString());
+        const detalle = quotation.detalles.find(d => d._id.toString() === detalleId.toString());
         if (!detalle) return res.status(404).send('❌ Detalle no encontrado.');
 
-        res.render('quotes/aceptar-trabajo', {
-            customer, quotation, detalle, version
+        const detalleIndex = quotation.detalles.findIndex(d => d._id.toString() === detalleId.toString());
+
+        // 🟡 Convertir fechas al formato YYYY-MM-DD para el input date
+        function formatDateLocal(date) {
+            if (!date) return '';
+            const d = new Date(date);
+            d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); // Ajuste zona horaria
+            return d.toISOString().split('T')[0];
+        }
+
+        //const fechaAceptacion = formatDateLocal(version.fechaAceptacion);
+        //const fechaPrevistaEntrega = formatDateLocal(version.fechaPrevistaEntrega);
+
+        const fechaAceptacion = version.fechaAceptacion
+        ? version.fechaAceptacion.toISOString().split('T')[0]
+        : '';
+
+        const fechaPrevistaEntrega = version.fechaPrevistaEntrega
+        ? version.fechaPrevistaEntrega.toISOString().split('T')[0]
+        : '';
+
+        //console.log("🧪 Datos en versión:");
+        //console.log("  aceptada:", version.aceptada);
+        //console.log("  fechaAceptacion:", fechaAceptacion);
+        //console.log("  fechaPrevistaEntrega:", fechaPrevistaEntrega);
+
+        res.render("quotes/aceptar-trabajo", {
+            customer,
+            quotation,
+            detalle,
+            version,
+            customerId: customer._id,
+            quotationId: quotation._id,
+            detalleIndex,
+            versionIndex,
+            fechaAceptacion,
+            fechaPrevistaEntrega
         });
+
     } catch (error) {
         console.error("❌ Error en aceptar-trabajo:", error);
         res.status(500).send("Error interno al cargar la aceptación.");
     }
 });
+
+router.post('/guardar-orden-trabajo/:customerId/:quotationId/:detalleIndex', async (req, res) => {
+  const { customerId, quotationId, detalleIndex } = req.params;
+  const {
+    aceptada,
+    fechaAceptacion,
+    fechaPrevistaEntrega,
+    detalleId,
+    versionIndex
+  } = req.body;
+
+  try {
+    // --------------------------
+    // 🟩 Paso 1: Actualizar en la colección Customer
+    // --------------------------
+    const customer = await Customer.findById(customerId);
+    if (!customer) return res.status(404).send("Cliente no encontrado.");
+
+    const cotizacion = customer.solicitudesCotizacion.find(q => q._id.toString() === quotationId);
+    if (!cotizacion) return res.status(404).send("Cotización no encontrada.");
+
+    const detalle = cotizacion.detalles[detalleIndex];
+    if (!detalle) return res.status(404).send("Detalle no encontrado.");
+
+    // Guardamos en el subdocumento de Customer (si lo necesitás también en Customer)
+    detalle.aceptada = (aceptada === true || aceptada === 'true');
+    detalle.fechaAceptacion = fechaAceptacion || null;
+    detalle.fechaPrevistaEntrega = fechaPrevistaEntrega || null;
+
+    await customer.save();
+    console.log("✅ Datos guardados en Customer.");
+
+    // --------------------------
+    // 🟦 Paso 2: Actualizar en QuotationCostDetail → dentro de calculoSchema
+    // --------------------------
+    const quotationCost = await QuotationCostDetail.findOne({ detalleId });
+    if (!quotationCost) return res.status(404).send("Cálculo de costos no encontrado.");
+
+    const versionNum = parseInt(versionIndex, 10);
+    if (isNaN(versionNum) || versionNum < 0 || versionNum >= quotationCost.calculos.length) {
+        return res.status(404).send("Versión de cálculo inválida.");
+    }
+
+    // ✅ Actualizar los campos directamente dentro de la versión
+    quotationCost.calculos[versionNum].aceptada = aceptada === true || aceptada === 'true';
+    quotationCost.calculos[versionNum].fechaAceptacion = fechaAceptacion || null;
+    quotationCost.calculos[versionNum].fechaPrevistaEntrega = fechaPrevistaEntrega || null;
+
+    await quotationCost.save();
+    console.log("✅ Datos guardados correctamente en calculoSchema.");
+    res.status(200).send("Orden de trabajo guardada en ambos modelos.");
+  } catch (err) {
+    console.error("❌ Error al guardar orden:", err);
+    res.status(500).send("Error interno al guardar.");
+  }
+});
+
 
 module.exports = router;

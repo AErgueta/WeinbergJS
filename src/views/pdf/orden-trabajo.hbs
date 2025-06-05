@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Orden de Trabajo</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #fff;
+      color: #000;
+      font-family: 'Arial', sans-serif;
+      font-size: 13px;
+    }
+
+    .page {
+      width: 21cm;
+      height: 29.7cm;
+      margin: auto;
+      background: white;
+      padding: 2cm;
+      box-sizing: border-box;
+      position: relative;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 25px;
+    }
+
+    .logo {
+      width: 120px;
+      height: auto;
+    }
+
+    .info-cliente {
+      text-align: right;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .bold {
+      font-weight: bold;
+    }
+
+    .box {
+      border: 1px solid #000;
+      padding: 12px;
+      margin-top: 10px;
+    }
+
+    .box .bold {
+      font-size: 15px;
+      margin-bottom: 5px;
+    }
+
+    .section-title {
+      font-weight: bold;
+      font-size: 14px;
+      margin-top: 25px;
+      margin-bottom: 6px;
+      padding-bottom: 3px;
+      border-bottom: 1px solid #999;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 8px;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      background-color: #f2f2f2;
+      text-align: left;
+      padding: 6px;
+      border: 1px solid #ccc;
+    }
+
+    td {
+      padding: 6px;
+      border: 1px solid #ddd;
+      vertical-align: top;
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 2cm;
+      left: 2cm;
+      right: 2cm;
+      font-size: 11px;
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Encabezado -->
+  <div class="header">
+    <img src="{{logoDataUrl}}" class="logo" alt="Logo" />
+    <div class="info-cliente">
+      <div>La Paz, {{formatDateLong version.fecha}}</div>
+      <div><span class="bold">Cód:</span> {{customer.alias}}</div>
+      <div><span class="bold">Cliente:</span> {{customer.nombreCus}}</div>
+      <div><span class="bold">Teléfono:</span> {{customer.telefonoCus}}</div>
+    </div>
+  </div>
+
+  <!-- Producto principal -->
+  <div class="box">
+    <div class="bold">Orden de Trabajo</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Cantidad</th>
+          <th>Producto</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{detalle.cantidadQuo}}</td>
+          <td>{{detalle.descripcionQuo}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Papeles -->
+  {{#with (groupByTipo version.lineas "P") as |papeles|}}
+    {{#if papeles.length}}
+      <div class="section-title">🧻 Papeles</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Descripción</th>
+            <th>Cantidad</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each papeles}}
+            <tr>
+              <td>{{noArticulo}}</td>
+              <td>{{detalle}}</td>
+              <td>{{cantidad}}</td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    {{/if}}
+  {{/with}}
+
+  <!-- Tintas -->
+  {{#with (groupByTipo version.lineas "T") as |tintas|}}
+    {{#if tintas.length}}
+      <div class="section-title">🖌️ Tintas</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Descripción</th>
+            <th>Cantidad</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each tintas}}
+            <tr>
+              <td>{{noArticulo}}</td>
+              <td>{{detalle}}</td>
+              <td>{{cantidad}}</td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    {{/if}}
+  {{/with}}
+
+  <!-- Planchas -->
+  {{#with (groupByTipo version.lineas "L") as |planchas|}}
+    {{#if planchas.length}}
+      <div class="section-title">🧷 Planchas</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Descripción</th>
+            <th>Cantidad</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each planchas}}
+            <tr>
+              <td>{{noArticulo}}</td>
+              <td>{{detalle}}</td>
+              <td>{{cantidad}}</td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    {{/if}}
+  {{/with}}
+
+  <!-- Pie -->
+  <div class="footer">
+    <div>
+      Orden generada automáticamente desde sistema NUMB.
+    </div>
+    <div style="text-align: right;">
+      {{version.usuario}}
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
