@@ -34,7 +34,7 @@
                 <label for="chkAprobar" class="mb-0 text-danger font-weight-bold">Aceptar Cotización</label>
             </div>
             <div class="col-md-6">
-                <label for="fechaAprobacion" class="mb-0">Fecha de Aceptación:</label>
+                <label for="fechaPrevista" class="mb-1 font-weight-bold">📅 Fecha de aceptación:</label>
                 <input type="date" id="fechaAprobacion" class="form-control" value="{{fechaAceptacion}}" />
             </div>
         </div>
@@ -64,15 +64,20 @@
             </div>
         </div>
 
-        <!-- Trabajo Terminado -->
+       <!-- Trabajo Terminado -->
         <div class="form-row">
             <div class="col-md-6 d-flex align-items-center">
                 <input type="checkbox" id="chkTerminado" class="mr-2">
                 <label for="chkTerminado" class="mb-0 text-primary font-weight-bold">Trabajo Terminado</label>
             </div>
             <div class="col-md-6">
-                <label for="fechaTerminado" class="mb-0">Fecha de Terminación:</label>
-                <input type="date" id="fechaTerminado" class="form-control" />
+                <label for="fechaPrevista" class="mb-1 font-weight-bold">📅 Fecha de Terminación:</label>
+                <input type="date" id="fechaTerminado" class="form-control mb-3" />
+                
+                <!-- ✅ Nuevo botón -->
+                <button id="btnActualizarInfo" class="btn btn-warning btn-block font-weight-bold">
+                    📌 Actualizar Información
+                </button>
             </div>
         </div>
     </div>
@@ -90,7 +95,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const chkAprobar = document.getElementById('chkAprobar');
     const fechaAprobacion = document.getElementById('fechaAprobacion');
     const fechaPrevista = document.getElementById('fechaPrevista');
+    const chkTerminado = document.getElementById('chkTerminado');
+    const fechaTerminado = document.getElementById('fechaTerminado');
 
+    // 🟢 Aceptar cotización
     chkAprobar.addEventListener('change', () => {
         if (chkAprobar.checked) {
             const hoy = new Date().toISOString().split('T')[0];
@@ -102,6 +110,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // 🟣 Trabajo Terminado
+    chkTerminado.addEventListener('change', () => {
+        if (chkTerminado.checked) {
+            const hoy = new Date().toISOString().split('T')[0];
+            fechaTerminado.value = hoy;
+        } else {
+            fechaTerminado.value = '';
+        }
+    });
+
+    // 💾 Guardar Orden
     document.getElementById("btnGuardarOrden").addEventListener("click", async () => {
         const customerId = document.getElementById("customerId").value;
         const quotationId = document.getElementById("quotationId").value;
@@ -112,6 +131,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const aceptada = document.getElementById("chkAprobar").checked;
         const fechaAceptacion = document.getElementById("fechaAprobacion").value;
         const fechaPrevistaEntrega = document.getElementById("fechaPrevista").value;
+        const terminado = document.getElementById("chkTerminado").checked;
+        const fechaTerminado = document.getElementById("fechaTerminado").value;
 
         try {
             const response = await fetch(`/guardar-orden-trabajo/${customerId}/${quotationId}/${detalleIndex}`, {
@@ -121,6 +142,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     aceptada,
                     fechaAceptacion,
                     fechaPrevistaEntrega,
+                    terminado,
+                    fechaTerminado,
                     detalleId,
                     versionIndex
                 })

@@ -108,44 +108,62 @@ router.get('/descargar-pdf/:detalleId/:versionIndex', async (req, res) => {
 
 // Vista previa Orden de Trabajo (sin precios)
 router.get('/ver-orden-trabajo/:detalleId/:versionIndex', async (req, res) => {
-    const { detalleId, versionIndex } = req.params;
+  const { detalleId, versionIndex } = req.params;
 
-    try {
-        const calculo = await QuotationCostDetail.findOne({ detalleId }).lean();
-        if (!calculo) return res.status(404).send("❌ Cálculo no encontrado.");
+  try {
+    const calculo = await QuotationCostDetail.findOne({ detalleId }).lean();
+    if (!calculo) return res.status(404).send("❌ Cálculo no encontrado.");
 
-        const version = calculo.calculos[versionIndex];
-        const customer = await Customer.findById(calculo.customer).lean();
-        const quotation = customer.solicitudesCotizacion.find(q => q._id.toString() === calculo.quotationId.toString());
-        const detalle = quotation.detalles.find(d => d._id.toString() === detalleId);
+    const versionIndexNum = parseInt(versionIndex, 10);
 
-        const logoAbsolutePath = path.join(__dirname, '../public/img/logo_blk2.png');
-        const logoBuffer = fs.readFileSync(logoAbsolutePath);
-        const logoDataUrl = `data:image/png;base64,${logoBuffer.toString('base64')}`;
-
-         const fechaAceptacion = version.fechaAceptacion
-        ? version.fechaAceptacion.toISOString().split('T')[0]
-        : '';
-
-        const fechaPrevistaEntrega = version.fechaPrevistaEntrega
-        ? version.fechaPrevistaEntrega.toISOString().split('T')[0]
-        : '';
-
-        res.render("pdf/orden-trabajo", {
-            customer,
-            version,
-            quotation,
-            detalle,
-            logoDataUrl,
-            //formatDateLong: handlebarsHelpers.formatDateLong
-            fechaAceptacion,
-            fechaPrevistaEntrega
-        });
-
-    } catch (error) {
-        console.error("❌ Error en /ver-orden-trabajo:", error);
-        res.status(500).send("Error interno.");
+    if (!Array.isArray(calculo.calculos) || versionIndexNum >= calculo.calculos.length) {
+      return res.status(404).send("❌ Versión de cálculo no encontrada.");
     }
+
+    const version = calculo.calculos[versionIndexNum];
+    if (!version) return res.status(404).send("❌ Versión no encontrada.");
+
+    const customer = await Customer.findById(calculo.customer).lean();
+    if (!customer) return res.status(404).send('❌ Cliente no encontrado.');
+
+    const quotation = customer.solicitudesCotizacion.find(q =>
+      q._id.toString() === calculo.quotationId.toString()
+    );
+    if (!quotation) return res.status(404).send('❌ Cotización no encontrada.');
+
+    const detalle = quotation.detalles.find(d =>
+      d._id.toString() === detalleId.toString()
+    );
+    if (!detalle) return res.status(404).send('❌ Detalle no encontrado.');
+
+    const logoAbsolutePath = path.join(__dirname, '../public/img/logo_blk2.png');
+    const logoBuffer = fs.readFileSync(logoAbsolutePath);
+    const logoDataUrl = `data:image/png;base64,${logoBuffer.toString('base64')}`;
+
+    // ✅ Convertir fechas al formato input-date
+    const fechaAceptacion = version.fechaAceptacion
+      ? version.fechaAceptacion.toISOString().split('T')[0]
+      : '';
+
+    const fechaPrevistaEntrega = version.fechaPrevistaEntrega
+      ? version.fechaPrevistaEntrega.toISOString().split('T')[0]
+      : '';
+
+    res.render("pdf/orden-trabajo", {
+      customer,
+      version,
+      quotation,
+      detalle,
+      logoDataUrl,
+      fechaAceptacion,
+      fechaPrevistaEntrega,
+      formatDateLong: handlebarsHelpers.formatDateLong
+    });
+
+  } catch (error) {
+    console.error("❌ Error en /ver-orden-trabajo:", error);
+    res.status(500).send("Error interno.");
+  }
 });
 
 // Exportar PDF de Orden de Trabajo
