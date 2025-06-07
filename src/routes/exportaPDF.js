@@ -123,13 +123,23 @@ router.get('/ver-orden-trabajo/:detalleId/:versionIndex', async (req, res) => {
         const logoBuffer = fs.readFileSync(logoAbsolutePath);
         const logoDataUrl = `data:image/png;base64,${logoBuffer.toString('base64')}`;
 
+         const fechaAceptacion = version.fechaAceptacion
+        ? version.fechaAceptacion.toISOString().split('T')[0]
+        : '';
+
+        const fechaPrevistaEntrega = version.fechaPrevistaEntrega
+        ? version.fechaPrevistaEntrega.toISOString().split('T')[0]
+        : '';
+
         res.render("pdf/orden-trabajo", {
             customer,
             version,
             quotation,
             detalle,
             logoDataUrl,
-            formatDateLong: handlebarsHelpers.formatDateLong
+            //formatDateLong: handlebarsHelpers.formatDateLong
+            fechaAceptacion,
+            fechaPrevistaEntrega
         });
 
     } catch (error) {
@@ -221,6 +231,81 @@ router.get('/descargar-orden/:detalleId/:versionIndex', async (req, res) => {
     } catch (error) {
         console.error("❌ Error al generar PDF de orden de trabajo:", error);
         res.status(500).send("Error interno al generar PDF.");
+    }
+});
+
+// Exportar PDF de Orden de Trabajo
+router.get('/descargar-orden-trabajo/:detalleId/:versionIndex', async (req, res) => {
+    const { detalleId, versionIndex } = req.params;
+
+    try {
+        const calculo = await QuotationCostDetail.findOne({ detalleId }).lean();
+        if (!calculo) return res.status(404).send('❌ Cálculo no encontrado.');
+
+        const version = calculo.calculos[versionIndex];
+        if (!version) return res.status(404).send('❌ Versión no encontrada.');
+
+        const customer = await Customer.findById(calculo.customer).lean();
+        if (!customer) return res.status(404).send('❌ Cliente no encontrado.');
+
+        const quotation = customer.solicitudesCotizacion.find(q => q._id.toString() === calculo.quotationId.toString());
+        if (!quotation) return res.status(404).send('❌ Cotización no encontrada.');
+
+        const detalle = quotation.detalles.find(d => d._id.toString() === calculo.detalleId.toString());
+        if (!detalle) return res.status(404).send('❌ Detalle no encontrado.');
+
+        // ✅ Convertir fechas a formato local (YYYY-MM-DD)
+        const fechaAceptacion = version.fechaAceptacion
+            ? version.fechaAceptacion.toISOString().split('T')[0]
+            : '';
+        const fechaPrevistaEntrega = version.fechaPrevistaEntrega
+            ? version.fechaPrevistaEntrega.toISOString().split('T')[0]
+            : '';
+
+        // ✅ Logo
+        const logoAbsolutePath = path.join(__dirname, '../public/img/logo_blk2.png');
+        const logoBuffer = fs.readFileSync(logoAbsolutePath);
+        const logoDataUrl = `data:image/png;base64,${logoBuffer.toString('base64')}`;
+
+        // ✅ Renderizar plantilla Handlebars
+        const html = await renderTemplate(
+            path.join(__dirname, '../views/pdf/orden-trabajo.hbs'),
+            {
+                customer,
+                version,
+                quotation,
+                detalle,
+                logoDataUrl,
+                fechaAceptacion,
+                fechaPrevistaEntrega,
+                formatDateLong: handlebarsHelpers.formatDateLong
+            }
+        );
+
+        // 🖨️ Generar PDF
+        const browser = await puppeteer.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
+
+        const page = await browser.newPage();
+        await page.setContent(html, { waitUntil: 'networkidle0' });
+        await page.emulateMediaType('screen');
+
+        const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
+        await browser.close();
+
+        // 📤 Enviar PDF al navegador
+        res.set({
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `attachment; filename=orden_trabajo_${version.titulo}.pdf`,
+            'Content-Length': pdfBuffer.length
+        });
+        res.end(pdfBuffer);
+
+    } catch (error) {
+        console.error('❌ Error al generar PDF de orden de trabajo:', error);
+        res.status(500).send('Error interno al generar el PDF.');
     }
 });
 
