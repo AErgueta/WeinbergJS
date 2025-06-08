@@ -66,19 +66,24 @@
 
        <!-- Trabajo Terminado -->
         <div class="form-row">
-            <div class="col-md-6 d-flex align-items-center">
-                <input type="checkbox" id="chkTerminado" class="mr-2">
-                <label for="chkTerminado" class="mb-0 text-primary font-weight-bold">Trabajo Terminado</label>
-            </div>
-            <div class="col-md-6">
-                <label for="fechaPrevista" class="mb-1 font-weight-bold">📅 Fecha de Terminación:</label>
-                <input type="date" id="fechaTerminado" class="form-control mb-3" />
-                
-                <!-- ✅ Nuevo botón -->
-                <button id="btnActualizarInfo" class="btn btn-warning btn-block font-weight-bold">
-                    📌 Actualizar Información
-                </button>
-            </div>
+        <div class="col-md-6 d-flex align-items-center">
+            <input type="checkbox" id="chkTerminado" class="mr-2" {{#if version.terminado}}checked{{/if}}>
+            <label for="chkTerminado" class="mb-0 text-primary font-weight-bold">Trabajo Terminado</label>
+        </div>
+        <div class="col-md-6">
+            <label for="fechaTerminado" class="mb-0">Fecha de Terminación:</label>
+            <input type="date" id="fechaTerminado" class="form-control" value="{{fechaTerminado}}" />
+        </div>
+        </div>
+
+        <!-- Botón: Actualizar trabajo terminado -->
+        <div class="form-row mt-3">
+        <div class="col-md-6 offset-md-6">
+            <input type="hidden" id="usuario" value="{{usuarioTermina}}">
+            <button id="btnActualizarTerminado" class="btn btn-info btn-block font-weight-bold">
+            🔄 Actualizar información
+            </button>
+        </div>
         </div>
     </div>
 
@@ -88,6 +93,7 @@
     <input type="hidden" id="detalleIndex" value="{{detalleIndex}}">
     <input type="hidden" id="detalleId" value="{{detalle._id}}">
     <input type="hidden" id="versionIndex" value="{{versionIndex}}">
+    <input type="hidden" id="usuario" value="{{user.name}}">
 </div>
 
 <script>
@@ -120,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 💾 Guardar Orden
+    // 💾 Guardar Orden de Trabajo
     document.getElementById("btnGuardarOrden").addEventListener("click", async () => {
         const customerId = document.getElementById("customerId").value;
         const quotationId = document.getElementById("quotationId").value;
@@ -128,11 +134,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const detalleId = document.getElementById("detalleId").value;
         const versionIndex = document.getElementById("versionIndex").value;
 
-        const aceptada = document.getElementById("chkAprobar").checked;
-        const fechaAceptacion = document.getElementById("fechaAprobacion").value;
-        const fechaPrevistaEntrega = document.getElementById("fechaPrevista").value;
-        const terminado = document.getElementById("chkTerminado").checked;
-        const fechaTerminado = document.getElementById("fechaTerminado").value;
+        const aceptada = chkAprobar.checked;
+        const fechaAceptacion = fechaAprobacion.value;
+        const fechaPrevistaEntrega = fechaPrevista.value;
 
         try {
             const response = await fetch(`/guardar-orden-trabajo/${customerId}/${quotationId}/${detalleIndex}`, {
@@ -142,8 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     aceptada,
                     fechaAceptacion,
                     fechaPrevistaEntrega,
-                    terminado,
-                    fechaTerminado,
                     detalleId,
                     versionIndex
                 })
@@ -159,5 +161,36 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("❌ Fallo al conectar con el servidor.");
         }
     });
+
+    // 🔄 Actualizar Trabajo Terminado
+    document.getElementById("btnActualizarTerminado").addEventListener("click", async () => {
+        const detalleId = document.getElementById("detalleId").value;
+        const versionIndex = document.getElementById("versionIndex").value;
+        const terminado = chkTerminado.checked;
+        const fechaTerminadoValue = fechaTerminado.value;
+        const usuarioTermina = document.getElementById("usuario").value;
+
+        try {
+            const response = await fetch(`/marcar-trabajo-terminado/${detalleId}/${versionIndex}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    terminado,
+                    fechaTerminado: fechaTerminadoValue,
+                    usuarioTermina
+                })
+            });
+
+            if (response.ok) {
+                alert("✅ Información de trabajo terminado actualizada.");
+            } else {
+                alert("❌ No se pudo actualizar trabajo terminado.");
+            }
+        } catch (error) {
+            console.error("❌ Error al actualizar trabajo terminado:", error);
+            alert("❌ Fallo al conectar con el servidor.");
+        }
+    });
 });
 </script>
+

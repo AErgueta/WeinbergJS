@@ -78,6 +78,7 @@ router.get('/quotes/calculator-paper', (req, res) => {
 });
 
 // Ruta: aceptar-trabajo
+// Ruta: aceptar-trabajo
 router.get('/quotes/aceptar-trabajo/:detalleId/:versionIndex', async (req, res) => {
     const { detalleId, versionIndex } = req.params;
 
@@ -99,30 +100,22 @@ router.get('/quotes/aceptar-trabajo/:detalleId/:versionIndex', async (req, res) 
 
         const detalleIndex = quotation.detalles.findIndex(d => d._id.toString() === detalleId.toString());
 
-        // 🟡 Convertir fechas al formato YYYY-MM-DD para el input date
-        function formatDateLocal(date) {
-            if (!date) return '';
-            const d = new Date(date);
-            d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); // Ajuste zona horaria
-            return d.toISOString().split('T')[0];
-        }
-
-        //const fechaAceptacion = formatDateLocal(version.fechaAceptacion);
-        //const fechaPrevistaEntrega = formatDateLocal(version.fechaPrevistaEntrega);
-
+        // 🟡 Fechas en formato YYYY-MM-DD (formulario input[type="date"])
         const fechaAceptacion = version.fechaAceptacion
-        ? version.fechaAceptacion.toISOString().split('T')[0]
-        : '';
+            ? version.fechaAceptacion.toISOString().split('T')[0]
+            : '';
 
         const fechaPrevistaEntrega = version.fechaPrevistaEntrega
-        ? version.fechaPrevistaEntrega.toISOString().split('T')[0]
-        : '';
+            ? version.fechaPrevistaEntrega.toISOString().split('T')[0]
+            : '';
 
-        //console.log("🧪 Datos en versión:");
-        //console.log("  aceptada:", version.aceptada);
-        //console.log("  fechaAceptacion:", fechaAceptacion);
-        //console.log("  fechaPrevistaEntrega:", fechaPrevistaEntrega);
+        const fechaTerminado = version.fechaTerminado
+            ? version.fechaTerminado.toISOString().split('T')[0]
+            : '';
 
+        const usuarioTermina = version.usuarioTermina || '';
+
+        // Renderizar vista
         res.render("quotes/aceptar-trabajo", {
             customer,
             quotation,
@@ -133,7 +126,9 @@ router.get('/quotes/aceptar-trabajo/:detalleId/:versionIndex', async (req, res) 
             detalleIndex,
             versionIndex,
             fechaAceptacion,
-            fechaPrevistaEntrega
+            fechaPrevistaEntrega,
+            fechaTerminado,
+            usuarioTermina
         });
 
     } catch (error) {
@@ -195,6 +190,36 @@ router.post('/guardar-orden-trabajo/:customerId/:quotationId/:detalleIndex', asy
   } catch (err) {
     console.error("❌ Error al guardar orden:", err);
     res.status(500).send("Error interno al guardar.");
+  }
+});
+router.post('/marcar-trabajo-terminado/:detalleId/:versionIndex', async (req, res) => {
+  const { detalleId, versionIndex } = req.params;
+  const { terminado, fechaTerminado, usuarioTermina } = req.body;
+
+  try {
+    const quotationCost = await QuotationCostDetail.findOne({ detalleId });
+    if (!quotationCost) return res.status(404).send("❌ Cálculo de costos no encontrado.");
+
+    const versionIndexNum = parseInt(versionIndex, 10);
+    const version = quotationCost.calculos[versionIndexNum];
+    if (!version) return res.status(404).send("❌ Versión no encontrada.");
+
+    // ✅ Actualizar campos recibidos
+    version.terminado = terminado === true || terminado === 'true';
+    version.fechaTerminado = fechaTerminado || null;
+    version.usuarioTermina = usuarioTermina || 'Sistema';
+
+    // 🔧 Forzar a Mongoose a marcar como modificado
+    quotationCost.markModified(`calculos.${versionIndexNum}`);
+
+    console.log("🧾 Usuario recibido:", usuarioTermina);
+
+    await quotationCost.save();
+    console.log("✅ Trabajo marcado como terminado.");
+    res.status(200).send("Trabajo terminado actualizado.");
+  } catch (error) {
+    console.error("❌ Error al marcar trabajo como terminado:", error);
+    res.status(500).send("Error interno al guardar trabajo terminado.");
   }
 });
 

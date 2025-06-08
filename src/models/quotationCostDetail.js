@@ -26,8 +26,10 @@ const calculoSchema = new Schema({
   // ← Movemos aquí los tres campos de aceptación
   aceptada:             { type: Boolean, default: false },
   fechaAceptacion:      { type: Date },
-  fechaPrevistaEntrega: { type: Date }
-
+  fechaPrevistaEntrega: { type: Date },
+  terminado: { type: Boolean, default: false },
+  fechaTerminado: { type: Date },
+  usuarioTermina: { type: String }
 }, {
   timestamps: true
 });
