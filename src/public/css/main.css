@@ -1,17 +1,61 @@
+/* Fondo principal: azul institucional con degradado sobrio */
 body {
-    background: #004FF9;  /* fallback for old browsers */
-    background: -webkit-linear-gradient(to right, #FFF94C, #004FF9);  /* Chrome 10-25, Safari 5.1-6 */
-    background: linear-gradient(to right, #FFF94C, #004FF9); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+    background: #00254F;  /* fondo principal */
+    background: linear-gradient(to right, #ffffff, #00254F); /* blanco a azul oscuro */
+    color: #212529;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* Logo */
 .logo {
-    width: 30%;
+    width: 25%;
+    max-width: 220px;
 }
 
+/* Alineación derecha */
 .text-right {
     text-align: right;
 }
 
+/* Botones destacados */
+.btn-success {
+    background-color: #005B9A;
+    border-color: #005B9A;
+}
+.btn-success:hover {
+    background-color: #003F6B;
+    border-color: #003F6B;
+}
+
+.btn-primary {
+    background-color: #00254F;
+    border-color: #00254F;
+}
+.btn-primary:hover {
+    background-color: #001A38;
+    border-color: #001A38;
+}
+
+.btn-secondary {
+    background-color: #4F5861;
+    border-color: #4F5861;
+}
+.btn-secondary:hover {
+    background-color: #3a4047;
+    border-color: #3a4047;
+}
+
+.btn-warning {
+    background-color: #D4AF37;
+    border-color: #D4AF37;
+    color: #000;
+}
+.btn-warning:hover {
+    background-color: #b38e2d;
+    border-color: #b38e2d;
+}
+
+/* Caja no imprimible */
 .no-print {
     position: fixed;
     top: 10px;
@@ -23,4 +67,31 @@ body {
     .no-print {
         display: none !important;
     }
+}
+
+/* Encabezados */
+h3, h5 {
+    color: #00254F;
+}
+
+/* Tablas */
+.table thead th {
+    background-color: #f8f9fa;
+    color: #00254F;
+    font-weight: bold;
+}
+
+/* Bordes de cajas informativas */
+.info-box {
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.4rem;
+    padding: 1rem;
+}
+
+/* Form controls */
+input.form-control,
+select.form-control {
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
 }
