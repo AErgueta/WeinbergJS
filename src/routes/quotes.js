@@ -100,7 +100,7 @@ router.get('/quotes/aceptar-trabajo/:detalleId/:versionIndex', async (req, res) 
 
         const detalleIndex = quotation.detalles.findIndex(d => d._id.toString() === detalleId.toString());
 
-        // 🟡 Fechas en formato YYYY-MM-DD (formulario input[type="date"])
+        // 🟡 Formatear fechas en formato YYYY-MM-DD para campos input[type="date"]
         const fechaAceptacion = version.fechaAceptacion
             ? version.fechaAceptacion.toISOString().split('T')[0]
             : '';
@@ -113,9 +113,18 @@ router.get('/quotes/aceptar-trabajo/:detalleId/:versionIndex', async (req, res) 
             ? version.fechaTerminado.toISOString().split('T')[0]
             : '';
 
-        const usuarioTermina = version.usuarioTermina || '';
+        const fechaEntregado = version.fechaEntregado
+            ? version.fechaEntregado.toISOString().split('T')[0]
+            : '';
 
-        // Renderizar vista
+        // 🧍‍♂️ Usuarios y otros campos
+        const usuarioTermina = version.usuarioTermina || '';
+        const usuarioEntrega = version.usuarioEntrega || '';
+        const recibidoPor = version.recibidoPor || '';
+
+        const usuarioSesion = req.session.usuario || '';
+
+        // Renderizar pantalla
         res.render("quotes/aceptar-trabajo", {
             customer,
             quotation,
@@ -128,7 +137,11 @@ router.get('/quotes/aceptar-trabajo/:detalleId/:versionIndex', async (req, res) 
             fechaAceptacion,
             fechaPrevistaEntrega,
             fechaTerminado,
-            usuarioTermina
+            fechaEntregado,
+            usuarioTermina,
+            usuarioEntrega,
+            recibidoPor,
+            user: { name: usuarioSesion }
         });
 
     } catch (error) {
@@ -223,5 +236,32 @@ router.post('/marcar-trabajo-terminado/:detalleId/:versionIndex', async (req, re
   }
 });
 
+router.post('/marcar-trabajo-entregado/:detalleId/:versionIndex', async (req, res) => {
+    const { detalleId, versionIndex } = req.params;
+    const { entregado, fechaEntregado, recibidoPor, usuarioEntrega } = req.body;
+
+    try {
+        const quotationCost = await QuotationCostDetail.findOne({ detalleId });
+        if (!quotationCost) return res.status(404).send("❌ Cálculo de costos no encontrado.");
+
+        const versionIndexNum = parseInt(versionIndex, 10);
+        const version = quotationCost.calculos[versionIndexNum];
+        if (!version) return res.status(404).send("❌ Versión no encontrada.");
+
+        // Guardar los datos
+        version.entregado = entregado === true || entregado === 'true';
+        version.fechaEntregado = fechaEntregado || null;
+        version.recibidoPor = recibidoPor || '';
+        version.usuarioEntrega = usuarioEntrega || 'Sistema';
+
+        await quotationCost.save();
+        console.log("✅ Trabajo marcado como entregado.");
+        res.status(200).send("Trabajo entregado actualizado.");
+
+    } catch (error) {
+        console.error("❌ Error al marcar trabajo como entregado:", error);
+        res.status(500).send("Error interno al guardar entrega.");
+    }
+});
 
 module.exports = router;

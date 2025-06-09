@@ -17,21 +17,23 @@ const costLineSchema = new Schema({
 
 // Subdocumento: un cálculo completo
 const calculoSchema = new Schema({
-  titulo:               { type: String, required: true },
-  fecha:                { type: Date,   default: Date.now },
-  usuario:              { type: String },
-
-  lineas:               [ costLineSchema ],
-
-  // ← Movemos aquí los tres campos de aceptación
-  aceptada:             { type: Boolean, default: false },
-  fechaAceptacion:      { type: Date },
-  fechaPrevistaEntrega: { type: Date },
-  terminado: { type: Boolean, default: false },
-  fechaTerminado: { type: Date },
-  usuarioTermina: { type: String }
+    titulo: { type: String, required: true },
+    fecha: { type: Date, default: Date.now },
+    usuario: { type: String },
+    lineas: [costLineSchema],
+    aceptada: { type: Boolean, default: false },
+    fechaAceptacion: { type: Date },
+    fechaPrevistaEntrega: { type: Date },
+    terminado: { type: Boolean, default: false },
+    fechaTerminado: { type: Date },
+    usuarioTermina: { type: String },
+    // 🆕 Campos de entrega
+    entregado: { type: Boolean, default: false },
+    fechaEntregado: { type: Date },
+    recibidoPor: { type: String },
+    usuarioEntrega: { type: String }
 }, {
-  timestamps: true
+    timestamps: true
 });
 
 // Documento principal: relación con cliente, cotización y detalle
