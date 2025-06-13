@@ -4,6 +4,7 @@ body {
     background: linear-gradient(to right, #ffffff, #00254F); /* blanco a azul oscuro */
     color: #212529;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding-top: 70px;
 }
 
 /* Logo */
