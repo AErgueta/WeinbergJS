@@ -4,28 +4,44 @@ const puppeteer = require('puppeteer');
 const path = require('path');
 const hbs = require('express-handlebars');
 const fs = require('fs');
+const { ObjectId } = require('mongodb');
 const QuotationCostDetail = require('../models/quotationCostDetail');
 const Customer = require('../models/customer');
 const handlebarsHelpers = require('../helpers/handlebars-helpers');
 
-// Vista previa HTML
+// 🔧 Render de plantilla handlebars
+async function renderTemplate(filePath, data) {
+    const templateContent = fs.readFileSync(filePath, 'utf8');
+    const handlebars = hbs.create();
+
+    handlebars.handlebars.registerHelper('sum', handlebarsHelpers.sum);
+    handlebars.handlebars.registerHelper('formatCurrency', handlebarsHelpers.formatCurrency);
+    handlebars.handlebars.registerHelper('formatDateLong', handlebarsHelpers.formatDateLong);
+    handlebars.handlebars.registerHelper('groupByTipo', handlebarsHelpers.groupByTipo);
+    handlebars.handlebars.registerHelper('formatDateLocal', handlebarsHelpers.formatDateLocal);
+
+    const compiled = handlebars.handlebars.compile(templateContent);
+    return compiled(data);
+}
+
+// 🧾 Vista previa Hoja Cotización
 router.get('/ver-hoja/:detalleId/:versionIndex', async (req, res) => {
     const { detalleId, versionIndex } = req.params;
 
     try {
-        const calculo = await QuotationCostDetail.findOne({ detalleId }).lean();
-        if (!calculo) return res.status(404).send('No se encontró el cálculo.');
+        const detalleObjectId = new ObjectId(detalleId);
+        const calculo = await QuotationCostDetail.findOne({ detalleId: detalleObjectId }).lean();
+        if (!calculo) return res.status(404).send('❌ Cálculo no encontrado.');
 
         const version = calculo.calculos[versionIndex];
-        if (!version) return res.status(404).send('Versión no encontrada.');
+        if (!version) return res.status(404).send('❌ Versión no encontrada.');
 
         const customer = await Customer.findById(calculo.customer).lean();
         const quotation = customer.solicitudesCotizacion.find(q => q._id.toString() === calculo.quotationId.toString());
         const detalle = quotation.detalles.find(d => d._id.toString() === calculo.detalleId.toString());
 
-        const logoAbsolutePath = path.join(__dirname, '../public/img/logo_blk2.png');
-        const logoBuffer = fs.readFileSync(logoAbsolutePath);
-        const logoDataUrl = `data:image/png;base64,${logoBuffer.toString('base64')}`;
+        const logoPath = path.join(__dirname, '../public/img/logo_blk2.png');
+        const logoDataUrl = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
 
         res.render('pdf/vista-preliminar', {
             customer,
@@ -35,56 +51,37 @@ router.get('/ver-hoja/:detalleId/:versionIndex', async (req, res) => {
             logoDataUrl
         });
 
-
     } catch (error) {
-        console.error('Error al cargar la vista:', error);
+        console.error('❌ Error en /ver-hoja:', error);
         res.status(500).send('Error interno.');
     }
 });
 
-// Exportar PDF
+// 📤 Exportar Hoja Cotización a PDF
 router.get('/descargar-pdf/:detalleId/:versionIndex', async (req, res) => {
     const { detalleId, versionIndex } = req.params;
 
     try {
-        const calculo = await QuotationCostDetail.findOne({ detalleId }).lean();
-        if (!calculo) return res.status(404).send('Cálculo no encontrado.');
+        const detalleObjectId = new ObjectId(detalleId);
+        const calculo = await QuotationCostDetail.findOne({ detalleId: detalleObjectId }).lean();
+        if (!calculo) return res.status(404).send('❌ Cálculo no encontrado.');
 
         const version = calculo.calculos[versionIndex];
-        if (!version) return res.status(404).send('Versión no encontrada.');
+        if (!version) return res.status(404).send('❌ Versión no encontrada.');
 
         const customer = await Customer.findById(calculo.customer).lean();
-        if (!customer) return res.status(404).send('Cliente no encontrado.');
-
         const quotation = customer.solicitudesCotizacion.find(q => q._id.toString() === calculo.quotationId.toString());
-        if (!quotation) return res.status(404).send('Cotización no encontrada.');
-
         const detalle = quotation.detalles.find(d => d._id.toString() === calculo.detalleId.toString());
-        if (!detalle) return res.status(404).send('Detalle no encontrado.');
 
-        // ✅ Leer logo en base64
-        
-        const logoAbsolutePath = path.join(__dirname, '../public/img/logo_blk2.png');
-        const logoBuffer = fs.readFileSync(logoAbsolutePath);
-        const logoDataUrl = `data:image/png;base64,${logoBuffer.toString('base64')}`;
-    
+        const logoPath = path.join(__dirname, '../public/img/logo_blk2.png');
+        const logoDataUrl = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
 
-        // ✅ Renderizar la plantilla con logo base64
         const html = await renderTemplate(
             path.join(__dirname, '../views/pdf/vista-preliminar.hbs'),
             { customer, version, quotation, detalle, logoDataUrl }
         );
 
-
-        // (opcional) Guardar HTML temporal para depurar
-        fs.writeFileSync('temp-vista.html', html);
-
-        // 🖨️ Generar el PDF
-        const browser = await puppeteer.launch({
-            headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
-        });
-
+        const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
         const page = await browser.newPage();
         await page.setContent(html, { waitUntil: 'networkidle0' });
         await page.emulateMediaType('screen');
@@ -92,187 +89,81 @@ router.get('/descargar-pdf/:detalleId/:versionIndex', async (req, res) => {
         const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
         await browser.close();
 
-        // Enviar PDF
         res.set({
             'Content-Type': 'application/pdf',
-            'Content-Disposition': `attachment; filename=hoja_cotizacion_${version.titulo}.pdf`,
+            'Content-Disposition': `attachment; filename="hoja_cotizacion_${version.titulo || 'sin_titulo'}.pdf"`,
             'Content-Length': pdfBuffer.length
         });
         res.end(pdfBuffer);
 
     } catch (error) {
-        console.error('❌ Error al generar PDF desde hoja:', error);
+        console.error('❌ Error al exportar PDF de hoja:', error);
         res.status(500).send('Error interno al generar el PDF.');
     }
 });
 
-// Vista previa Orden de Trabajo (sin precios)
+// 🧾 Vista previa de la orden de trabajo
 router.get('/ver-orden-trabajo/:detalleId/:versionIndex', async (req, res) => {
-  const { detalleId, versionIndex } = req.params;
-
-  try {
-    const calculo = await QuotationCostDetail.findOne({ detalleId }).lean();
-    if (!calculo) return res.status(404).send("❌ Cálculo no encontrado.");
-
-    const versionIndexNum = parseInt(versionIndex, 10);
-
-    if (!Array.isArray(calculo.calculos) || versionIndexNum >= calculo.calculos.length) {
-      return res.status(404).send("❌ Versión de cálculo no encontrada.");
-    }
-
-    const version = calculo.calculos[versionIndexNum];
-    if (!version) return res.status(404).send("❌ Versión no encontrada.");
-
-    const customer = await Customer.findById(calculo.customer).lean();
-    if (!customer) return res.status(404).send('❌ Cliente no encontrado.');
-
-    const quotation = customer.solicitudesCotizacion.find(q =>
-      q._id.toString() === calculo.quotationId.toString()
-    );
-    if (!quotation) return res.status(404).send('❌ Cotización no encontrada.');
-
-    const detalle = quotation.detalles.find(d =>
-      d._id.toString() === detalleId.toString()
-    );
-    if (!detalle) return res.status(404).send('❌ Detalle no encontrado.');
-
-    const logoAbsolutePath = path.join(__dirname, '../public/img/logo_blk2.png');
-    const logoBuffer = fs.readFileSync(logoAbsolutePath);
-    const logoDataUrl = `data:image/png;base64,${logoBuffer.toString('base64')}`;
-
-    // ✅ Convertir fechas al formato input-date
-    const fechaAceptacion = version.fechaAceptacion
-      ? version.fechaAceptacion.toISOString().split('T')[0]
-      : '';
-
-    const fechaPrevistaEntrega = version.fechaPrevistaEntrega
-      ? version.fechaPrevistaEntrega.toISOString().split('T')[0]
-      : '';
-
-    res.render("pdf/orden-trabajo", {
-      customer,
-      version,
-      quotation,
-      detalle,
-      logoDataUrl,
-      fechaAceptacion,
-      fechaPrevistaEntrega,
-      formatDateLong: handlebarsHelpers.formatDateLong
-    });
-
-  } catch (error) {
-    console.error("❌ Error en /ver-orden-trabajo:", error);
-    res.status(500).send("Error interno.");
-  }
-});
-
-// Exportar PDF de Orden de Trabajo
-router.get('/descargar-orden/:detalleId/:versionIndex', async (req, res) => {
     const { detalleId, versionIndex } = req.params;
 
     try {
-        const calculo = await QuotationCostDetail.findOne({ detalleId }).lean();
+        const detalleObjectId = new ObjectId(detalleId);
+        const calculo = await QuotationCostDetail.findOne({ detalleId: detalleObjectId }).lean();
         if (!calculo) return res.status(404).send("❌ Cálculo no encontrado.");
 
-        //const version = calculo.calculos[versionIndex];
-        //if (!version) return res.status(404).send("❌ Versión no encontrada.");
-
-        const versionRaw = calculo.calculos[versionIndex];
-        if (!versionRaw) return res.status(404).send("❌ Versión no encontrada.");
-
-        // Ajustar fechas a formato YYYY-MM-DD en zona horaria local
-        const ajustarFecha = (fecha) => {
-            if (!fecha) return '';
-            const f = new Date(fecha);
-            f.setMinutes(f.getMinutes() - f.getTimezoneOffset());
-            return f.toISOString().split('T')[0];
-        };
-
-        const version = {
-            ...versionRaw,
-            fechaAceptacion: ajustarFecha(versionRaw.fechaAceptacion),
-            fechaPrevistaEntrega: ajustarFecha(versionRaw.fechaPrevistaEntrega)
-        };
+        const version = calculo.calculos[versionIndex];
+        if (!version) return res.status(404).send("❌ Versión no encontrada.");
 
         const customer = await Customer.findById(calculo.customer).lean();
-        if (!customer) return res.status(404).send("❌ Cliente no encontrado.");
-
         const quotation = customer.solicitudesCotizacion.find(q => q._id.toString() === calculo.quotationId.toString());
-        if (!quotation) return res.status(404).send("❌ Cotización no encontrada.");
-
         const detalle = quotation.detalles.find(d => d._id.toString() === detalleId);
-        if (!detalle) return res.status(404).send("❌ Detalle no encontrado.");
 
-        // Leer logo como base64
-        const logoAbsolutePath = path.join(__dirname, '../public/img/logo_blk2.png');
-        const logoBuffer = fs.readFileSync(logoAbsolutePath);
-        const logoDataUrl = `data:image/png;base64,${logoBuffer.toString('base64')}`;
+        const logoPath = path.join(__dirname, '../public/img/logo_blk2.png');
+        const logoDataUrl = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
 
-        // Renderizar plantilla handlebars
-        const html = await renderTemplate(
-            path.join(__dirname, '../views/pdf/orden-trabajo.hbs'),
-            {
-                customer,
-                version,
-                quotation,
-                detalle,
-                logoDataUrl,
-                formatDateLong: handlebarsHelpers.formatDateLong
-            }
-        );
+        const fechaAceptacion = version.fechaAceptacion
+            ? new Date(version.fechaAceptacion).toISOString().split('T')[0]
+            : '';
+        const fechaPrevistaEntrega = version.fechaPrevistaEntrega
+            ? new Date(version.fechaPrevistaEntrega).toISOString().split('T')[0]
+            : '';
 
-        // 🖨️ Generar PDF con Puppeteer
-        const browser = await puppeteer.launch({
-            headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        res.render("pdf/orden-trabajo", {
+            customer,
+            version,
+            quotation,
+            detalle,
+            logoDataUrl,
+            fechaAceptacion,
+            fechaPrevistaEntrega,
+            formatDateLong: handlebarsHelpers.formatDateLong
         });
-
-        const page = await browser.newPage();
-        await page.setContent(html, { waitUntil: 'networkidle0' });
-        await page.emulateMediaType('screen');
-
-        const pdfBuffer = await page.pdf({
-            format: 'A4',
-            printBackground: true
-        });
-
-        await browser.close();
-
-        // Enviar al cliente
-        res.set({
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': `attachment; filename=orden_trabajo_${version.titulo}.pdf`,
-            'Content-Length': pdfBuffer.length
-        });
-        res.end(pdfBuffer);
 
     } catch (error) {
-        console.error("❌ Error al generar PDF de orden de trabajo:", error);
-        res.status(500).send("Error interno al generar PDF.");
+        console.error("❌ Error en /ver-orden-trabajo:", error);
+        res.status(500).send("Error interno.");
     }
 });
 
-// Exportar PDF de Orden de Trabajo
-router.get('/descargar-orden-trabajo/:detalleId/:versionIndex', async (req, res) => {
+// 📤 Exportar Orden de Trabajo a PDF
+router.get('/exportar-orden-pdf/:detalleId/:versionIndex', async (req, res) => {
     const { detalleId, versionIndex } = req.params;
 
     try {
-        const calculo = await QuotationCostDetail.findOne({ detalleId }).lean();
+        const detalleObjectId = new ObjectId(detalleId);
+        const calculo = await QuotationCostDetail.findOne({ detalleId: detalleObjectId }).lean();
         if (!calculo) return res.status(404).send('❌ Cálculo no encontrado.');
 
         const version = calculo.calculos[versionIndex];
         if (!version) return res.status(404).send('❌ Versión no encontrada.');
 
         const customer = await Customer.findById(calculo.customer).lean();
-        if (!customer) return res.status(404).send('❌ Cliente no encontrado.');
-
         const quotation = customer.solicitudesCotizacion.find(q => q._id.toString() === calculo.quotationId.toString());
-        if (!quotation) return res.status(404).send('❌ Cotización no encontrada.');
+        const detalle = quotation.detalles.find(d => d._id.toString() === detalleId.toString());
 
-        const detalle = quotation.detalles.find(d => d._id.toString() === calculo.detalleId.toString());
-        if (!detalle) return res.status(404).send('❌ Detalle no encontrado.');
+        const logoPath = path.join(__dirname, '../public/img/logo_blk2.png');
+        const logoDataUrl = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
 
-        // ✅ Convertir fechas a formato local (YYYY-MM-DD)
         const fechaAceptacion = version.fechaAceptacion
             ? version.fechaAceptacion.toISOString().split('T')[0]
             : '';
@@ -280,12 +171,6 @@ router.get('/descargar-orden-trabajo/:detalleId/:versionIndex', async (req, res)
             ? version.fechaPrevistaEntrega.toISOString().split('T')[0]
             : '';
 
-        // ✅ Logo
-        const logoAbsolutePath = path.join(__dirname, '../public/img/logo_blk2.png');
-        const logoBuffer = fs.readFileSync(logoAbsolutePath);
-        const logoDataUrl = `data:image/png;base64,${logoBuffer.toString('base64')}`;
-
-        // ✅ Renderizar plantilla Handlebars
         const html = await renderTemplate(
             path.join(__dirname, '../views/pdf/orden-trabajo.hbs'),
             {
@@ -300,12 +185,7 @@ router.get('/descargar-orden-trabajo/:detalleId/:versionIndex', async (req, res)
             }
         );
 
-        // 🖨️ Generar PDF
-        const browser = await puppeteer.launch({
-            headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
-        });
-
+        const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
         const page = await browser.newPage();
         await page.setContent(html, { waitUntil: 'networkidle0' });
         await page.emulateMediaType('screen');
@@ -313,33 +193,20 @@ router.get('/descargar-orden-trabajo/:detalleId/:versionIndex', async (req, res)
         const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
         await browser.close();
 
-        // 📤 Enviar PDF al navegador
         res.set({
             'Content-Type': 'application/pdf',
-            'Content-Disposition': `attachment; filename=orden_trabajo_${version.titulo}.pdf`,
+            'Content-Disposition': `attachment; filename="orden_trabajo_${version.titulo || 'sin_titulo'}.pdf"`,
             'Content-Length': pdfBuffer.length
         });
         res.end(pdfBuffer);
 
     } catch (error) {
-        console.error('❌ Error al generar PDF de orden de trabajo:', error);
+        console.error('❌ Error al exportar PDF de orden de trabajo:', error);
         res.status(500).send('Error interno al generar el PDF.');
     }
 });
 
-// Handlebars rendering
-async function renderTemplate(filePath, data) {
-    const templateContent = fs.readFileSync(filePath, 'utf8');
-    const handlebars = hbs.create();
-
-    handlebars.handlebars.registerHelper('sum', handlebarsHelpers.sum);
-    handlebars.handlebars.registerHelper('formatCurrency', handlebarsHelpers.formatCurrency);
-    handlebars.handlebars.registerHelper('formatDateLong', handlebarsHelpers.formatDateLong);
-    handlebars.handlebars.registerHelper('groupByTipo', handlebarsHelpers.groupByTipo); // ✅ Asegúrate de que esté aquí
-    handlebars.handlebars.registerHelper('formatDateLocal', handlebarsHelpers.formatDateLocal);
-
-    const compiled = handlebars.handlebars.compile(templateContent);
-    return compiled(data);
-}
-
 module.exports = router;
+
+
+
