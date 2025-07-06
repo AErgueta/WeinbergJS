@@ -29,6 +29,8 @@
                                     <form action="/customers/{{../customer._id}}/quotations/delete/{{this._id}}?_method=DELETE" method="POST" style="display: inline;">
                                         <button class="btn btn-danger btn-sm" type="submit">Eliminar</button>
                                     </form>
+                                    <a href="/pdf/ver-cotizacion-general/{{../customer._id}}/{{this._id}}" target="_blank" class="btn btn-info btn-sm">Ver Cotización General</a>
+                                    <a href="/pdf/exportar-cotizacion-general/{{../customer._id}}/{{this._id}}" class="btn btn-secondary btn-sm" target="_blank">📄 PDF</a>
                                 </td>
                             </tr>
                         {{/each}}

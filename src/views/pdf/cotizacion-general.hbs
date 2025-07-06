@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Cotización General</title>
+  <style>
+    @page {
+      margin: 2cm;
+    }
+
+    body {
+      margin: 0;
+      background-color: #fff;
+      color: #000;
+      font-family: Arial, sans-serif;
+    }
+
+    .page {
+      width: 21cm;
+      min-height: 29.7cm;
+      margin: auto;
+      background: white;
+      padding: 2cm;
+      box-sizing: border-box;
+      position: relative;
+      page-break-after: always;
+    }
+
+    header {
+      position: running(header);
+    }
+
+    footer {
+      position: running(footer);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      width: 100%;
+    }
+
+    .logo {
+      width: 120px;
+      height: auto;
+    }
+
+    .info-cliente {
+      text-align: right;
+      font-size: 13px;
+    }
+
+    .bold {
+      font-weight: bold;
+    }
+
+    .box {
+      border: 1px solid #000;
+      padding: 10px;
+      margin-top: 15px;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .box-calculo {
+      border: 1px dashed #666;
+      padding: 10px;
+      margin-top: 10px;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .footer {
+      font-size: 11px;
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      border-top: 1px solid #ccc;
+      padding-top: 5px;
+    }
+
+    .page-number {
+      text-align: center;
+      font-size: 11px;
+      position: fixed;
+      bottom: 1cm;
+      left: 0;
+      right: 0;
+    }
+
+    .titulo-detalle {
+      font-weight: bold;
+      font-size: 15px;
+      margin-bottom: 5px;
+    }
+
+    .resumen {
+      margin-top: 5px;
+      font-size: 13px;
+    }
+
+    .resumen strong {
+      display: inline-block;
+      width: 120px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page">
+
+    <!-- ✅ Cabecera persistente -->
+    <header>
+      <div class="header">
+        <img src="{{logoDataUrl}}" class="logo" alt="Logo">
+        <div class="info-cliente">
+          <div>La Paz, {{formatDateLong quotation.fecha}}</div>
+          <div><span class="bold">Cód:</span> {{customer.alias}}</div>
+          <div><span class="bold">Cliente:</span> {{customer.nombreCus}}</div>
+          <div><span class="bold">Teléfono:</span> {{customer.telefonoCus}}</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 🔷 Título -->
+    <div class="box">
+      <div class="bold">Proforma General</div>
+    </div>
+
+    <!-- 🔸 Recuadros por detalle con cálculos -->
+    {{#each detallesCalculados}}
+      <div class="box">
+        <div class="titulo-detalle">📦 {{cantidadQuo}} - {{descripcionQuo}}</div>
+
+        {{#each calculos}}
+          <div class="box-calculo">
+            <div class="resumen">
+              <div><strong>Título:</strong> {{titulo}}</div>
+              <div><strong>Total:</strong> {{formatCurrency (sum lineas "monto")}}</div>
+
+              {{!-- ✅ Papeles usados --}}
+              {{#with (groupByTipo lineas "P") as |papeles|}}
+                {{#if papeles.length}}
+                  <div><strong>Papeles:</strong>
+                    {{#each papeles}}
+                      {{detalle}}{{#unless @last}}, {{/unless}}
+                    {{/each}}
+                  </div>
+                {{/if}}
+              {{/with}}
+
+            </div>
+          </div>
+        {{/each}}
+
+      </div>
+    {{/each}}
+
+    <!-- ✅ Pie persistente -->
+    <footer>
+      <div class="footer">
+        <div>
+          Tiempo de entrega: 3 a 5 días hábiles.<br>
+          Validez de la cotización: 15 días.
+        </div>
+        <div style="text-align: right;">
+          {{user.name}}
+        </div>
+      </div>
+    </footer>
+
+    <!-- ✅ Número de página 
+    <div class="page-number">
+      Página <span class="pageNumber"></span> de <span class="totalPages"></span>
+    </div> -->
+
+  </div>
+
+</body>
+</html>
