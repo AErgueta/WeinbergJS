@@ -295,8 +295,9 @@ router.get('/exportar-cotizacion-general/:customerId/:quotationId', async (req, 
             return res.status(404).send("❌ No hay detalles con cálculos para esta cotización.");
         }
 
-        const logoPath = path.join(__dirname, '../public/img/logo_blk2.png');
-        const logoDataUrl = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
+        //const logoPath = path.join(__dirname, '../public/img/logo_blk2.png');
+        //const logoDataUrl = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
+        const logoDataUrl = 'https://numb-imprenta.onrender.com/img/logo_blk2.png';
 
         const userName = req.user?.name || 'Usuario';
 
