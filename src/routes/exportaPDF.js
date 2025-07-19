@@ -76,9 +76,10 @@ router.get('/descargar-pdf/:detalleId/:versionIndex', async (req, res) => {
         const quotation = customer.solicitudesCotizacion.find(q => q._id.toString() === calculo.quotationId.toString());
         const detalle = quotation.detalles.find(d => d._id.toString() === calculo.detalleId.toString());
 
-        const logoPath = path.join(__dirname, '../public/img/logo_blk2.png');
-        const logoDataUrl = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
-
+        //const logoPath = path.join(__dirname, '../public/img/logo_blk2.png');
+        //const logoDataUrl = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
+        const logoDataUrl = 'https://numb-imprenta.onrender.com/img/logo_blk2.png';
+        
         const html = await renderTemplate(
             path.join(__dirname, '../views/pdf/vista-preliminar.hbs'),
             { customer, version, quotation, detalle, logoDataUrl }
@@ -164,8 +165,9 @@ router.get('/exportar-orden-pdf/:detalleId/:versionIndex', async (req, res) => {
         const quotation = customer.solicitudesCotizacion.find(q => q._id.toString() === calculo.quotationId.toString());
         const detalle = quotation.detalles.find(d => d._id.toString() === detalleId.toString());
 
-        const logoPath = path.join(__dirname, '../public/img/logo_blk2.png');
-        const logoDataUrl = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
+        //const logoPath = path.join(__dirname, '../public/img/logo_blk2.png');
+        //const logoDataUrl = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
+        const logoDataUrl = 'https://numb-imprenta.onrender.com/img/logo_blk2.png';
 
         const fechaAceptacion = version.fechaAceptacion
             ? version.fechaAceptacion.toISOString().split('T')[0]
