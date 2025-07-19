@@ -84,7 +84,7 @@ router.get('/descargar-pdf/:detalleId/:versionIndex', async (req, res) => {
             { customer, version, quotation, detalle, logoDataUrl }
         );
 
-        const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+        const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
         const page = await browser.newPage();
         await page.setContent(html, { waitUntil: 'networkidle0' });
         await page.emulateMediaType('screen');
@@ -188,7 +188,7 @@ router.get('/exportar-orden-pdf/:detalleId/:versionIndex', async (req, res) => {
             }
         );
 
-        const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+        const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
         const page = await browser.newPage();
         await page.setContent(html, { waitUntil: 'networkidle0' });
         await page.emulateMediaType('screen');
@@ -311,7 +311,7 @@ router.get('/exportar-cotizacion-general/:customerId/:quotationId', async (req, 
             }
         );
 
-        const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+        const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
         const page = await browser.newPage();
         await page.setContent(html, { waitUntil: 'networkidle0' });
         await page.emulateMediaType('screen');
