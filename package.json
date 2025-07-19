@@ -21,12 +21,9 @@
     "mongoose": "^7.5.2",
     "passport": "^0.6.0",
     "passport-local": "^1.0.0",
-    "puppeteer": "^24.8.2"
+    "puppeteer": "^24.14.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
-  },
-  "puppeteer": {
-    "default_browser_revision": "136.0.7103.92"
   }
 }
