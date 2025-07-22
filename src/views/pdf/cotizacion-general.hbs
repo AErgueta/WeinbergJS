@@ -177,6 +177,14 @@
     </div> -->
 
   </div>
-
+<script>
+  window.onload = function () {
+    if (window.matchMedia('print').matches === false) {
+      setTimeout(() => {
+        window.print();
+      }, 1000); // Espera 1 segundo por si se está renderizando algo más
+    }
+  };
+</script>
 </body>
 </html>
