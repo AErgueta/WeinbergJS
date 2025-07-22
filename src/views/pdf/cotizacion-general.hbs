@@ -178,10 +178,14 @@
 
   </div>
 <script>
-  window.addEventListener('DOMContentLoaded', function () {
-    setTimeout(() => {
-      window.print();
-    }, 500);
+  // Asegura que todo el DOM esté listo
+  document.addEventListener("DOMContentLoaded", function () {
+    // Espera que las imágenes carguen completamente
+    window.addEventListener("load", function () {
+      setTimeout(() => {
+        window.print();
+      }, 1000); // da tiempo a que la página se estabilice
+    });
   });
 </script>
 </body>
