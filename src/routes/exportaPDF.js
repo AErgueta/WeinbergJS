@@ -1,8 +1,5 @@
 const express = require('express');
 const router = express.Router();
-//const puppeteer = require('puppeteer');
-const puppeteer = require('puppeteer-core');
-const chromium = require('chrome-aws-lambda');
 const path = require('path');
 const hbs = require('express-handlebars');
 const fs = require('fs');
@@ -62,58 +59,6 @@ router.get('/ver-hoja/:detalleId/:versionIndex', async (req, res) => {
     }
 });
 
-// 📤 Exportar Hoja Cotización a PDF
-router.get('/descargar-pdf/:detalleId/:versionIndex', async (req, res) => {
-    const { detalleId, versionIndex } = req.params;
-
-    try {
-        const detalleObjectId = new ObjectId(detalleId);
-        const calculo = await QuotationCostDetail.findOne({ detalleId: detalleObjectId }).lean();
-        if (!calculo) return res.status(404).send('❌ Cálculo no encontrado.');
-
-        const version = calculo.calculos[versionIndex];
-        if (!version) return res.status(404).send('❌ Versión no encontrada.');
-
-        const customer = await Customer.findById(calculo.customer).lean();
-        const quotation = customer.solicitudesCotizacion.find(q => q._id.toString() === calculo.quotationId.toString());
-        const detalle = quotation.detalles.find(d => d._id.toString() === calculo.detalleId.toString());
-
-        //const logoPath = path.join(__dirname, '../public/img/logo_blk2.png');
-        //const logoDataUrl = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
-        const logoDataUrl = 'https://numb-imprenta.onrender.com/img/logo_blk2.png';
-        
-        const html = await renderTemplate(
-            path.join(__dirname, '../views/pdf/vista-preliminar.hbs'),
-            { customer, version, quotation, detalle, logoDataUrl }
-        );
-
-        //const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
-        const browser = await puppeteer.launch({
-            args: chromium.args,
-            defaultViewport: chromium.defaultViewport,
-            executablePath: await chromium.executablePath,
-            headless: chromium.headless,
-        });
-        const page = await browser.newPage();
-        await page.setContent(html, { waitUntil: 'networkidle0' });
-        await page.emulateMediaType('screen');
-
-        const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
-        await browser.close();
-
-        res.set({
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': `attachment; filename="hoja_cotizacion_${version.titulo || 'sin_titulo'}.pdf"`,
-            'Content-Length': pdfBuffer.length
-        });
-        res.end(pdfBuffer);
-
-    } catch (error) {
-        console.error('❌ Error al exportar PDF de hoja:', error);
-        res.status(500).send('Error interno al generar el PDF.');
-    }
-});
-
 // 🧾 Vista previa de la orden de trabajo
 router.get('/ver-orden-trabajo/:detalleId/:versionIndex', async (req, res) => {
     const { detalleId, versionIndex } = req.params;
@@ -154,74 +99,6 @@ router.get('/ver-orden-trabajo/:detalleId/:versionIndex', async (req, res) => {
     } catch (error) {
         console.error("❌ Error en /ver-orden-trabajo:", error);
         res.status(500).send("Error interno.");
-    }
-});
-
-// 📤 Exportar Orden de Trabajo a PDF
-router.get('/exportar-orden-pdf/:detalleId/:versionIndex', async (req, res) => {
-    const { detalleId, versionIndex } = req.params;
-
-    try {
-        const detalleObjectId = new ObjectId(detalleId);
-        const calculo = await QuotationCostDetail.findOne({ detalleId: detalleObjectId }).lean();
-        if (!calculo) return res.status(404).send('❌ Cálculo no encontrado.');
-
-        const version = calculo.calculos[versionIndex];
-        if (!version) return res.status(404).send('❌ Versión no encontrada.');
-
-        const customer = await Customer.findById(calculo.customer).lean();
-        const quotation = customer.solicitudesCotizacion.find(q => q._id.toString() === calculo.quotationId.toString());
-        const detalle = quotation.detalles.find(d => d._id.toString() === detalleId.toString());
-
-        //const logoPath = path.join(__dirname, '../public/img/logo_blk2.png');
-        //const logoDataUrl = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
-        const logoDataUrl = 'https://numb-imprenta.onrender.com/img/logo_blk2.png';
-
-        const fechaAceptacion = version.fechaAceptacion
-            ? version.fechaAceptacion.toISOString().split('T')[0]
-            : '';
-        const fechaPrevistaEntrega = version.fechaPrevistaEntrega
-            ? version.fechaPrevistaEntrega.toISOString().split('T')[0]
-            : '';
-
-        const html = await renderTemplate(
-            path.join(__dirname, '../views/pdf/orden-trabajo.hbs'),
-            {
-                customer,
-                version,
-                quotation,
-                detalle,
-                logoDataUrl,
-                fechaAceptacion,
-                fechaPrevistaEntrega,
-                formatDateLong: handlebarsHelpers.formatDateLong
-            }
-        );
-
-        //const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
-        const browser = await puppeteer.launch({
-            args: chromium.args,
-            defaultViewport: chromium.defaultViewport,
-            executablePath: await chromium.executablePath,
-            headless: chromium.headless,
-        });
-        const page = await browser.newPage();
-        await page.setContent(html, { waitUntil: 'networkidle0' });
-        await page.emulateMediaType('screen');
-
-        const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
-        await browser.close();
-
-        res.set({
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': `attachment; filename="orden_trabajo_${version.titulo || 'sin_titulo'}.pdf"`,
-            'Content-Length': pdfBuffer.length
-        });
-        res.end(pdfBuffer);
-
-    } catch (error) {
-        console.error('❌ Error al exportar PDF de orden de trabajo:', error);
-        res.status(500).send('Error interno al generar el PDF.');
     }
 });
 
@@ -282,98 +159,6 @@ router.get('/ver-cotizacion-general/:customerId/:quotationId', async (req, res) 
     console.error('❌ Error en vista de cotización general:', error);
     res.status(500).send('Error interno al generar vista.');
   }
-});
-
-// 📤 Exportar Cotización General a PDF
-router.get('/exportar-cotizacion-general/:customerId/:quotationId', async (req, res) => {
-    const { customerId, quotationId } = req.params;
-
-    try {
-        const customer = await Customer.findById(customerId).lean();
-        if (!customer) return res.status(404).send("❌ Cliente no encontrado.");
-
-        const quotation = customer.solicitudesCotizacion.find(q => q._id.toString() === quotationId);
-        if (!quotation) return res.status(404).send("❌ Cotización no encontrada.");
-
-        // Obtener detalles con cálculos
-        const detallesCalculados = [];
-        for (const detalle of quotation.detalles) {
-            const calculo = await QuotationCostDetail.findOne({ detalleId: detalle._id }).lean();
-            if (calculo && calculo.calculos && calculo.calculos.length > 0) {
-                detallesCalculados.push({
-                    ...detalle,
-                    calculos: calculo.calculos
-                });
-            }
-        }
-
-        if (detallesCalculados.length === 0) {
-            return res.status(404).send("❌ No hay detalles con cálculos para esta cotización.");
-        }
-
-        //const logoPath = path.join(__dirname, '../public/img/logo_blk2.png');
-        //const logoDataUrl = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
-        const logoDataUrl = 'https://numb-imprenta.onrender.com/img/logo_blk2.png';
-
-        const userName = req.user?.name || 'Usuario';
-
-        const html = await renderTemplate(
-            path.join(__dirname, '../views/pdf/cotizacion-general.hbs'),
-            {
-                customer,
-                quotation,
-                detallesCalculados,
-                logoDataUrl,
-                user: { name: userName }
-            }
-        );
-
-        //const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
-        const browser = await puppeteer.launch({
-            args: chromium.args,
-            defaultViewport: chromium.defaultViewport,
-            executablePath: await chromium.executablePath,
-            headless: chromium.headless,
-        });
-        const page = await browser.newPage();
-        await page.setContent(html, { waitUntil: 'networkidle0' });
-        await page.emulateMediaType('screen');
-
-        //const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
-        const pdfBuffer = await page.pdf({
-            format: 'A4',
-            printBackground: true,
-            displayHeaderFooter: true,
-            headerTemplate: `
-                <div style="font-size:10px; color: gray; width: 100%; text-align: right; padding-right: 1cm;">
-                Cotizaciones NUMB
-                </div>
-            `,
-            footerTemplate: `
-                <div style="font-size:10px; width: 100%; text-align: center; padding-top: 5px; border-top: 1px solid #ccc;">
-                Página <span class="pageNumber"></span> de <span class="totalPages"></span>
-                </div>
-            `,
-            margin: {
-                top: '2.5cm',
-                bottom: '2.5cm',
-                left: '2cm',
-                right: '2cm'
-            }
-        });
-        await browser.close();
-
-        res.set({
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': `attachment; filename="cotizacion_general_${customer.alias || 'cliente'}.pdf"`,
-            'Content-Length': pdfBuffer.length
-        });
-        res.end(pdfBuffer);
-
-    } catch (error) {
-        console.error("❌ Error al exportar cotización general:", error);
-        res.status(500).send("Error interno al generar PDF.");
-    }
 });
 
 module.exports = router;
