@@ -9,6 +9,35 @@
             background-color: #fff;
             color: #000;
         }
+
+        /* Botón de imprimir */
+        .print-button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Ocultar botón al imprimir */
+        @media print {
+            .print-button {
+                display: none;
+            }
+
+            body {
+                margin: 0;
+            }
+
+            .page {
+                box-shadow: none;
+            }
+        }
+
         .page {
             width: 21cm;
             height: 29.7cm;
@@ -19,38 +48,46 @@
             position: relative;
             box-shadow: 0 0 5px rgba(0,0,0,0.1);
         }
+
         .header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 20px;
         }
+
         .logo {
             width: 120px;
             height: auto;
         }
+
         .info-cliente {
             text-align: right;
             font-size: 13px;
         }
+
         .bold {
             font-weight: bold;
         }
+
         .box {
             border: 1px solid #000;
             padding: 10px;
             margin-top: 10px;
         }
+
         table {
             width: 100%;
             margin-top: 10px;
             border-collapse: collapse;
         }
+
         th, td {
             padding: 5px;
             text-align: left;
             border: 1px solid #ddd;
         }
+
         .footer {
             font-size: 11px;
             display: flex;
@@ -62,13 +99,16 @@
     </style>
 </head>
 <body>
+
+    <!-- Botón para imprimir -->
+    <button class="print-button" onclick="window.print()">🖨️ Imprimir PDF</button>
+
+    <!-- Contenido imprimible -->
     <div class="page">
 
         <!-- Encabezado con logo e info cliente -->
         <div class="header">
-            
             <img src="{{logoDataUrl}}" class="logo" alt="Logo">
-
             <div class="info-cliente">
                 <div>La Paz, {{formatDateLong version.fecha}}</div>
                 <div><span class="bold">Cód:</span> {{customer.alias}}</div>
