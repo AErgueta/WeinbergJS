@@ -12,6 +12,32 @@
       font-size: 13px;
     }
 
+    .print-button {
+      display: block;
+      margin: 20px auto;
+      padding: 10px 20px;
+      background-color: #28a745;
+      color: white;
+      font-size: 14px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    @media print {
+      .print-button {
+        display: none;
+      }
+
+      .page {
+        box-shadow: none;
+      }
+
+      body {
+        margin: 0;
+      }
+    }
+
     .page {
       width: 21cm;
       height: 29.7cm;
@@ -97,6 +123,10 @@
   </style>
 </head>
 <body>
+
+<!-- Botón de impresión -->
+<button class="print-button" onclick="window.print()">🖨️ Imprimir PDF</button>
+
 <div class="page">
 
   <!-- Encabezado -->
@@ -206,17 +236,17 @@
 
   <!-- Pie -->
   <div class="footer">
-  <div>
-    <div><strong>Fecha de Aceptación:</strong> {{fechaAceptacion}}</div>
-    <div><strong>Fecha Prevista de Entrega:</strong> {{fechaPrevistaEntrega}}</div>
-    <div style="margin-top: 5px;">
-      Orden generada automáticamente desde sistema NUMB.
+    <div>
+      <div><strong>Fecha de Aceptación:</strong> {{fechaAceptacion}}</div>
+      <div><strong>Fecha Prevista de Entrega:</strong> {{fechaPrevistaEntrega}}</div>
+      <div style="margin-top: 5px;">
+        Orden generada automáticamente desde sistema NUMB.
+      </div>
+    </div>
+    <div style="text-align: right;">
+      {{version.usuario}}
     </div>
   </div>
-  <div style="text-align: right;">
-    {{version.usuario}}
-  </div>
-</div>
 
 </div>
 </body>

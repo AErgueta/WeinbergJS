@@ -6,6 +6,7 @@
   <style>
     @page {
       margin: 2cm;
+      size: A4;
     }
 
     body {
@@ -13,6 +14,32 @@
       background-color: #fff;
       color: #000;
       font-family: Arial, sans-serif;
+    }
+
+    .print-button {
+      display: block;
+      margin: 20px auto;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      font-size: 14px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    @media print {
+      .print-button {
+        display: none;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      .page {
+        box-shadow: none;
+      }
     }
 
     .page {
@@ -81,15 +108,6 @@
       padding-top: 5px;
     }
 
-    .page-number {
-      text-align: center;
-      font-size: 11px;
-      position: fixed;
-      bottom: 1cm;
-      left: 0;
-      right: 0;
-    }
-
     .titulo-detalle {
       font-weight: bold;
       font-size: 15px;
@@ -109,73 +127,70 @@
 </head>
 <body>
 
-  <div class="page">
+<!-- 🔘 Botón de impresión -->
+<button class="print-button" onclick="window.print()">🖨️ Imprimir PDF</button>
 
-    <!-- ✅ Cabecera persistente -->
-    <header>
-      <div class="header">
-        <img src="{{logoDataUrl}}" class="logo" alt="Logo">
-        <div class="info-cliente">
-          <div>La Paz, {{formatDateLong quotation.fecha}}</div>
-          <div><span class="bold">Cód:</span> {{customer.alias}}</div>
-          <div><span class="bold">Cliente:</span> {{customer.nombreCus}}</div>
-          <div><span class="bold">Teléfono:</span> {{customer.telefonoCus}}</div>
-        </div>
+<div class="page">
+
+  <!-- ✅ Cabecera persistente -->
+  <header>
+    <div class="header">
+      <img src="{{logoDataUrl}}" class="logo" alt="Logo">
+      <div class="info-cliente">
+        <div>La Paz, {{formatDateLong quotation.fecha}}</div>
+        <div><span class="bold">Cód:</span> {{customer.alias}}</div>
+        <div><span class="bold">Cliente:</span> {{customer.nombreCus}}</div>
+        <div><span class="bold">Teléfono:</span> {{customer.telefonoCus}}</div>
       </div>
-    </header>
-
-    <!-- 🔷 Título -->
-    <div class="box">
-      <div class="bold">Proforma General</div>
     </div>
+  </header>
 
-    <!-- 🔸 Recuadros por detalle con cálculos -->
-    {{#each detallesCalculados}}
-      <div class="box">
-        <div class="titulo-detalle">📦 {{cantidadQuo}} - {{descripcionQuo}}</div>
-
-        {{#each calculos}}
-          <div class="box-calculo">
-            <div class="resumen">
-              <div><strong>Título:</strong> {{titulo}}</div>
-              <div><strong>Total:</strong> {{formatCurrency (sum lineas "monto")}}</div>
-
-              {{!-- ✅ Papeles usados --}}
-              {{#with (groupByTipo lineas "P") as |papeles|}}
-                {{#if papeles.length}}
-                  <div><strong>Papeles:</strong>
-                    {{#each papeles}}
-                      {{detalle}}{{#unless @last}}, {{/unless}}
-                    {{/each}}
-                  </div>
-                {{/if}}
-              {{/with}}
-
-            </div>
-          </div>
-        {{/each}}
-
-      </div>
-    {{/each}}
-
-    <!-- ✅ Pie persistente -->
-    <footer>
-      <div class="footer">
-        <div>
-          Tiempo de entrega: 3 a 5 días hábiles.<br>
-          Validez de la cotización: 15 días.
-        </div>
-        <div style="text-align: right;">
-          {{user.name}}
-        </div>
-      </div>
-    </footer>
-
-    <!-- ✅ Número de página 
-    <div class="page-number">
-      Página <span class="pageNumber"></span> de <span class="totalPages"></span>
-    </div> -->
-
+  <!-- 🔷 Título -->
+  <div class="box">
+    <div class="bold">Proforma General</div>
   </div>
+
+  <!-- 🔸 Recuadros por detalle con cálculos -->
+  {{#each detallesCalculados}}
+    <div class="box">
+      <div class="titulo-detalle">📦 {{cantidadQuo}} - {{descripcionQuo}}</div>
+
+      {{#each calculos}}
+        <div class="box-calculo">
+          <div class="resumen">
+            <div><strong>Título:</strong> {{titulo}}</div>
+            <div><strong>Total:</strong> {{formatCurrency (sum lineas "monto")}}</div>
+
+            {{!-- ✅ Papeles usados --}}
+            {{#with (groupByTipo lineas "P") as |papeles|}}
+              {{#if papeles.length}}
+                <div><strong>Papeles:</strong>
+                  {{#each papeles}}
+                    {{detalle}}{{#unless @last}}, {{/unless}}
+                  {{/each}}
+                </div>
+              {{/if}}
+            {{/with}}
+          </div>
+        </div>
+      {{/each}}
+
+    </div>
+  {{/each}}
+
+  <!-- ✅ Pie persistente -->
+  <footer>
+    <div class="footer">
+      <div>
+        Tiempo de entrega: 3 a 5 días hábiles.<br>
+        Validez de la cotización: 15 días.
+      </div>
+      <div style="text-align: right;">
+        {{user.name}}
+      </div>
+    </div>
+  </footer>
+</div>
+
 </body>
 </html>
