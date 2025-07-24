@@ -11,6 +11,7 @@ const mongoose = require('mongoose');
 // Importar el modelo Customer
 const Customer = require('../models/customer');
 const Quotation = require('../models/customer'); // Asegúrate de tener el modelo Quotation definido
+const QuotationCostDetail = require('../models/quotationCostDetail'); // Asegúrate que esto esté al inicio
 
 const{isAuthenticated} = require('../helpers/auth');
 
@@ -101,26 +102,40 @@ router.post('/customers/:customerId/quotations', async (req, res) => {
 
 // Obtener la página de edición de una solicitud de cotización
 // routes/quotation.js
-router.get('/customers/:customerId/quotations/edit/:quotationId',isAuthenticated, async (req, res) => {
+
+router.get('/customers/:customerId/quotations/edit/:quotationId', isAuthenticated, async (req, res) => {
     const { customerId, quotationId } = req.params;
     try {
         const customer = await Customer.findById(customerId).lean();
-        if (!customer) {
-            return res.status(404).send('Customer not found');
-        }
+        if (!customer) return res.status(404).send('Customer not found');
 
-        // Encontrar la cotización manualmente
         const quotation = customer.solicitudesCotizacion.find(q => q._id.toString() === quotationId);
-        if (!quotation) {
-            return res.status(404).send('Quotation not found');
-        }
-        //console.log(quotation);
-        res.render('quotes/edit-quotation', { customer, quotation });
+        if (!quotation) return res.status(404).send('Quotation not found');
+
+        // Para cada detalle, verificamos si hay cálculos guardados
+        const detallesConCalculos = await Promise.all(
+            quotation.detalles.map(async (detalle) => {
+                const detalleId = detalle._id;
+                const calculo = await QuotationCostDetail.findOne({ detalleId }).lean();
+                return {
+                    ...detalle,
+                    tieneCalculos: !!(calculo && calculo.calculos && calculo.calculos.length > 0)
+                };
+            })
+        );
+
+        res.render('quotes/edit-quotation', {
+            customer,
+            quotation,
+            detalles: detallesConCalculos
+        });
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });
+
 
 // Actualizar una solicitud de cotización
 router.put('/customers/:customerId/quotations/edit/:quotationId', async (req, res) => {
