@@ -62,10 +62,13 @@
                         <div class="col-md-10 d-flex align-items-end justify-content-end gap-1">
                             <button type="button" class="btn btn-danger btn-sm" onclick="removeDetail(${detailIndex})">Remove</button>
                             <button type="button" class="btn btn-success btn-sm" onclick="redirectToCalculator(${detailIndex})">Cotizar</button>
-                            <button type="button" class="btn btn-info btn-sm" onclick="redirectToResumen(${detailIndex})"
+                            <button type="button"
+                                class="btn btn-sm ${detail.tieneCalculos ? 'btn-info' : 'btn-secondary'}"
+                                onclick="redirectToResumen(${detailIndex})"
                                 ${detail.tieneCalculos ? '' : 'disabled title="No hay cálculos guardados aún"'}>
                                 Resumen de Costos
                             </button>
+
                         </div>
                     </div>
                     <hr>
