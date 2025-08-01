@@ -35,7 +35,7 @@ router.post('/users/signup', async (req, res) => {
     }
 
     // Validar contraseña de administrador
-    const adminUser = await User.findOne({ email: 'admin@numb.com' }); // Cambia si usas otro correo
+    const adminUser = await User.findOne({ email: 'administrador@numb-wb.com' }); 
 
     if (!adminUser) {
         errors.push({ text: 'No se encontró el usuario administrador.' });
