@@ -1,12 +1,10 @@
 const express = require('express');
 const router = express.Router();
-
+const passport = require('passport');
 const User = require('../models/user');
 
-const passport = require('passport');
-
-router.get('/users/signin', (req, res) => {//get es para abrir el archivo
-    res.render('users/signin'); //Dentro de la carpeta users, está el archivo signin
+router.get('/users/signin', (req, res) => {
+    res.render('users/signin');
 });
 
 router.post('/users/signin', passport.authenticate('local', {
@@ -15,13 +13,12 @@ router.post('/users/signin', passport.authenticate('local', {
     failureFlash: true
 }));
 
-
 router.get('/users/signup', (req, res) => {
     res.render('users/signup');
 });
 
 router.post('/users/signup', async (req, res) => {
-    const { name, email, password, confirm_password, admin_password } = req.body;
+    const { name, email, password, confirm_password, admin_password, role } = req.body;
     const errors = [];
 
     if (!name || name.trim().length === 0) {
@@ -33,10 +30,12 @@ router.post('/users/signup', async (req, res) => {
     if (password.length < 4) {
         errors.push({ text: 'La contraseña debe contener más de 4 caracteres' });
     }
+    if (!role || !['A', 'U'].includes(role)) {
+        errors.push({ text: 'Debe seleccionar un tipo de usuario válido' });
+    }
 
-    // Validar contraseña de administrador
+    // Validar contraseña del administrador
     const adminUser = await User.findOne({ email: 'administrador@numb-wb.com' }); 
-
     if (!adminUser) {
         errors.push({ text: 'No se encontró el usuario administrador.' });
     } else {
@@ -48,17 +47,18 @@ router.post('/users/signup', async (req, res) => {
 
     if (errors.length > 0) {
         return res.render('users/signup', {
-            errors, name, email, password, confirm_password
+            errors, name, email, password, confirm_password, role
         });
     }
 
+    // Validar si el correo ya existe
     const emailUser = await User.findOne({ email: email });
     if (emailUser) {
         req.flash('errors', 'El correo ya se encuentra registrado');
         return res.redirect('/users/signup');
     }
 
-    const newUser = new User({ name, email, password });
+    const newUser = new User({ name, email, password, role });
     newUser.password = await newUser.encryptPassword(password);
     await newUser.save();
     req.flash('success_msg', 'Usuario registrado');
@@ -68,9 +68,9 @@ router.post('/users/signup', async (req, res) => {
 router.get('/users/logout', (req, res) => {
     req.logout((err) => {
         if (err) {
-            return res.redirect('/'); // Otra acción en caso de error
+            return res.redirect('/');
         }
-        res.redirect('/'); // Redireccionar después de cerrar sesión
+        res.redirect('/');
     });
 });
 
