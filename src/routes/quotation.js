@@ -25,7 +25,7 @@ router.get('/customers/:customerId/quotations/new', isAuthenticated, async (req,
         if (!customer) {
             return res.status(404).send('Customer not found');
         }
-        res.render('quotes/new-quotation', { customerId }); // Asegúrate de pasar el customerId a la vista
+        res.render('quotes/new-quotation', { customerId, user: { name: usuarioSesion } }); // Asegúrate de pasar el customerId a la vista
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal Server Error' });
@@ -53,7 +53,7 @@ router.get('/customers/:customerId/quotations', async (req, res) => {
 // Escribir documentos
 router.post('/customers/:customerId/quotations', async (req, res) => {
     const customerId = req.params.customerId;
-    const { fecha, fechaVence, descripcionCorta, detalles = [] } = req.body;
+    const { fecha, fechaVence, descripcionCorta, detalles, user = [] } = req.body;
 
     // Agregar logs para depuración
     console.log('Fecha:', fecha);
@@ -61,6 +61,7 @@ router.post('/customers/:customerId/quotations', async (req, res) => {
     console.log('Descripción corta:', descripcionCorta);
     console.log('Detalles:', detalles);
     console.log('ID Customer', customerId);
+    console.log('Usuario', user);
 
     try {
         const customer = await Customer.findById(customerId);
