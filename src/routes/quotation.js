@@ -53,7 +53,7 @@ router.get('/customers/:customerId/quotations', async (req, res) => {
 // Escribir documentos
 router.post('/customers/:customerId/quotations', async (req, res) => {
     const customerId = req.params.customerId;
-    const { fecha, fechaVence, descripcionCorta, detalles, user = [] } = req.body;
+    const { fecha, fechaVence, descripcionCorta, detalles = [] } = req.body;
 
     // Agregar logs para depuración
     console.log('Fecha:', fecha);
@@ -61,8 +61,7 @@ router.post('/customers/:customerId/quotations', async (req, res) => {
     console.log('Descripción corta:', descripcionCorta);
     console.log('Detalles:', detalles);
     console.log('ID Customer', customerId);
-    console.log('Usuario', user);
-
+    
     try {
         const customer = await Customer.findById(customerId);
         if (!customer) {
