@@ -25,7 +25,7 @@ router.get('/customers/:customerId/quotations/new', isAuthenticated, async (req,
         if (!customer) {
             return res.status(404).send('Customer not found');
         }
-        res.render('quotes/new-quotation', { customerId, user: { name: usuarioSesion } }); // Asegúrate de pasar el customerId a la vista
+        res.render('quotes/new-quotation', { customerId }); // Asegúrate de pasar el customerId a la vista
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal Server Error' });
