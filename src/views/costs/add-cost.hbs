@@ -4,7 +4,11 @@
         <div class="form-row">
             <div class="form-group col-md-3">
                 <label>Código</label>
-                <input type="text" name="codigoCT" class="form-control" required>
+                <input type="text" name="codigoCT" class="form-control" required
+                    style="text-transform: uppercase;"
+                    oninput="this.value = this.value.toUpperCase()"
+                    pattern="[A-Z0-9]+" title="Solo letras y números, sin espacios"
+                    autofocus>
             </div>
             <div class="form-group col-md-6">
                 <label>Descripción</label>
@@ -12,13 +16,13 @@
             </div>
             <div class="form-group col-md-3">
                 <label>Tamaño</label>
-                <input type="text" name="tamanoCT" class="form-control">
+                <input type="text" name="tamanoCT" class="form-control" value="x">
             </div>
         </div>
         <div class="form-row">
             <div class="form-group col-md-3">
                 <label>Monto</label>
-                <input type="number" step="0.01" name="montoCT" class="form-control" required>
+                <input type="number" step="any" name="montoCT" class="form-control" required>
             </div>
             <div class="form-group col-md-3">
                 <label>No. Artículo</label>
