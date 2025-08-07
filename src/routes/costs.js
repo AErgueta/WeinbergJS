@@ -63,4 +63,22 @@ router.post('/costs/edit/:id', isAuthenticated, async (req, res) => {
     }
 });
 
+// Ruta para mostrar el formulario de creación de nuevo costo
+router.get('/costs/add', isAuthenticated, (req, res) => {
+    res.render('costs/add-cost');
+});
+
+// Ruta para procesar la creación del nuevo costo
+router.post('/costs/add', isAuthenticated, async (req, res) => {
+    const { codigoCT, descCT, tamanoCT, montoCT, noArtiCT, factorCT } = req.body;
+    try {
+        const newCost = new Cost({ codigoCT, descCT, tamanoCT, montoCT, noArtiCT, factorCT });
+        await newCost.save();
+        res.redirect('/costs');
+    } catch (error) {
+        console.error('Error al guardar el nuevo costo:', error);
+        res.status(500).send('Error al guardar el nuevo costo');
+    }
+});
+
 module.exports = router;

@@ -1,0 +1,35 @@
+<div class="container mt-4">
+    <h3 class="text-center mb-3">➕ Nuevo Costo</h3>
+    <form action="/costs/add" method="POST">
+        <div class="form-row">
+            <div class="form-group col-md-3">
+                <label>Código</label>
+                <input type="text" name="codigoCT" class="form-control" required>
+            </div>
+            <div class="form-group col-md-6">
+                <label>Descripción</label>
+                <input type="text" name="descCT" class="form-control" required>
+            </div>
+            <div class="form-group col-md-3">
+                <label>Tamaño</label>
+                <input type="text" name="tamanoCT" class="form-control">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-3">
+                <label>Monto</label>
+                <input type="number" step="0.01" name="montoCT" class="form-control" required>
+            </div>
+            <div class="form-group col-md-3">
+                <label>No. Artículo</label>
+                <input type="text" name="noArtiCT" class="form-control">
+            </div>
+            <div class="form-group col-md-3">
+                <label>Factor</label>
+                <input type="number" step="0.01" name="factorCT" class="form-control" value="0">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-success">Guardar</button>
+        <a href="/costs" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
