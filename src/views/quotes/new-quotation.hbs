@@ -8,29 +8,37 @@
     <script>
         function addDetail() {
             const detailsContainer = document.getElementById('detailsContainer');
-            const detailIndex = detailsContainer.childElementCount;
+            const detailIndex = detailsContainer.childElementCount; 
+            const lineaNumero = detailIndex + 1; 
 
             const detailTemplate = `
                 <div class="detail mb-2" id="detail-${detailIndex}">
                     <div class="form-row">
                         <div class="col-md-2">
-                            <label for="detalles[${detailIndex}][lineaQuo]" class="mb-1">Linea:</label>
-                            <input type="number" id="detalles[${detailIndex}][lineaQuo]" name="detalles[${detailIndex}][lineaQuo]" class="form-control form-control-sm" required>
+                            <label class="mb-1">Linea:</label>
+                            <input type="number" 
+                                name="detalles[${detailIndex}][lineaQuo]" 
+                                class="form-control form-control-sm" 
+                                value="${lineaNumero}" 
+                                readonly>
                         </div>
+
+                        <!-- Campo oculto para Tipo, siempre "R" -->
+                        <input type="hidden" 
+                            name="detalles[${detailIndex}][tipoQuo]" 
+                            value="R">
+
                         <div class="col-md-2">
-                            <label for="detalles[${detailIndex}][tipoQuo]" class="mb-1">Tipo (P/R):</label>
-                            <select id="detalles[${detailIndex}][tipoQuo]" name="detalles[${detailIndex}][tipoQuo]" class="form-control form-control-sm" required>
-                                <option value="P">P</option>
-                                <option value="R">R</option>
-                            </select>
+                            <label class="mb-1">Cantidad:</label>
+                            <input type="number" 
+                                name="detalles[${detailIndex}][cantidadQuo]" 
+                                class="form-control form-control-sm" required>
                         </div>
-                        <div class="col-md-2">
-                            <label for="detalles[${detailIndex}][cantidadQuo]" class="mb-1">Cantidad:</label>
-                            <input type="number" id="detalles[${detailIndex}][cantidadQuo]" name="detalles[${detailIndex}][cantidadQuo]" class="form-control form-control-sm" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="detalles[${detailIndex}][descripcionQuo]" class="mb-1">Descripción:</label>
-                            <textarea id="detalles[${detailIndex}][descripcionQuo]" name="detalles[${detailIndex}][descripcionQuo]" class="form-control form-control-sm" rows="6" required></textarea>
+                        <div class="col-md-6">
+                            <label class="mb-1">Descripción:</label>
+                            <textarea name="detalles[${detailIndex}][descripcionQuo]" 
+                                    class="form-control form-control-sm" 
+                                    rows="6" required></textarea>
                         </div>
                         <div class="col-md-2 d-flex align-items-end">
                             <button type="button" class="btn btn-danger btn-sm" onclick="removeDetail(${detailIndex})">Remove</button>
@@ -45,7 +53,14 @@
 
         function removeDetail(index) {
             const detailElement = document.getElementById(`detail-${index}`);
-            detailElement.remove();
+            if (detailElement) {
+                detailElement.remove();
+                const detalles = document.querySelectorAll('#detailsContainer .detail');
+                detalles.forEach((detalle, i) => {
+                    const lineaInput = detalle.querySelector('input[name$="[lineaQuo]"]');
+                    if (lineaInput) lineaInput.value = i + 1;
+                });
+            }
         }
     </script>
 </head>

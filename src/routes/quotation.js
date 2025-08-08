@@ -183,16 +183,22 @@ router.put('/customers/:customerId/quotations/edit/:quotationId', async (req, re
 // Borrar documento
 router.delete('/customers/:customerId/quotations/delete/:quotationId', async (req, res) => {
     const { customerId, quotationId } = req.params;
+
     try {
-        const customer = await Customer.findById(customerId);
+        const customer = await Customer.findById(customerId); // 👈 sin .lean()
+
         if (!customer) {
             return res.status(404).send('Customer not found');
         }
-        customer.solicitudesCotizacion.id(quotationId).remove();
+
+        // Eliminar usando pull()
+        customer.solicitudesCotizacion.pull({ _id: quotationId });
+
         await customer.save();
+
         res.redirect(`/customers/${customerId}/quotations`);
     } catch (error) {
-        console.error(error);
+        console.error('Error eliminando cotización:', error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });
