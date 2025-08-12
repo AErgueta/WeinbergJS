@@ -50,30 +50,21 @@ router.get('/customers/:customerId/quotations', async (req, res) => {
     }
 });
 
-// Escribir documentos
 router.post('/customers/:customerId/quotations', async (req, res) => {
     const customerId = req.params.customerId;
     const { fecha, fechaVence, descripcionCorta, detalles = [] } = req.body;
 
-    // Agregar logs para depuración
-    console.log('Fecha:', fecha);
-    console.log('Fecha Vence:', fechaVence);
-    console.log('Descripción corta:', descripcionCorta);
-    console.log('Detalles:', detalles);
-    console.log('ID Customer', customerId);
-    
     try {
         const customer = await Customer.findById(customerId);
         if (!customer) {
-            console.log('Customer not found');
             return res.status(404).send('Customer not found');
         }
 
-        // Crear una nueva cotización usando el esquema de cotización
         const newQuotation = {
             fecha,
             fechaVence,
             descripcionCorta,
+            usuarioCreador: req.user ? req.user.name : 'Desconocido', // 👈 aquí se guarda el usuario
             detalles: detalles.map(detalle => ({
                 lineaQuo: detalle.lineaQuo,
                 tipoQuo: detalle.tipoQuo,
@@ -82,16 +73,8 @@ router.post('/customers/:customerId/quotations', async (req, res) => {
             }))
         };
 
-        // Agregar log para verificar la nueva cotización
-        console.log('New Quotation:', newQuotation);
-
-        // Añadir la nueva cotización al array de solicitudesCotizacion
         customer.solicitudesCotizacion.push(newQuotation);
-
-        // Guardar el cliente actualizado
         await customer.save();
-
-        console.log('Quotation saved successfully');
 
         res.redirect(`/customers/${customerId}/quotations`);
     } catch (error) {

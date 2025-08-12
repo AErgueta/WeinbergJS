@@ -16,6 +16,7 @@ const quotationHeaderSchema = new Schema({
     fecha: { type: Date, required: true },
     fechaVence: { type: Date },
     descripcionCorta: { type: String, required: true },
+    usuarioCreador: { type: String, required: true }, // 👈 nuevo campo
     detalles: [quotationSchema]
 });
 
