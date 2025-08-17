@@ -1,8 +1,11 @@
+// routes/users.js
 const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 const User = require('../models/user');
+const { isAuthenticated } = require('../helpers/auth');
 
+// -------------------- LOGIN --------------------
 router.get('/users/signin', (req, res) => {
     res.render('users/signin');
 });
@@ -13,6 +16,7 @@ router.post('/users/signin', passport.authenticate('local', {
     failureFlash: true
 }));
 
+// -------------------- SIGNUP --------------------
 router.get('/users/signup', (req, res) => {
     res.render('users/signup');
 });
@@ -54,7 +58,7 @@ router.post('/users/signup', async (req, res) => {
     // Validar si el correo ya existe
     const emailUser = await User.findOne({ email: email });
     if (emailUser) {
-        req.flash('errors', 'El correo ya se encuentra registrado');
+        req.flash('error_msg', 'El correo ya se encuentra registrado');
         return res.redirect('/users/signup');
     }
 
@@ -65,6 +69,7 @@ router.post('/users/signup', async (req, res) => {
     res.redirect('/users/signin');
 });
 
+// -------------------- LOGOUT --------------------
 router.get('/users/logout', (req, res) => {
     req.logout((err) => {
         if (err) {
@@ -72,6 +77,64 @@ router.get('/users/logout', (req, res) => {
         }
         res.redirect('/');
     });
+});
+
+// -------------------- CAMBIO DE CONTRASEÑA --------------------
+// Mostrar formulario
+router.get('/users/change-password', isAuthenticated, (req, res) => {
+    res.render('users/change-password');
+});
+
+// Procesar cambio
+router.post('/users/change-password', isAuthenticated, async (req, res) => {
+    const { current_password, new_password, confirm_password } = req.body;
+    const errors = [];
+
+    try {
+        const user = await User.findById(req.user.id);
+
+        // Validar contraseña actual
+        const isMatch = await user.matchPassword(current_password);
+        if (!isMatch) {
+            errors.push({ text: 'La contraseña actual es incorrecta' });
+        }
+
+        // Validar coincidencia de nueva contraseña
+        if (new_password !== confirm_password) {
+            errors.push({ text: 'Las nuevas contraseñas no coinciden' });
+        }
+
+        // Validar longitud mínima
+        if (new_password.length < 4) {
+            errors.push({ text: 'La nueva contraseña debe tener al menos 4 caracteres' });
+        }
+
+        // Validar que no sea igual a la actual
+        const isSameAsOld = await user.matchPassword(new_password);
+        if (isSameAsOld) {
+            errors.push({ text: 'La nueva contraseña no puede ser igual a la actual' });
+        }
+
+        if (errors.length > 0) {
+            return res.render('users/change-password', { 
+                errors, 
+                current_password, 
+                new_password, 
+                confirm_password 
+            });
+        }
+
+        // Guardar nueva contraseña encriptada
+        user.password = await user.encryptPassword(new_password);
+        await user.save();
+
+        req.flash('success_msg', 'Contraseña actualizada correctamente');
+        res.redirect('/customers');
+    } catch (error) {
+        console.error(error);
+        req.flash('error_msg', 'Error al cambiar la contraseña');
+        res.redirect('/users/change-password');
+    }
 });
 
 module.exports = router;
