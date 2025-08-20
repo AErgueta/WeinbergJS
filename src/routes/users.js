@@ -38,6 +38,17 @@ router.post('/users/signup', async (req, res) => {
         errors.push({ text: 'Debe seleccionar un tipo de usuario válido' });
     }
 
+    // Validar contraseña del administrador (versión temporal)
+    //const adminUser = await User.findOne({ email: 'administrador@numb-wb.com' }); 
+    //if (!adminUser) {
+        //errors.push({ text: 'No se encontró el usuario administrador.' });
+    //} else {
+        // Comparar directamente con "123" en lugar de validar el hash
+        //if (admin_password !== '123') {
+            //errors.push({ text: 'Contraseña de administrador incorrecta' });
+        //}
+    //}
+
     // Validar contraseña del administrador
     const adminUser = await User.findOne({ email: 'administrador@numb-wb.com' }); 
     if (!adminUser) {
