@@ -46,12 +46,13 @@ router.get('/ver-hoja/:detalleId/:versionIndex', async (req, res) => {
         const logoDataUrl = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
 
         res.render('pdf/vista-preliminar', {
-            customer,
-            version,
-            quotation,
-            detalle,
-            logoDataUrl
-        });
+          customer,
+          version,
+          quotation,
+          detalle,
+          logoDataUrl,
+          codigoCotizacion: quotation.codigoCotizacion   // 👈 agregado
+      });
 
     } catch (error) {
         console.error('❌ Error en /ver-hoja:', error);
@@ -86,15 +87,16 @@ router.get('/ver-orden-trabajo/:detalleId/:versionIndex', async (req, res) => {
             : '';
 
         res.render("pdf/orden-trabajo", {
-            customer,
-            version,
-            quotation,
-            detalle,
-            logoDataUrl,
-            fechaAceptacion,
-            fechaPrevistaEntrega,
-            formatDateLong: handlebarsHelpers.formatDateLong
-        });
+          customer,
+          version,
+          quotation,
+          detalle,
+          logoDataUrl,
+          fechaAceptacion,
+          fechaPrevistaEntrega,
+          formatDateLong: handlebarsHelpers.formatDateLong,
+          codigoCotizacion: quotation.codigoCotizacion   // 👈 agregado
+      });
 
     } catch (error) {
         console.error("❌ Error en /ver-orden-trabajo:", error);
@@ -145,14 +147,15 @@ router.get('/ver-cotizacion-general/:customerId/:quotationId', async (req, res) 
 
     // ✅ Renderizar vista
     res.render('pdf/cotizacion-general', {
-      customer,
-      quotation,
-      detallesCalculados,
-      logoDataUrl,
-      user: { name: userName },
-      formatDateLong: handlebarsHelpers.formatDateLong,
-      formatCurrency: handlebarsHelpers.formatCurrency,
-      sum: handlebarsHelpers.sum
+        customer,
+        quotation,
+        detallesCalculados,
+        logoDataUrl,
+        user: { name: userName },
+        formatDateLong: handlebarsHelpers.formatDateLong,
+        formatCurrency: handlebarsHelpers.formatCurrency,
+        sum: handlebarsHelpers.sum,
+        codigoCotizacion: quotation.codigoCotizacion   // 👈 agregado
     });
 
   } catch (error) {
