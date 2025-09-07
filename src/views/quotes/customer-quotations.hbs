@@ -9,28 +9,39 @@
     {{#if quotations.length}}
         <div class="row">
             <div class="col-md-12">
-                <table class="table">
-                    <thead>
+                <table class="table table-bordered table-hover table-sm">
+                    <thead class="thead-dark text-center">
                         <tr>
+                            <th>Código</th>
                             <th>Fecha</th>
                             <th>Fecha Vence</th>
                             <th>Descripción Corta</th>
+                            <th>Usuario Creador</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {{#each quotations}}
-                            <tr>
-                                <td>{{formatDate this.fecha}}</td>
-                                <td>{{formatDate this.fechaVence}}</td>
-                                <td>{{this.descripcionCorta}}</td>
+                            <tr class="text-center">
+                                <td>{{codigoCotizacion}}</td>
+                                <td>{{formatDateLocal this.fecha}}</td>
+                                <td>{{formatDateLocal this.fechaVence}}</td>
+                                <td class="text-left">{{this.descripcionCorta}}</td>
+                                <td>{{this.usuarioCreador}}</td>
                                 <td>
-                                    <a href="/customers/{{../customer._id}}/quotations/edit/{{this._id}}" class="btn btn-primary btn-sm">Editar</a>
-                                    <form action="/customers/{{../customer._id}}/quotations/delete/{{this._id}}?_method=DELETE" method="POST" style="display: inline;">
+                                    <a href="/customers/{{../customer._id}}/quotations/edit/{{this._id}}" 
+                                       class="btn btn-primary btn-sm">Editar</a>
+                                    <form action="/customers/{{../customer._id}}/quotations/delete/{{this._id}}?_method=DELETE" 
+                                          method="POST" style="display:inline;">
                                         <button class="btn btn-danger btn-sm" type="submit">Eliminar</button>
                                     </form>
-                                    <a href="/pdf/ver-cotizacion-general/{{../customer._id}}/{{this._id}}" target="_blank" class="btn btn-info btn-sm">Ver Cotización General</a>
-                                    <!--<a href="/pdf/exportar-cotizacion-general/{{../customer._id}}/{{this._id}}" class="btn btn-secondary btn-sm" target="_blank">📄 PDF</a>-->
+                                    <a href="/pdf/ver-cotizacion-general/{{../customer._id}}/{{this._id}}" 
+                                       target="_blank" 
+                                       class="btn btn-info btn-sm">Ver Cotización General</a>
+                                    <!--
+                                    <a href="/pdf/exportar-cotizacion-general/{{../customer._id}}/{{this._id}}" 
+                                       class="btn btn-secondary btn-sm" target="_blank">📄 PDF</a>
+                                    -->
                                 </td>
                             </tr>
                         {{/each}}
@@ -46,7 +57,7 @@
         </div>
     {{/if}}
 
-    <div class="row">
+    <div class="row mt-3">
         <div class="col-md-12">
             <a href="/customers/{{customer._id}}/quotations/new" class="btn btn-success">Crear Nueva Cotización</a>
         </div>

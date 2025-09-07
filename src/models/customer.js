@@ -13,10 +13,11 @@ const quotationSchema = new Schema({
 });
 
 const quotationHeaderSchema = new Schema({
+    codigoCotizacion: { type: String, required: true }, // 👈 nuevo campo
     fecha: { type: Date, required: true },
     fechaVence: { type: Date },
     descripcionCorta: { type: String, required: true },
-    usuarioCreador: { type: String, required: true }, // 👈 nuevo campo
+    usuarioCreador: { type: String, required: true },
     detalles: [quotationSchema]
 });
 

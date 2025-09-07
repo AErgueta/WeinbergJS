@@ -2,20 +2,10 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 
-// Middleware para registrar el cuerpo de la solicitud
-/*router.use((req, res, next) => {
-    console.log('Request Body:', req.body);
-    next();
-});*/
-
 // Importar el modelo Customer
 const Customer = require('../models/customer');
-const Quotation = require('../models/customer'); // Asegúrate de tener el modelo Quotation definido
-const QuotationCostDetail = require('../models/quotationCostDetail'); // Asegúrate que esto esté al inicio
-
-const{isAuthenticated} = require('../helpers/auth');
-
-//const { Customer, Quotation } = require('../models/customer'); //MODIFICADO
+const QuotationCostDetail = require('../models/quotationCostDetail');
+const { isAuthenticated } = require('../helpers/auth');
 
 // Mostrar formulario para crear una nueva cotización
 router.get('/customers/:customerId/quotations/new', isAuthenticated, async (req, res) => {
@@ -25,14 +15,12 @@ router.get('/customers/:customerId/quotations/new', isAuthenticated, async (req,
         if (!customer) {
             return res.status(404).send('Customer not found');
         }
-        res.render('quotes/new-quotation', { customerId }); // Asegúrate de pasar el customerId a la vista
+        res.render('quotes/new-quotation', { customerId });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });
-
-
 
 // Leer documentos de solicitudes de cotización para un cliente específico
 router.get('/customers/:customerId/quotations', async (req, res) => {
@@ -50,6 +38,7 @@ router.get('/customers/:customerId/quotations', async (req, res) => {
     }
 });
 
+// Crear nueva solicitud de cotización
 router.post('/customers/:customerId/quotations', async (req, res) => {
     const customerId = req.params.customerId;
     const { fecha, fechaVence, descripcionCorta, detalles = [] } = req.body;
@@ -60,11 +49,43 @@ router.post('/customers/:customerId/quotations', async (req, res) => {
             return res.status(404).send('Customer not found');
         }
 
+        // --- Generar código ---
+        let codigoCotizacion = '';
+        const alias = customer.aliasCus.toUpperCase();
+        const ultimaCotizacion = customer.solicitudesCotizacion.slice(-1)[0]; // última
+
+        if (!ultimaCotizacion) {
+            // primera vez
+            codigoCotizacion = `${alias}001-A`;
+        } else {
+            const ultimoCodigo = ultimaCotizacion.codigoCotizacion; // ej. "ABC005-A"
+            const match = ultimoCodigo.match(/(\D+)(\d{3})-([A-Z])/);
+
+            if (match) {
+                const prefix = match[1];   // alias
+                let numero = parseInt(match[2]); // 005
+                let letra = match[3];      // A
+
+                numero++;
+                if (numero > 999) {
+                    numero = 1;
+                    letra = String.fromCharCode(letra.charCodeAt(0) + 1); // siguiente letra
+                }
+
+                codigoCotizacion = `${prefix}${numero.toString().padStart(3, '0')}-${letra}`;
+            } else {
+                // fallback si algo falla
+                codigoCotizacion = `${alias}001-A`;
+            }
+        }
+
+        // Crear la nueva cotización
         const newQuotation = {
+            codigoCotizacion,   // 👈 lo nuevo
             fecha,
             fechaVence,
             descripcionCorta,
-            usuarioCreador: req.user ? req.user.name : 'Desconocido', // 👈 aquí se guarda el usuario
+            usuarioCreador: req.user ? req.user.name : 'Desconocido',
             detalles: detalles.map(detalle => ({
                 lineaQuo: detalle.lineaQuo,
                 tipoQuo: detalle.tipoQuo,
@@ -84,8 +105,6 @@ router.post('/customers/:customerId/quotations', async (req, res) => {
 });
 
 // Obtener la página de edición de una solicitud de cotización
-// routes/quotation.js
-
 router.get('/customers/:customerId/quotations/edit/:quotationId', isAuthenticated, async (req, res) => {
     const { customerId, quotationId } = req.params;
     try {
@@ -119,7 +138,6 @@ router.get('/customers/:customerId/quotations/edit/:quotationId', isAuthenticate
     }
 });
 
-
 // Actualizar una solicitud de cotización
 router.put('/customers/:customerId/quotations/edit/:quotationId', async (req, res) => {
     const { customerId, quotationId } = req.params;
@@ -137,7 +155,6 @@ router.put('/customers/:customerId/quotations/edit/:quotationId', async (req, re
         quotation.fechaVence = fechaVence;
         quotation.descripcionCorta = descripcionCorta;
 
-        // Asegúrate de que detalles es un array antes de mapearlo
         if (Array.isArray(detalles)) {
             quotation.detalles = detalles.map(detalle => ({
                 lineaQuo: detalle.lineaQuo,
@@ -146,7 +163,6 @@ router.put('/customers/:customerId/quotations/edit/:quotationId', async (req, re
                 descripcionQuo: detalle.descripcionQuo
             }));
         } else {
-            // Manejo de caso en que detalles no sea un array, tal vez sea un solo objeto
             quotation.detalles = [{
                 lineaQuo: detalles.lineaQuo,
                 tipoQuo: detalles.tipoQuo,
@@ -168,13 +184,12 @@ router.delete('/customers/:customerId/quotations/delete/:quotationId', async (re
     const { customerId, quotationId } = req.params;
 
     try {
-        const customer = await Customer.findById(customerId); // 👈 sin .lean()
+        const customer = await Customer.findById(customerId);
 
         if (!customer) {
             return res.status(404).send('Customer not found');
         }
 
-        // Eliminar usando pull()
         customer.solicitudesCotizacion.pull({ _id: quotationId });
 
         await customer.save();
@@ -186,6 +201,7 @@ router.delete('/customers/:customerId/quotations/delete/:quotationId', async (re
     }
 });
 
+// Guardar edición con POST
 router.post('/customers/:customerId/quotations/edit/:quotationId', async (req, res) => {
     const { customerId, quotationId } = req.params;
     const { fecha, fechaVence, descripcionCorta, detalles = [] } = req.body;
@@ -218,7 +234,5 @@ router.post('/customers/:customerId/quotations/edit/:quotationId', async (req, r
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });
-
-
 
 module.exports = router;
