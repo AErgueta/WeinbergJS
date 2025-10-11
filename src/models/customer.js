@@ -1,4 +1,4 @@
-// models/customer.js
+//customer.js
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 

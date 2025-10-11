@@ -2,10 +2,21 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 
-// Importar el modelo Customer
+// Importar los modelos
 const Customer = require('../models/customer');
 const QuotationCostDetail = require('../models/quotationCostDetail');
+const Counter = require('../models/counter'); // 👈 nuevo modelo para el correlativo
 const { isAuthenticated } = require('../helpers/auth');
+
+// 🔧 Función para obtener el siguiente número global
+async function getNextSequence(name) {
+    const counter = await Counter.findOneAndUpdate(
+        { name },
+        { $inc: { seq: 1 } },
+        { new: true, upsert: true }
+    );
+    return counter.seq;
+}
 
 // Mostrar formulario para crear una nueva cotización
 router.get('/customers/:customerId/quotations/new', isAuthenticated, async (req, res) => {
@@ -38,70 +49,67 @@ router.get('/customers/:customerId/quotations', async (req, res) => {
     }
 });
 
-// Crear nueva solicitud de cotización
+// Crear nueva solicitud de cotización con código global
 router.post('/customers/:customerId/quotations', async (req, res) => {
-    const customerId = req.params.customerId;
-    const { fecha, fechaVence, descripcionCorta, detalles = [] } = req.body;
+  const customerId = req.params.customerId;
+  const { fecha, fechaVence, descripcionCorta, detalles = [] } = req.body;
 
-    try {
-        const customer = await Customer.findById(customerId);
-        if (!customer) {
-            return res.status(404).send('Customer not found');
-        }
-
-        // --- Generar código ---
-        let codigoCotizacion = '';
-        const alias = customer.aliasCus.toUpperCase();
-        const ultimaCotizacion = customer.solicitudesCotizacion.slice(-1)[0]; // última
-
-        if (!ultimaCotizacion) {
-            // primera vez
-            codigoCotizacion = `${alias}001-A`;
-        } else {
-            const ultimoCodigo = ultimaCotizacion.codigoCotizacion; // ej. "ABC005-A"
-            const match = ultimoCodigo.match(/(\D+)(\d{3})-([A-Z])/);
-
-            if (match) {
-                const prefix = match[1];   // alias
-                let numero = parseInt(match[2]); // 005
-                let letra = match[3];      // A
-
-                numero++;
-                if (numero > 999) {
-                    numero = 1;
-                    letra = String.fromCharCode(letra.charCodeAt(0) + 1); // siguiente letra
-                }
-
-                codigoCotizacion = `${prefix}${numero.toString().padStart(3, '0')}-${letra}`;
-            } else {
-                // fallback si algo falla
-                codigoCotizacion = `${alias}001-A`;
-            }
-        }
-
-        // Crear la nueva cotización
-        const newQuotation = {
-            codigoCotizacion,   // 👈 lo nuevo
-            fecha,
-            fechaVence,
-            descripcionCorta,
-            usuarioCreador: req.user ? req.user.name : 'Desconocido',
-            detalles: detalles.map(detalle => ({
-                lineaQuo: detalle.lineaQuo,
-                tipoQuo: detalle.tipoQuo,
-                cantidadQuo: detalle.cantidadQuo,
-                descripcionQuo: detalle.descripcionQuo
-            }))
-        };
-
-        customer.solicitudesCotizacion.push(newQuotation);
-        await customer.save();
-
-        res.redirect(`/customers/${customerId}/quotations`);
-    } catch (error) {
-        console.error('Error during saving:', error);
-        res.status(500).json({ message: 'Internal Server Error (writing)' });
+  try {
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).send('Customer not found');
     }
+
+    // ===========================
+    // 🔹 1. GENERAR CÓDIGO GLOBAL
+    // ===========================
+    const counterCollection = mongoose.connection.collection('counters');
+    const result = await counterCollection.findOneAndUpdate(
+      { _id: 'globalQuotationNumber' },
+      { $inc: { seq: 1 } },
+      { upsert: true, returnDocument: 'after' }
+    );
+
+    const numeroGlobal = result.value.seq;
+    const codigoCotizacion = `GRV${numeroGlobal.toString().padStart(4, '0')}-A`;
+
+    //console.log("👉 numeroGlobal generado:", numeroGlobal);
+    //console.log("👉 codigoCotizacion generado:", codigoCotizacion);
+
+    // ===========================
+    // 🔹 2. CREAR NUEVA COTIZACIÓN
+    // ===========================
+    const newQuotation = {
+      codigoCotizacion,
+      fecha,
+      fechaVence,
+      descripcionCorta,
+      usuarioCreador: req.user ? req.user.name : 'Desconocido',
+      detalles: detalles.map(detalle => ({
+        lineaQuo: detalle.lineaQuo,
+        tipoQuo: detalle.tipoQuo,
+        cantidadQuo: detalle.cantidadQuo,
+        descripcionQuo: detalle.descripcionQuo
+        //aceptada: false
+      }))
+    };
+
+    //console.log("👉 newQuotation listo para push:", newQuotation);
+
+    // ===========================
+    // 🔹 3. AGREGAR AL CLIENTE
+    // ===========================
+    customer.solicitudesCotizacion.push(newQuotation);
+
+    await customer.save(); // 💾 Guardamos como antes, sin cast manual ni nada raro
+
+    //console.log("✅ Cotización guardada exitosamente");
+    res.redirect(`/customers/${customerId}/quotations`);
+
+  } catch (error) {
+    console.error('Error during saving:', error);
+    res.status(500).json({ message: 'Internal Server Error (writing)' });
+  }
 });
 
 // Obtener la página de edición de una solicitud de cotización
