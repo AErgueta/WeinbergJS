@@ -799,7 +799,7 @@
                 const tipo = tipoSelect.value?.trim();
 
                 // ✅ Mantener P, T y L sin tocar
-                if (["P", "T", "L"].includes(tipo)) return;
+                if (["P", "T", "L", "C", "A", "S"].includes(tipo)) return;
 
                 // 🔹 Reset tipoMaterial
                 tipoSelect.value = "";
