@@ -173,6 +173,9 @@
             <div class="mt-3 d-flex justify-content-between align-items-center">
                 <!-- Botón Limpiar -->
                 <button id="btnLimpiar" class="btn btn-warning mb-2">Limpiar</button>
+                <!-- Botones Copiar y Pegar -->
+                <button id="btnCopiar" class="btn btn-secondary">📋 Copiar</button>
+                <button id="btnPegar" class="btn btn-primary">📥 Pegar</button>
                 <div class="text-right">
                     <button id="btnCalcularTotal" class="btn btn-success mb-2">Calcular Total</button>
                     <div class="form-group d-inline-block ml-3">
@@ -221,6 +224,8 @@
                         row.querySelector("input[name='monto']").value = "";
                         row.querySelector("input[name='factor']").value = 1;
                         row.querySelector("input[name='cantidadM']").value = "";
+
+                        desbloquearCantidades();
 
                         return; // Salir del handler, no hacer más nada
                     }
@@ -377,7 +382,9 @@
                         const dato = nuevosDatos[usadas];
                         usadas++;
 
-                        tipoMaterialSelect.innerHTML = `<option value="I" selected>I - Gastos Indirectos</option>`;
+                        //tipoMaterialSelect.innerHTML = `<option value="I" selected>I - Gastos Indirectos</option>`;
+                        tipoMaterialSelect.value = "I";
+                        tipoMaterialSelect.dispatchEvent(new Event("change"));
 
                         fetch("/api/articulos/gastosindirectos")
                             .then(response => response.json())
@@ -772,52 +779,166 @@
         });
     </script>
     <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Guardar las opciones originales de cada combo de artículos
+            document.querySelectorAll("#tabla-detalles tbody tr").forEach(fila => {
+                const noArticulo = fila.querySelector("select[name='noArticulo']");
+                if (noArticulo && !noArticulo.dataset.originalOptions) {
+                    noArticulo.dataset.originalOptions = noArticulo.innerHTML;
+                }
+            });
+        });
+
         function limpiarGrid() {
             const filas = document.querySelectorAll("#tabla-detalles tbody tr");
 
             filas.forEach(fila => {
-            const tipoSelect = fila.querySelector("select[name='tipoMaterial']");
-            if (!tipoSelect) return;
+                const tipoSelect = fila.querySelector("select[name='tipoMaterial']");
+                if (!tipoSelect) return;
 
-            const tipo = tipoSelect.value;
+                const tipo = tipoSelect.value?.trim();
 
-            // Mantener P, T y L tal cual
-            if (tipo === "P" || tipo === "T" || tipo === "L") return;
+                // ✅ Mantener P, T y L sin tocar
+                if (["P", "T", "L"].includes(tipo)) return;
 
-            // Limpiar valores sin eliminar elementos ni reemplazar HTML
-            tipoSelect.value = "";
-            // Dispara change por si tienes lógica que reacciona a esto
-            tipoSelect.dispatchEvent(new Event("change"));
+                // 🔹 Reset tipoMaterial
+                tipoSelect.value = "";
+                tipoSelect.dispatchEvent(new Event("change")); // dispara lógica asociada
+                tipoSelect.removeAttribute("disabled");
+                tipoSelect.removeAttribute("readonly");
 
-            const noArticulo = fila.querySelector("select[name='noArticulo']");
-            if (noArticulo) {
-                // No reemplazar innerHTML: solo resetear selección
-                noArticulo.selectedIndex = 0;
-            }
+                // 🔹 Reset noArticulo → restaurar opciones originales
+                const noArticulo = fila.querySelector("select[name='noArticulo']");
+                if (noArticulo) {
+                    if (noArticulo.dataset.originalOptions) {
+                        noArticulo.innerHTML = noArticulo.dataset.originalOptions; // restaurar lista original
+                    } else {
+                        noArticulo.innerHTML = `<option value="">Seleccione</option>`;
+                    }
+                    noArticulo.selectedIndex = 0;
+                    noArticulo.removeAttribute("disabled");
+                    noArticulo.removeAttribute("readonly");
+                }
 
-            const cantidad = fila.querySelector("input[name='cantidad']");
-            const precio   = fila.querySelector("input[name='precio']");
-            const detalle  = fila.querySelector("input[name='detalle']");
-            const monto    = fila.querySelector("input[name='monto']");
-            const factor   = fila.querySelector("input[name='factor']");
-            const cantM    = fila.querySelector("input[name='cantidadM']");
+                // 🔹 Reset de inputs de la fila
+                const campos = ["cantidad", "precio", "detalle", "monto", "factor", "cantidadM"];
+                campos.forEach(nombre => {
+                    const input = fila.querySelector(`input[name='${nombre}']`);
+                    if (input) {
+                        // Restablecer valores por defecto
+                        if (nombre === "factor") input.value = "1";
+                        else if (nombre === "cantidadM") input.value = "0";
+                        else input.value = "";
 
-            if (cantidad) cantidad.value = "";
-            if (precio)   precio.value   = "";
-            if (detalle)  detalle.value  = "";
-            if (monto)    monto.value    = "";
-            if (factor)   factor.value   = "1";
-            if (cantM)    cantM.value    = "0";
+                        // Quitar restricciones
+                        input.removeAttribute("readonly");
+                        input.removeAttribute("disabled");
+                        input.classList.remove("readonly", "disabled");
+                    }
+                });
+
+                // 🔹 Quitar estilos visuales o marcas residuales
+                fila.classList.remove("resaltado", "bloqueado", "fila-automatica");
             });
 
-            // Resetear totales globales
+            // 🔹 Limpiar totales globales
             const total = document.getElementById("sumaTotalCostos");
             if (total) total.value = "";
+
             const cantMtot = document.getElementById("cantidadMtotGlobal");
             if (cantMtot) cantMtot.value = "0";
+
+            // 🔹 Llamar al desbloqueador general por si había filas bloqueadas
+            if (typeof desbloquearCantidades === "function") {
+                desbloquearCantidades();
+            }
+
+            console.log("🧹 Grid limpiado correctamente (se mantuvieron P, T y L).");
+        }
+
+        function desbloquearCantidades() {
+            document.querySelectorAll("#tabla-detalles tbody tr").forEach(fila => {
+                const tipo = fila.querySelector("select[name='tipoMaterial']")?.value;
+                const inputCantidad = fila.querySelector("input[name='cantidad']");
+
+                // Desbloquear si la fila no es automática (I, O, U son automáticas)
+                if (inputCantidad && !["I", "O", "U"].includes(tipo)) {
+                    inputCantidad.removeAttribute("readonly");
+                    inputCantidad.removeAttribute("disabled");
+                }
+            });
         }
 
         document.getElementById("btnLimpiar").addEventListener("click", limpiarGrid);
+    </script>
+    <script>
+        document.getElementById("btnCopiar")?.addEventListener("click", () => {
+            const filas = document.querySelectorAll("#tabla-detalles tbody tr");
+            const datos = [];
+
+            filas.forEach(fila => {
+                const tipo = fila.querySelector("select[name='tipoMaterial']")?.value;
+                if (!tipo) return; // Ignorar filas vacías
+
+                const detalle = {
+                    tipoMaterial: tipo,
+                    noArticulo: fila.querySelector("select[name='noArticulo']")?.value || "",
+                    cantidad: fila.querySelector("input[name='cantidad']")?.value || "",
+                    precio: fila.querySelector("input[name='precio']")?.value || "",
+                    detalle: fila.querySelector("input[name='detalle']")?.value || "",
+                    monto: fila.querySelector("input[name='monto']")?.value || "",
+                    factor: fila.querySelector("input[name='factor']")?.value || "",
+                    cantidadM: fila.querySelector("input[name='cantidadM']")?.value || ""
+                };
+                datos.push(detalle);
+            });
+
+            localStorage.setItem("gridCopiado", JSON.stringify(datos));
+            alert(`✅ ${datos.length} líneas copiadas al portapapeles interno.`);
+            console.log("📋 Copiado:", datos);
+        });
+
+        document.getElementById("btnPegar")?.addEventListener("click", () => {
+            const data = localStorage.getItem("gridCopiado");
+            if (!data) {
+                alert("⚠️ No hay datos copiados para pegar.");
+                return;
+            }
+
+            const filasGuardadas = JSON.parse(data);
+            console.log("📥 Pegando:", filasGuardadas);
+
+            const filas = document.querySelectorAll("#tabla-detalles tbody tr");
+            let i = 0;
+
+            filasGuardadas.forEach(filaData => {
+                if (i >= filas.length) return; // No más filas disponibles
+                const fila = filas[i++];
+
+                const tipoSelect = fila.querySelector("select[name='tipoMaterial']");
+                const noArticulo = fila.querySelector("select[name='noArticulo']");
+                const campos = {
+                    cantidad: fila.querySelector("input[name='cantidad']"),
+                    precio: fila.querySelector("input[name='precio']"),
+                    detalle: fila.querySelector("input[name='detalle']"),
+                    monto: fila.querySelector("input[name='monto']"),
+                    factor: fila.querySelector("input[name='factor']"),
+                    cantidadM: fila.querySelector("input[name='cantidadM']")
+                };
+
+                // Asignar valores
+                tipoSelect.value = filaData.tipoMaterial;
+                tipoSelect.dispatchEvent(new Event("change"));
+                setTimeout(() => {
+                    if (noArticulo) noArticulo.value = filaData.noArticulo;
+                    for (let campo in campos) {
+                        if (campos[campo]) campos[campo].value = filaData[campo] || "";
+                    }
+                }, 400);
+            });
+
+            alert(`✅ ${filasGuardadas.length} líneas pegadas correctamente.`);
+        });
     </script>
 </body>
 </html>
