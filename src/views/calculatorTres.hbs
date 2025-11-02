@@ -359,7 +359,7 @@
                 const nuevosDatos = [
                     { codigo: "CI2001", cantidad: cantidadMO * 2 },
                     { codigo: "CI2002", cantidad: cantidadMO },
-                    { codigo: "CI2003", cantidad: cantidadMO - 1 }
+                    { codigo: "CI2003", cantidad: cantidadMO > 1 ? cantidadMO - 1 : cantidadMO }
                 ];
 
                 let usadas = 0;
