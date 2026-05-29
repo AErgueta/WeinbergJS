@@ -1,0 +1,27 @@
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card card-body">
+                <h3 class="text-center">Reporte de Seguimiento</h3>
+                <p class="text-muted text-center">Seleccione el rango de fechas a consultar.</p>
+                
+                <form action="/reports/seguimiento-data" method="POST" target="_blank">
+                    
+                    <div class="form-group">
+                        <label for="fechaInicio">Fecha de Inicio:</label>
+                        <input type="date" id="fechaInicio" name="fechaInicio" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="fechaFin">Fecha de Fin:</label>
+                        <input type="date" id="fechaFin" name="fechaFin" class="form-control" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block mt-3">
+                        Generar Reporte
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,175 +1,348 @@
-<style>
-  .canvas-wrapper {
-    background-color: #f0f0f0;
-    padding: 10px;
-    border-radius: 5px;
-    display: inline-block;
-  }
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calculadora de Pliegos</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  
+  <style>
+    body {
+      background-color: #f4f6f9; /* Fondo gris suave dashboard */
+    }
+    .card-custom {
+      border: none;
+      border-radius: 15px;
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s;
+    }
+    .form-control {
+      border-radius: 10px;
+      height: 45px; /* Inputs más altos y cómodos */
+    }
+    .form-label-bold {
+      font-weight: 600;
+      color: #495057;
+      font-size: 0.9rem;
+    }
+    .result-box {
+      background-color: #e3f2fd; /* Azul muy suave */
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+      border: 1px solid #bbdefb;
+    }
+    .result-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #0d47a1;
+    }
+    .result-label {
+      font-size: 0.85rem;
+      color: #546e7a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .canvas-container {
+      background-color: #ffffff;
+      border: 2px dashed #ced4da;
+      border-radius: 15px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 300px;
+      padding: 10px;
+    }
+    canvas {
+      max-width: 100%;
+      height: auto;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
 
-  .form-group {
-    margin-bottom: 10px;
-  }
-
-  .compact-label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    margin-bottom: 2px;
-  }
-
-  input[type="number"] {
-    font-size: 0.85rem;
-    padding: 4px 6px;
-    height: 32px;
-  }
-
-  .card-header {
-    font-size: 0.95rem;
-    padding: 6px 10px;
-  }
-
-  .card-body {
-    padding: 10px;
-  }
-
-  .btn {
-    font-size: 0.85rem;
-    padding: 6px 10px;
-  }
-
-  h3 {
-    font-size: 1.4rem;
-  }
-
-  p.text-muted {
-    font-size: 0.9rem;
-  }
-
-  canvas {
-    max-width: 100%;
-    height: auto;
-  }
-</style>
-
-<div class="container mt-3">
-  <div class="text-center mb-3">
-    <h3>📐 Cálculo Referencial de Pliegos</h3>
-    <p class="text-muted">Herramienta auxiliar para estimar uso de papel en impresión.</p>
-    <hr>
+<div class="container mt-4 mb-5">
+  
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="font-weight-bold text-dark mb-0">
+          <i class="fas fa-cut text-primary mr-2"></i>Calculadora de Cortes
+        </h2>
+        <p class="text-muted mb-0">Optimización de pliegos y cortes de papel</p>
+    </div>
+    <a href="/" class="btn btn-outline-secondary shadow-sm" style="border-radius: 20px;">
+        <i class="fas fa-home mr-1"></i> Ir al Inicio
+    </a>
   </div>
 
   <div class="row">
-    <!-- Formulario -->
-    <div class="col-md-4 mb-3">
-      <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">📝 Datos de Entrada</div>
+    
+    <div class="col-lg-4 mb-4">
+      <div class="card card-custom h-100">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+          <h5 class="font-weight-bold text-dark"><i class="fas fa-sliders-h mr-2 text-info"></i>Parámetros</h5>
+        </div>
         <div class="card-body">
+            
+            <h6 class="text-primary font-weight-bold mb-3 border-bottom pb-2">📏 Dimensiones del Pliego</h6>
+            <div class="form-row">
+                <div class="form-group col-6">
+                    <label class="form-label-bold">Ancho (cm)</label>
+                    <input type="number" id="papelAncho" class="form-control text-center" value="61" onchange="calculate()">
+                </div>
+                <div class="form-group col-6">
+                    <label class="form-label-bold">Alto (cm)</label>
+                    <input type="number" id="papelAlto" class="form-control text-center" value="41" onchange="calculate()">
+                </div>
+            </div>
 
-          <div class="form-row">
-            <div class="col">
-              <label class="compact-label">Pliego Ancho</label>
-              <input type="number" class="form-control" id="input1">
+            <h6 class="text-primary font-weight-bold mt-3 mb-3 border-bottom pb-2">📄 Tamaño del Corte (Trabajo)</h6>
+            <div class="form-row">
+                <div class="form-group col-6">
+                    <label class="form-label-bold">Ancho (cm)</label>
+                    <input type="number" id="anchoLogico" class="form-control text-center" value="21" onchange="calculate()">
+                </div>
+                <div class="form-group col-6">
+                    <label class="form-label-bold">Alto (cm)</label>
+                    <input type="number" id="altoLogico" class="form-control text-center" value="29" onchange="calculate()">
+                </div>
             </div>
-            <div class="col">
-              <label class="compact-label">Pliego Alto</label>
-              <input type="number" class="form-control" id="input2">
-            </div>
-          </div>
 
-          <div class="form-row">
-            <div class="col">
-              <label class="compact-label">Corte Ancho</label>
-              <input type="number" class="form-control" id="input3">
+            <h6 class="text-primary font-weight-bold mt-3 mb-3 border-bottom pb-2">🔧 Ajustes y Cantidad</h6>
+            <div class="form-row">
+                <div class="form-group col-6">
+                    <label class="form-label-bold">Pinza (cm)</label>
+                    <input type="number" id="pinza" class="form-control text-center" value="1" onchange="calculate()">
+                </div>
+                <div class="form-group col-6">
+                    <label class="form-label-bold">Cantidad Deseada</label>
+                    <input type="number" id="cantidad" class="form-control text-center font-weight-bold" value="1000" style="color: #28a745;" onchange="calculate()">
+                </div>
             </div>
-            <div class="col">
-              <label class="compact-label">Corte Alto</label>
-              <input type="number" class="form-control" id="input4">
-            </div>
-          </div>
 
-          <div class="form-group mt-2">
-            <label class="compact-label">Cantidad de Unidades</label>
-            <input type="number" class="form-control" id="input5">
-          </div>
-
-          <hr class="my-2">
-
-          <div class="form-row">
-            <div class="col">
-              <label class="compact-label">Margen Izquierdo</label>
-              <input type="number" class="form-control" id="margenIzquierdo" value="0.5">
+            <div class="mt-4">
+                <button class="btn btn-primary btn-block btn-lg shadow-sm mb-2" onclick="calculate()" style="border-radius: 30px;">
+                    <i class="fas fa-calculator mr-2"></i> Calcular Cortes
+                </button>
+                <button class="btn btn-outline-info btn-block shadow-sm" onclick="toggleOrientation()" style="border-radius: 30px;">
+                    <i class="fas fa-sync-alt mr-2"></i> Girar Orientación
+                </button>
             </div>
-            <div class="col">
-              <label class="compact-label">Margen Derecho</label>
-              <input type="number" class="form-control" id="margenDerecho" value="0.5">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="col">
-              <label class="compact-label">Margen Superior</label>
-              <input type="number" class="form-control" id="margenSuperior" value="1">
-            </div>
-            <div class="col">
-              <label class="compact-label">Margen Inferior</label>
-              <input type="number" class="form-control" id="margenInferior" value="1.2">
-            </div>
-          </div>
-
-          <div class="d-flex justify-content-between mt-3">
-            <button class="btn btn-outline-primary w-50 mr-1" id="calculate-btn1">↔️ Horizontal</button>
-            <button class="btn btn-outline-secondary w-50 ml-1" id="calculate-btn2">↕️ Vertical</button>
-          </div>
 
         </div>
       </div>
     </div>
 
-    <!-- Resultados y Canvas -->
-    <div class="col-md-8 mb-3">
-      <div class="card shadow-sm">
-        <div class="card-header bg-success text-white">📊 Visualización</div>
-        <div class="card-body text-center">
-          <div class="canvas-wrapper mb-2">
-            <canvas id="myCanvas" width="500" height="500" class="border border-secondary rounded"></canvas>
-          </div>
-
-          <div class="form-row">
-            <div class="col-6">
-              <label class="compact-label">Unidades por pliego</label>
-              <input type="number" class="form-control text-center" id="resultC" readonly>
+    <div class="col-lg-8">
+        
+        <div class="row mb-3">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <div class="result-box shadow-sm h-100">
+                    <div class="result-label">Unidades por Pliego</div>
+                    <div class="result-value" id="resultC_display">0</div> </div>
             </div>
-            <div class="col-6">
-              <label class="compact-label">Pliegos necesarios</label>
-              <input type="number" class="form-control text-center" id="result" readonly>
+            <div class="col-md-6">
+                <div class="result-box shadow-sm h-100" style="background-color: #e8f5e9; border-color: #c8e6c9;">
+                    <div class="result-label" style="color: #2e7d32;">Pliegos Necesarios</div>
+                    <div class="result-value" id="result_display" style="color: #1b5e20;">0</div>
+                </div>
             </div>
-          </div>
-
-          <div class="form-row mt-2">
-            <div class="col-6">
-              <label class="compact-label">Porcentaje Ocupado</label>
-              <input type="number" class="form-control text-center" id="porO" readonly>
-            </div>
-            <div class="col-6">
-              <label class="compact-label">Porcentaje Libre</label>
-              <input type="number" class="form-control text-center" id="porL" readonly>
-            </div>
-          </div>
-
-          <hr class="my-2">
-
-          <h6 class="text-muted mt-2">Unidades que ingresan por pliego</h6>
-          <div class="form-row justify-content-center">
-            <div class="col-md-4">
-              <input type="number" class="form-control text-center" id="width" placeholder="Ancho" readonly>
-            </div>
-            <div class="col-md-4">
-              <input type="number" class="form-control text-center" id="height" placeholder="Alto" readonly>
-            </div>
-          </div>
         </div>
-      </div>
+
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-white border-bottom-0 d-flex justify-content-between align-items-center">
+                <h5 class="font-weight-bold text-dark mb-0"><i class="far fa-eye mr-2 text-secondary"></i>Visualización</h5>
+                <span class="badge badge-light border">Área Útil</span>
+            </div>
+            <div class="card-body">
+                <div class="canvas-container">
+                    <canvas id="canvas" width="500" height="350"></canvas>
+                </div>
+                
+                <div class="row mt-3 text-muted small text-center">
+                    <div class="col-3 border-right">
+                        <strong>% Ocupado</strong><br>
+                        <span id="porO_span">0%</span>
+                    </div>
+                    <div class="col-3 border-right">
+                        <strong>% Libre</strong><br>
+                        <span id="porL_span">0%</span>
+                    </div>
+                    <div class="col-3 border-right">
+                         <strong>Ancho Final</strong><br>
+                         <span id="width_span">0</span> cm
+                    </div>
+                    <div class="col-3">
+                         <strong>Alto Final</strong><br>
+                         <span id="height_span">0</span> cm
+                    </div>
+                </div>
+
+                <div class="d-none">
+                    <input type="number" id="resultC">
+                    <input type="number" id="result">
+                    <input type="number" id="porO">
+                    <input type="number" id="porL">
+                    <input type="number" id="width">
+                    <input type="number" id="height">
+                </div>
+
+            </div>
+        </div>
+
     </div>
   </div>
 </div>
 
-<script src="/js/calculator-paper.js"></script>
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Variables globales para el estado de rotación
+    let rotated = false;
+
+    function toggleOrientation() {
+        rotated = !rotated;
+        calculate();
+    }
+
+    function calculate() {
+        // Obtener valores
+        const papelAncho = parseFloat(document.getElementById('papelAncho').value);
+        const papelAlto = parseFloat(document.getElementById('papelAlto').value);
+        let anchoLogico = parseFloat(document.getElementById('anchoLogico').value);
+        let altoLogico = parseFloat(document.getElementById('altoLogico').value);
+        const pinza = parseFloat(document.getElementById('pinza').value);
+        const cantidad = parseFloat(document.getElementById('cantidad').value);
+
+        // Validar
+        if (!papelAncho || !papelAlto || !anchoLogico || !altoLogico) return;
+
+        // Aplicar rotación lógica si está activado
+        if (rotated) {
+            [anchoLogico, altoLogico] = [altoLogico, anchoLogico];
+        }
+
+        // Área efectiva (restando pinza al alto del papel, asumiendo pinza va en un lado)
+        // OJO: La lógica de pinza puede variar. Aquí asumo que reduce el alto disponible.
+        const altoEfectivo = papelAlto - pinza; 
+        const anchoEfectivo = papelAncho;
+
+        // Calcular cuántos caben (Estrategia simple: Grid directo)
+        // Opción A: Normal
+        const colsA = Math.floor(anchoEfectivo / anchoLogico);
+        const rowsA = Math.floor(altoEfectivo / altoLogico);
+        const totalA = colsA * rowsA;
+
+        // Opción B: Girado (dentro del área efectiva)
+        const colsB = Math.floor(anchoEfectivo / altoLogico);
+        const rowsB = Math.floor(altoEfectivo / anchoLogico);
+        const totalB = colsB * rowsB;
+
+        // Decidir cuál es mejor (o usar la orientación actual del input si el usuario ya giró)
+        // En esta calculadora simple, usaremos la orientación actual de los inputs (que ya rotamos arriba si rotated=true)
+        const cols = Math.floor(anchoEfectivo / anchoLogico);
+        const rows = Math.floor(altoEfectivo / altoLogico);
+        const unidadesPorPliego = cols * rows;
+
+        // Cálculos finales
+        const pliegosNecesarios = Math.ceil(cantidad / (unidadesPorPliego || 1));
+        
+        const areaPapel = papelAncho * papelAlto;
+        const areaCortes = unidadesPorPliego * (anchoLogico * altoLogico);
+        const porcentajeOcupado = ((areaCortes / areaPapel) * 100).toFixed(2);
+        const porcentajeLibre = (100 - porcentajeOcupado).toFixed(2);
+
+        // --- Actualizar DOM (Inputs ocultos y visibles) ---
+        
+        // Inputs originales (ocultos o visibles)
+        document.getElementById('resultC').value = unidadesPorPliego;
+        document.getElementById('result').value = pliegosNecesarios;
+        document.getElementById('porO').value = porcentajeOcupado;
+        document.getElementById('porL').value = porcentajeLibre;
+        document.getElementById('width').value = (cols * anchoLogico).toFixed(2); // Ancho utilizado
+        document.getElementById('height').value = (rows * altoLogico).toFixed(2); // Alto utilizado
+
+        // Textos visibles bonitos
+        document.getElementById('resultC_display').innerText = unidadesPorPliego;
+        document.getElementById('result_display').innerText = pliegosNecesarios;
+        document.getElementById('porO_span').innerText = porcentajeOcupado + '%';
+        document.getElementById('porL_span').innerText = porcentajeLibre + '%';
+        document.getElementById('width_span').innerText = (cols * anchoLogico).toFixed(2);
+        document.getElementById('height_span').innerText = (rows * altoLogico).toFixed(2);
+
+        // --- DIBUJAR EN CANVAS ---
+        draw(papelAncho, papelAlto, anchoLogico, altoLogico, cols, rows, pinza);
+    }
+
+    function draw(pAncho, pAlto, cAncho, cAlto, cols, rows, pinza) {
+        // Limpiar
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Escala para ajustar al canvas
+        const margin = 20;
+        const maxWidth = canvas.width - (margin * 2);
+        const maxHeight = canvas.height - (margin * 2);
+
+        const scaleX = maxWidth / pAncho;
+        const scaleY = maxHeight / pAlto;
+        const scale = Math.min(scaleX, scaleY);
+
+        // Origen (centrado)
+        const drawW = pAncho * scale;
+        const drawH = pAlto * scale;
+        const startX = (canvas.width - drawW) / 2;
+        const startY = (canvas.height - drawH) / 2;
+
+        // Dibujar Pliego Base (Gris claro)
+        ctx.fillStyle = '#eeeeee';
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 2;
+        ctx.fillRect(startX, startY, drawW, drawH);
+        ctx.strokeRect(startX, startY, drawW, drawH);
+
+        // Dibujar Pinza (Área roja suave arriba o abajo según lógica, aquí asumo arriba)
+        if (pinza > 0) {
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+            const pinzaH = pinza * scale;
+            // Asumiendo pinza resta al alto desde el borde (ej. inferior o superior)
+            // Dibujémosla abajo para visualización
+            ctx.fillRect(startX, startY + drawH - pinzaH, drawW, pinzaH);
+        }
+
+        // Dibujar Cortes (Azul)
+        ctx.fillStyle = '#bbdefb'; // Azul claro
+        ctx.strokeStyle = '#0d47a1'; // Azul oscuro borde
+        ctx.lineWidth = 1;
+
+        // El área de dibujo empieza en (0,0) del pliego (arriba a la izquierda)
+        // Si la pinza está abajo, dibujamos desde arriba.
+        
+        for (let i = 0; i < cols; i++) {
+            for (let j = 0; j < rows; j++) {
+                const x = startX + (i * cAncho * scale);
+                const y = startY + (j * cAlto * scale);
+                const w = cAncho * scale;
+                const h = cAlto * scale;
+
+                // Margen pequeño entre cortes para verlos mejor
+                const gap = 1; 
+                ctx.fillRect(x + gap, y + gap, w - (gap*2), h - (gap*2));
+                ctx.strokeRect(x, y, w, h);
+                
+                // Texto de orden (opcional)
+                // ctx.fillStyle = '#000';
+                // ctx.fillText((j * cols + i + 1), x + w/2 - 5, y + h/2 + 3);
+                // ctx.fillStyle = '#bbdefb';
+            }
+        }
+    }
+
+    // Calcular al cargar
+    window.onload = calculate;
+</script>
+
+</body>
+</html>

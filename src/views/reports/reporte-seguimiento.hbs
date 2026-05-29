@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Reporte de Seguimiento</title>
+  <style>
+    /* Estilos copiados y adaptados de orden-trabajo.hbs */
+    body {
+      margin: 0;
+      background-color: #525659; /* Fondo gris para ver la hoja */
+      color: #000;
+      font-family: 'Arial', sans-serif;
+      font-size: 12px; /* Letra un poco más pequeña para que quepa la tabla */
+    }
+
+    .print-button {
+      display: block;
+      margin: 20px auto;
+      padding: 10px 20px;
+      background-color: #28a745;
+      color: white;
+      font-size: 14px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    @media print {
+      .print-button { display: none; }
+      body { background-color: white; margin: 0; }
+      .page { box-shadow: none; margin: 0; width: 100%; }
+      /* Asegurar que la cabecera se repita si ocupa varias hojas (opcional) */
+      thead { display: table-header-group; } 
+    }
+
+    .page {
+      width: 21cm; /* Ancho A4 */
+      min-height: 29.7cm;
+      margin: 20px auto;
+      background: white;
+      padding: 1.5cm; /* Margen un poco más estrecho para ganar espacio */
+      box-sizing: border-box;
+      position: relative;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #000;
+      padding-bottom: 10px;
+    }
+
+    .logo {
+      width: 120px;
+      height: auto;
+    }
+
+    .info-reporte {
+      text-align: right;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .bold { font-weight: bold; }
+
+    table {
+      width: 100%;
+      margin-top: 10px;
+      border-collapse: collapse;
+      font-size: 11px; /* Ajuste para tabla densa */
+    }
+
+    th {
+      background-color: #f2f2f2;
+      text-align: center;
+      padding: 5px;
+      border: 1px solid #ccc;
+      font-weight: bold;
+    }
+
+    td {
+      padding: 5px;
+      border: 1px solid #ddd;
+      vertical-align: middle;
+      text-align: center;
+    }
+
+    .text-left { text-align: left; }
+
+    /* Estilos simples para estados (Badges visuales) */
+    .status-ok { color: #155724; font-weight: bold; }
+    .status-no { color: #721c24; font-size: 0.9em; opacity: 0.7; }
+    .date-small { font-size: 10px; color: #555; display: block; margin-top: 2px; }
+
+    .footer {
+      margin-top: 30px;
+      font-size: 10px;
+      text-align: center;
+      color: #666;
+      border-top: 1px solid #ccc;
+      padding-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<button class="print-button" onclick="window.print()">🖨️ Imprimir PDF / Guardar</button>
+
+<div class="page">
+
+  <div class="header">
+    <img src="{{logoDataUrl}}" class="logo" alt="Logo" />
+    <div class="info-reporte">
+      <div style="font-size: 16px;" class="bold">REPORTE DE SEGUIMIENTO</div>
+      <div style="margin-top: 5px;">Rango de Fechas:</div>
+      <div>
+        Del <span class="bold">{{formatDateLocal fechaInicio}}</span> 
+        al <span class="bold">{{formatDateLocal fechaFin}}</span>
+      </div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th width="8%">Cód.</th>
+        <th width="20%">Cliente / Trabajo</th>
+        <th width="10%">Solicitud</th>
+        <th width="12%">Cotizado</th>
+        <th width="15%">Aceptado</th>
+        <th width="15%">Producido</th>
+        <th width="15%">Entregado</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each reportData}}
+      <tr>
+        <td class="bold">{{codigoCotizacion}}</td>
+        
+        <td class="text-left">
+          <div class="bold">{{clienteAlias}}</div>
+          <div style="font-size:10px;">{{descripcionCorta}}</div>
+        </td>
+
+        <td>{{formatDateLocal fechaCotizacion}}</td>
+
+        <td>
+          {{#if fechaCalculo}}
+            <div class="status-ok">✔ SÍ</div>
+            <span class="date-small">{{formatDateLocal fechaCalculo}}</span>
+          {{else}}
+             <div class="status-no" style="color:red; font-weight:bold;">PENDIENTE</div>
+          {{/if}}
+        </td>
+
+        <td>
+          {{#if aceptada}}
+            <div class="status-ok">✔ APROBADO</div>
+            <span class="date-small">{{formatDateLocal fechaAceptacion}}</span>
+          {{else}}
+            <div class="status-no">-</div>
+          {{/if}}
+        </td>
+
+        <td>
+          {{#if terminado}}
+            <div class="status-ok">✔ TERMINADO</div>
+            <span class="date-small">{{formatDateLocal fechaTerminado}}</span>
+          {{else}}
+            <div class="status-no">-</div>
+          {{/if}}
+        </td>
+
+        <td>
+          {{#if entregado}}
+            <div class="status-ok">✔ ENTREGADO</div>
+            <span class="date-small">{{formatDateLocal fechaEntregado}}</span>
+          {{else}}
+             <div class="status-no">-</div>
+          {{/if}}
+        </td>
+      </tr>
+      {{else}}
+      <tr>
+        <td colspan="7" style="padding: 20px; color: #666;">
+          No se encontraron trabajos en el rango de fechas seleccionado.
+        </td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <div class="footer">
+    Reporte generado automáticamente por sistema NUMB el {{formatDateLocal (now)}}.
+  </div>
+
+</div>
+
+</body>
+</html>

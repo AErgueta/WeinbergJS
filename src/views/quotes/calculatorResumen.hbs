@@ -1,128 +1,211 @@
 <!DOCTYPE html>
 <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <title>Resumen de Cálculo de Costos</title>
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-        <style>
-            .info-box {
-                border: 1px solid #ddd;
-                padding: 10px;
-                font-size: 12px;
-                background-color: #f9f9f9;
-                border-radius: 5px;
-            }
-            .info-title {
-                font-weight: bold;
-                background-color: #007bff;
-                color: white;
-                padding: 5px;
-                font-size: 14px;
-                border-radius: 3px;
-            }
-            .scrollable-table {
-                max-height: 300px;
-                overflow-y: auto;
-                border: 1px solid #ddd;
-            }
-            .table thead th {
-                background-color: #007bff;
-                color: white;
-                font-weight: bold;
-                text-align: center;
-            }
-            th, td {
-                border: 1px solid #ddd;
-                padding: 5px;
-                text-align: center;
-            }
-            .no-print {
-                margin-top: 20px;
-            }
-            @media print {
-                .no-print {
-                    display: none;
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container mt-3">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resumen de Costos</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-            <h3 class="text-center mt-3 mb-4">Resumen del Cálculo de Costos</h3>
+    <style>
+        body { background-color: #f4f6f9; }
+        .card-custom {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+        }
+        .kpi-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6c757d;
+            font-weight: 700;
+        }
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #28a745;
+        }
+        .status-card {
+            background-color: #ffffff;
+            border-radius: 15px;
+            border-left: 5px solid #17a2b8;
+        }
+        .table-modern thead th {
+            border-top: none;
+            border-bottom: 2px solid #e9ecef;
+            color: #495057;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
 
-            <!-- CABECERA -->
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="info-box">
-                        <div class="info-title">Cabecera</div>
-                        <p><strong>Fecha:</strong> {{quotation.fecha}}</p>
-                        <p><strong>Fecha Vence:</strong> {{quotation.fechaVence}}</p>
-                        <p><strong>Descripción:</strong> {{quotation.descripcionCorta}}</p>
-                    </div>
+<div class="container mt-4 mb-5">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="/customers/{{customer._id}}/quotations/edit/{{quotation._id}}" class="text-muted text-decoration-none mb-1 d-inline-block">
+                <i class="fas fa-arrow-left mr-1"></i> Volver a la Cotización
+            </a>
+            <h2 class="font-weight-bold text-dark mb-0">
+                <i class="fas fa-file-invoice-dollar text-primary mr-2"></i>Resumen de Costos
+            </h2>
+        </div>
+        <div>
+            <a href="/pdf/ver-hoja/{{detalle._id}}/0" 
+               target="_blank" 
+               class="btn btn-outline-danger shadow-sm rounded-pill px-4">
+                <i class="fas fa-file-pdf mr-2"></i> Vista Previa PDF
+            </a>
+        </div>
+    </div>
+
+    <div class="card card-custom mb-4">
+        <div class="card-body py-3">
+            <div class="row align-items-center">
+                <div class="col-md-4 border-right">
+                    <small class="text-muted text-uppercase font-weight-bold">Cliente</small>
+                    <h5 class="font-weight-bold text-dark m-0">{{customer.nombreCus}}</h5>
                 </div>
+                <div class="col-md-4 border-right">
+                    <small class="text-muted text-uppercase font-weight-bold">Referencia</small>
+                    <h5 class="font-weight-bold text-dark m-0">{{quotation.descripcionCorta}}</h5>
+                </div>
+                <div class="col-md-4">
+                     <small class="text-muted text-uppercase font-weight-bold">Ítem Actual</small>
+                     <h5 class="font-weight-bold text-primary m-0">{{detalle.descripcionQuo}}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                <!-- DETALLE -->
-                <div class="col-md-6">
-                    <div class="info-box">
-                        <div class="info-title">Detalle</div>
-                        <p><strong>Línea:</strong> {{detalle.lineaQuo}} | <strong>Tipo:</strong> {{detalle.tipoQuo}} | <strong>Cantidad:</strong> {{detalle.cantidadQuo}}</p>
-                        <p><strong>Descripción:</strong></p>
-                        <textarea class="detalle-largo" readonly style="width: 100%; min-height: 4em; border: 1px solid #ccc; padding: 5px;">{{detalle.descripcionQuo}}</textarea>
+    {{#each calculos}}
+    
+    <div class="row">
+        
+        <div class="col-12 mb-4">
+            <div class="card card-custom status-card shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center flex-wrap">
+                    
+                    <div class="d-flex align-items-center flex-wrap mb-3 mb-md-0">
+                        <h6 class="kpi-title mb-0 mr-4"><i class="fas fa-tasks mr-2"></i>Fases:</h6>
+                        
+                        <div class="custom-control custom-switch mr-4">
+                            <input type="checkbox" class="custom-control-input" id="chkCot_{{_id}}" disabled {{#if cotizada}}checked{{/if}}>
+                            <label class="custom-control-label" for="chkCot_{{_id}}">Cotizado</label>
+                        </div>
+                        <div class="custom-control custom-switch mr-4">
+                            <input type="checkbox" class="custom-control-input" id="chkAce_{{_id}}" disabled {{#if aceptada}}checked{{/if}}>
+                            <label class="custom-control-label" for="chkAce_{{_id}}">Aceptado</label>
+                        </div>
+                        <div class="custom-control custom-switch mr-4">
+                            <input type="checkbox" class="custom-control-input" id="chkTer_{{_id}}" disabled {{#if terminado}}checked{{/if}}>
+                            <label class="custom-control-label" for="chkTer_{{_id}}">Producido</label>
+                        </div>
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="chkEnt_{{_id}}" disabled {{#if entregado}}checked{{/if}}>
+                            <label class="custom-control-label" for="chkEnt_{{_id}}">Entregado</label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <a href="/quotes/aceptar-trabajo/{{../detalle._id}}/{{@index}}" 
+                           class="btn btn-sm btn-success ml-2 shadow-sm" 
+                           style="border-radius: 20px; padding: 10px 20px; font-weight: bold;">
+                           ✔️ Aceptar trabajo
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-12 mb-4">
+            <div class="card card-custom shadow-sm">
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4 border-right">
+                            <div class="kpi-title">Costo Total</div>
+                            <div class="kpi-value mt-1">
+                                {{formatCurrency (sum this.lineas "monto")}}
+                            </div>
+                        </div>
+                        <div class="col-md-4 border-right">
+                            <div class="kpi-title">Cantidad</div>
+                            <div class="h3 font-weight-bold text-info mt-2">
+                                {{../detalle.cantidadQuo}}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="kpi-title">Costo Unitario</div>
+                            <div class="h3 font-weight-bold text-dark mt-2">
+                                {{formatCurrency (math (sum this.lineas "monto") "/" ../detalle.cantidadQuo)}}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <!-- MOSTRAR TODAS LAS VERSIONES DE CÁLCULOS -->
-            {{#each calculos}}
-                <div class="mt-5">
-                    <div class="info-box">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div class="info-title m-0 p-2 w-100">
-                                Versión: {{this.titulo}} | Usuario: {{this.usuario}} | Fecha: {{formatDateLong this.fecha}}
-                                <!--<a href="#" class="btn btn-sm btn-outline-danger">Exportar a PDF</a>-->
-                                <a href="/pdf/ver-hoja/{{../detalle._id}}/{{@index}}" target="_blank" class="btn btn-sm btn-outline-danger">Vista Previa</a>
-                                <!--<a href="/pdf/descargar-pdf/{{../detalle._id}}/{{@index}}" class="btn btn-sm btn-outline-danger" target="_blank">Exportar a PDF</a>-->
-                                <a href="/quotes/aceptar-trabajo/{{../detalle._id}}/{{@index}}" class="btn btn-sm btn-success ml-2">✔️ Aceptar trabajo</a>
-                            </div>
-                        </div>
-
-                        <div class="scrollable-table mb-2">
-                            <table class="table table-bordered table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Tipo Material</th>
-                                        <th>No. Artículo</th>
-                                        <th>Detalle</th>
-                                        <th>Cantidad</th>
-                                        <th>Precio</th>
-                                        <th>Monto</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {{#each this.lineas}}
-                                        <tr>
-                                            <td>{{lineaQuo}}</td>
-                                            <td>{{tipoMaterial}}</td>
-                                            <td>{{noArticulo}}</td>
-                                            <td>{{detalle}}</td>
-                                            <td>{{cantidad}}</td>
-                                            <td>{{precio}}</td>
-                                            <td>{{monto}}</td>
-                                        </tr>
-                                    {{/each}}
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="6" class="text-right"><strong>Total</strong></td>
-                                        <td><strong>{{sum this.lineas "monto"}}</strong></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            {{/each}}
         </div>
-    </body>
+
+    </div>
+
+    <div class="card card-custom shadow-sm mb-5">
+        <div class="card-header bg-white border-bottom-0 pt-4">
+            <h5 class="font-weight-bold text-dark"><i class="fas fa-list-alt mr-2 text-secondary"></i>Desglose de Materiales</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-modern table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="pl-4">#</th>
+                            <th>Tipo</th>
+                            <th>Artículo</th>
+                            <th>Detalle</th>
+                            <th class="text-center">Cant.</th>
+                            <th class="text-right">Precio</th>
+                            <th class="text-right pr-4">Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each this.lineas}}
+                            <tr>
+                                <td class="pl-4 text-muted">{{lineaQuo}}</td>
+                                <td>
+                                    {{#ifCond tipoMaterial '==' 'P'}}
+                                        <span class="badge badge-light border text-dark">Papel</span>
+                                    {{else}}
+                                        <span class="badge badge-light border">{{tipoMaterial}}</span>
+                                    {{/ifCond}}
+                                </td>
+                                <td class="font-weight-bold text-dark">{{noArticulo}}</td>
+                                <td class="text-muted small">{{detalle}}</td>
+                                <td class="text-center">{{cantidad}}</td>
+                                <td class="text-right">{{formatCurrency precio}}</td>
+                                <td class="text-right pr-4 font-weight-bold">{{formatCurrency monto}}</td>
+                            </tr>
+                        {{/each}}
+                    </tbody>
+                    <tfoot class="bg-light">
+                        <tr>
+                            <td colspan="6" class="text-right pr-4 py-3 text-uppercase text-muted font-weight-bold">Total Costos</td>
+                            <td class="text-right pr-4 py-3">
+                                <h5 class="font-weight-bold text-dark m-0">{{formatCurrency (sum this.lineas "monto")}}</h5>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {{/each}}
+
+</div>
+
+</body>
 </html>

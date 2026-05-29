@@ -1,265 +1,320 @@
-<div class="container mt-4">
-  <h3 class="text-center mb-4 font-weight-bold text-dark">📋 Seguimiento del Trabajo</h3>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguimiento del Trabajo</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-  <!-- Recuadro principal -->
-  <div class="info-box border border-secondary rounded p-3 mb-4 bg-white shadow-sm">
-    <table class="table table-sm table-bordered mb-0">
-      <thead class="thead-light text-center">
-        <tr>
-          <th>Cantidad</th>
-          <th>Producto</th>
-          <th>Precio en Bs.</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="text-center align-middle">{{detalle.cantidadQuo}}</td>
-          <td class="align-middle">{{detalle.descripcionQuo}}</td>
-          <td class="text-right align-middle">
-            {{formatCurrency (sum version.lineas "monto")}}
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+    <style>
+        body { background-color: #f4f6f9; }
+        .card-custom {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s;
+        }
+        .card-custom:hover { transform: translateY(-2px); }
+        .border-left-primary { border-left: 5px solid #007bff !important; }
+        .border-left-warning { border-left: 5px solid #ffc107 !important; }
+        .border-left-success { border-left: 5px solid #28a745 !important; }
+        .form-label-bold { font-weight: 600; color: #495057; font-size: 0.9rem; }
+        .custom-switch .custom-control-label::before { height: 1.5rem; width: 2.75rem; border-radius: 1rem; }
+        .custom-switch .custom-control-label::after { height: 1.5rem; width: 1.5rem; border-radius: 50%; }
+        .custom-control-label { padding-left: 0.5rem; padding-top: 0.2rem; font-weight: bold; }
+        
+        /* Estilo para input readonly que parece texto */
+        .input-plaintext-custom {
+            background-color: #e9ecef;
+            border: 1px solid #ced4da;
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
 
-  <!-- Paneles de seguimiento -->
-  <div class="row">
-    <!-- 🟢 Aceptar Cotización -->
-    <div class="col-md-4">
-      <div class="border border-success rounded p-3 shadow-sm bg-light mb-4 h-100">
-        <h5 class="text-success font-weight-bold mb-3">✔️ Aceptar Cotización</h5>
+<div class="container mt-4 mb-5">
 
-        <div class="form-group form-check">
-          <input type="checkbox" id="chkAprobar" class="form-check-input" {{#if version.aceptada}}checked{{/if}}>
-          <label for="chkAprobar" class="form-check-label font-weight-bold text-success">Cotización Aprobada</label>
+    <input type="hidden" id="detalleId" value="{{detalle._id}}">
+    <input type="hidden" id="versionIndex" value="{{versionIndex}}">
+    <input type="hidden" id="usuario" value="{{user.name}}">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="/quotes/{{quotationId}}/detalle/{{detalle._id}}/resumen-costos/{{calculoId}}" class="text-muted text-decoration-none mb-1 d-inline-block">
+                <i class="fas fa-arrow-left mr-1"></i> Volver al Resumen
+            </a>
+            <h2 class="font-weight-bold text-dark mb-0">
+                <i class="fas fa-clipboard-check text-primary mr-2"></i>Control de Orden de Trabajo
+            </h2>
         </div>
-
-        <div class="form-group">
-          <label for="fechaAprobacion">📆 Fecha de Aprobación:</label>
-          <input type="date" id="fechaAprobacion" class="form-control" value="{{fechaAceptacion}}">
-        </div>
-
-        <div class="form-group">
-          <label for="fechaPrevista">📅 Fecha Prevista de Entrega:</label>
-          <input type="date" id="fechaPrevista" class="form-control" value="{{fechaPrevistaEntrega}}">
-        </div>
-
-        <button id="btnGuardarOrden" class="btn btn-success btn-block font-weight-bold">
-          💾 Guardar Orden
-        </button>
-
-        <a href="/pdf/ver-orden-trabajo/{{detalle._id}}/{{versionIndex}}" target="_blank"
-           class="btn btn-primary btn-block font-weight-bold mt-2">
-          📝 Ver Orden
-        </a>
-
-        <!--<a href="/pdf/exportar-orden-pdf/{{detalle._id}}/{{versionIndex}}" target="_blank"
-           class="btn btn-secondary btn-block font-weight-bold mt-2">
-          📤 Exportar a PDF
-        </a>-->
-      </div>
     </div>
 
-    <!-- 🔵 Trabajo Terminado -->
-    <div class="col-md-4">
-      <div class="border border-info rounded p-3 shadow-sm bg-light mb-4 h-100">
-        <h5 class="text-info font-weight-bold mb-3">🔧 Trabajo Terminado</h5>
-
-        <div class="form-group form-check">
-          <input type="checkbox" id="chkTerminado" class="form-check-input" {{#if version.terminado}}checked{{/if}}>
-          <label for="chkTerminado" class="form-check-label font-weight-bold text-info">Trabajo Terminado</label>
+    <div class="card card-custom mb-5">
+        <div class="card-body">
+            <div class="row text-center align-items-center">
+                <div class="col-md-3 border-right">
+                    <label class="small text-muted text-uppercase font-weight-bold mb-0">Cantidad</label>
+                    <h3 class="font-weight-bold text-info">{{detalle.cantidadQuo}}</h3>
+                </div>
+                <div class="col-md-6 border-right">
+                    <label class="small text-muted text-uppercase font-weight-bold mb-0">Producto / Descripción</label>
+                    <h4 class="font-weight-bold text-dark">{{detalle.descripcionQuo}}</h4>
+                </div>
+                <div class="col-md-3">
+                    <label class="small text-muted text-uppercase font-weight-bold mb-0">Precio Acordado</label>
+                    <h3 class="font-weight-bold text-success">{{formatCurrency (sum version.lineas "monto")}}</h3>
+                </div>
+            </div>
         </div>
-
-        <div class="form-group">
-          <label for="fechaTerminado">📆 Fecha de Terminación:</label>
-          <input type="date" id="fechaTerminado" class="form-control" value="{{fechaTerminado}}">
-        </div>
-
-        <button id="btnActualizarTerminado" class="btn btn-info btn-block font-weight-bold mt-2">
-          🔄 Actualizar Información
-        </button>
-      </div>
     </div>
 
-    <!-- 🟣 Trabajo Entregado -->
-    <div class="col-md-4">
-      <div class="border border-warning rounded p-3 shadow-sm bg-light mb-4 h-100">
-        <h5 class="text-warning font-weight-bold mb-3">📦 Trabajo Entregado</h5>
+    <div class="row">
+        
+        <div class="col-lg-4 mb-4">
+            <div class="card card-custom border-left-primary h-100">
+                <div class="card-header bg-white border-bottom-0 pt-4">
+                    <h5 class="text-primary font-weight-bold"><i class="fas fa-file-signature mr-2"></i>1. Orden de Trabajo</h5>
+                </div>
+                <div class="card-body">
+                    
+                    <div class="form-group mb-4">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="chkAprobar" {{#if fechaAceptacion}}checked{{/if}}>
+                            <label class="custom-control-label text-dark" for="chkAprobar">Aprobar Cotización</label>
+                        </div>
+                    </div>
 
-        <div class="form-group form-check">
-          <input type="checkbox" id="chkEntregado" class="form-check-input" {{#if version.entregado}}checked{{/if}}>
-          <label for="chkEntregado" class="form-check-label font-weight-bold text-warning">Entregado</label>
+                    <div class="form-group">
+                        <label class="form-label-bold">📆 Fecha de Aprobación</label>
+                        <input type="date" id="fechaAprobacion" class="form-control" value="{{formatDateLocal fechaAceptacion}}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label-bold text-danger">📅 Fecha Prevista de Entrega</label>
+                        <input type="date" id="fechaPrevista" class="form-control border-danger" value="{{formatDateLocal fechaPrevistaEntrega}}">
+                    </div>
+
+                    <!--<div class="form-group">
+                        <label class="small text-muted">Aprobado por:</label>
+                        <input type="text" id="usuarioAprobacion" class="form-control form-control-sm input-plaintext-custom" readonly value="{{usuarioAprobacion}}" placeholder="---">
+                    </div>-->
+
+                    <hr>
+
+                    <button type="button" id="btnGuardarOrden" class="btn btn-primary btn-block shadow-sm mb-3" style="border-radius: 20px;">
+                        <i class="fas fa-save mr-2"></i> Guardar Orden
+                    </button>
+
+                    <a href="/pdf/ver-orden-trabajo/{{detalle._id}}/{{versionIndex}}" target="_blank" class="btn btn-outline-danger btn-block shadow-sm" style="border-radius: 20px;">
+                        <i class="fas fa-file-pdf mr-2"></i> Ver Orden de Trabajo
+                    </a>
+
+                </div>
+            </div>
         </div>
 
-        <div class="form-group">
-          <label for="fechaEntregado">📆 Fecha de Entrega:</label>
-          <input type="date" id="fechaEntregado" class="form-control" value="{{fechaEntregado}}">
+        <div class="col-lg-4 mb-4">
+            <div class="card card-custom border-left-warning h-100">
+                <div class="card-header bg-white border-bottom-0 pt-4">
+                    <h5 class="text-warning font-weight-bold"><i class="fas fa-industry mr-2"></i>2. Producción</h5>
+                </div>
+                <div class="card-body">
+                    
+                    <div class="alert alert-light border small text-muted mb-3">
+                        Marcar cuando el taller haya finalizado la producción.
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="chkTerminado" {{#if fechaTerminado}}checked{{/if}}>
+                            <label class="custom-control-label text-dark" for="chkTerminado">Trabajo Terminado</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label-bold">Fecha Finalización</label>
+                        <input type="date" id="fechaTerminado" class="form-control" value="{{formatDateLocal fechaTerminado}}">
+                    </div>
+
+                    <!--<div class="form-group">
+                        <label class="small text-muted">Registrado por:</label>
+                        <input type="text" id="usuarioTerminado" class="form-control form-control-sm input-plaintext-custom" readonly value="{{usuarioTerminado}}" placeholder="---">
+                    </div>-->
+
+                    <div class="mt-auto pt-4">
+                        <button type="button" id="btnActualizarTerminado" class="btn btn-warning btn-block shadow-sm font-weight-bold text-dark" style="border-radius: 20px;">
+                            <i class="fas fa-check mr-2"></i> Actualizar Estado
+                        </button>
+                    </div>
+
+                </div>
+            </div>
         </div>
 
-        <div class="form-group">
-          <label for="recibidoPor">👤 Recibido por:</label>
-          <input type="text" id="recibidoPor" class="form-control" value="{{recibidoPor}}" placeholder="Nombre de quien recibió">
+        <div class="col-lg-4 mb-4">
+            <div class="card card-custom border-left-success h-100">
+                <div class="card-header bg-white border-bottom-0 pt-4">
+                    <h5 class="text-success font-weight-bold"><i class="fas fa-truck-loading mr-2"></i>3. Entrega al Cliente</h5>
+                </div>
+                <div class="card-body">
+                    
+                    <div class="form-group mb-4">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="chkEntregado" {{#if fechaEntregado}}checked{{/if}}>
+                            <label class="custom-control-label text-dark" for="chkEntregado">Entregado al Cliente</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label-bold">Fecha Entrega Real</label>
+                        <input type="date" id="fechaEntregado" class="form-control" value="{{formatDateLocal fechaEntregado}}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label-bold">Recibido por (Cliente)</label>
+                        <input type="text" id="recibidoPor" class="form-control" placeholder="Nombre de quien recibe..." value="{{recibidoPor}}">
+                    </div>
+
+                    <!--<div class="form-group">
+                        <label class="small text-muted">Entregado por (Nosotros):</label>
+                        <input type="text" id="usuarioEntrega" class="form-control form-control-sm input-plaintext-custom" readonly value="{{usuarioEntrega}}" placeholder="---">
+                    </div>-->
+
+                    <div class="mt-auto pt-3">
+                        <button type="button" id="btnActualizarEntregado" class="btn btn-success btn-block shadow-sm font-weight-bold" style="border-radius: 20px;">
+                            <i class="fas fa-shipping-fast mr-2"></i> Confirmar Entrega
+                        </button>
+                    </div>
+
+                </div>
+            </div>
         </div>
 
-        <button id="btnActualizarEntregado" class="btn btn-warning btn-block font-weight-bold mt-2">
-          📤 Actualizar Información
-        </button>
-      </div>
     </div>
-  </div>
-
-  <!-- Campos ocultos -->
-  <input type="hidden" id="customerId" value="{{customerId}}">
-  <input type="hidden" id="quotationId" value="{{quotationId}}">
-  <input type="hidden" id="detalleIndex" value="{{detalleIndex}}">
-  <input type="hidden" id="detalleId" value="{{detalle._id}}">
-  <input type="hidden" id="versionIndex" value="{{versionIndex}}">
-  <input type="hidden" id="usuario" value="{{user.name}}">
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const chkAprobar = document.getElementById('chkAprobar');
-    const fechaAprobacion = document.getElementById('fechaAprobacion');
-    const fechaPrevista = document.getElementById('fechaPrevista');
-    const chkTerminado = document.getElementById('chkTerminado');
-    const fechaTerminado = document.getElementById('fechaTerminado');
-    const chkEntregado = document.getElementById('chkEntregado');
-    const fechaEntregado = document.getElementById('fechaEntregado');
-    const recibidoPor = document.getElementById('recibidoPor');
-    const usuario = document.getElementById('usuario');
+document.addEventListener("DOMContentLoaded", () => {
+    // Referencias DOM
+    const chkAprobar = document.getElementById("chkAprobar");
+    const fechaAprobacion = document.getElementById("fechaAprobacion");
+    const fechaPrevista = document.getElementById("fechaPrevista");
+    const usuarioAprobacion = document.getElementById("usuarioAprobacion");
 
-    // 🟢 Aceptar cotización
-    chkAprobar.addEventListener('change', () => {
-        const hoy = new Date().toISOString().split('T')[0];
-        if (chkAprobar.checked) {
-            if (!fechaAprobacion.value) fechaAprobacion.value = hoy;
-            if (!fechaPrevista.value) fechaPrevista.focus();
-        } else {
-            fechaAprobacion.value = '';
-            fechaPrevista.value = '';
+    const chkTerminado = document.getElementById("chkTerminado");
+    const fechaTerminado = document.getElementById("fechaTerminado");
+    const usuarioTerminado = document.getElementById("usuarioTerminado");
+
+    const chkEntregado = document.getElementById("chkEntregado");
+    const fechaEntregado = document.getElementById("fechaEntregado");
+    const recibidoPor = document.getElementById("recibidoPor");
+    const usuarioEntrega = document.getElementById("usuarioEntrega");
+
+    const usuario = document.getElementById("usuario");
+
+    function getToday() {
+        return new Date().toISOString().split('T')[0];
+    }
+
+    // --- Autocompletado ---
+    function autoFill(checkElement, dateElement, userElement, extraDateElement = null) {
+        if (checkElement.checked) {
+            if (!dateElement.value) dateElement.value = getToday();
+            if (!userElement.value && usuario.value) userElement.value = usuario.value;
+            // Autocompletar Fecha Prevista si está vacía
+            if (extraDateElement && !extraDateElement.value) extraDateElement.value = getToday();
         }
-    });
+    }
 
-    // 🔧 Trabajo Terminado
-    chkTerminado.addEventListener('change', () => {
-        const hoy = new Date().toISOString().split('T')[0];
-        if (chkTerminado.checked) {
-            if (!fechaTerminado.value) fechaTerminado.value = hoy;
-        } else {
-            fechaTerminado.value = '';
-        }
-    });
+    chkAprobar.addEventListener("change", () => autoFill(chkAprobar, fechaAprobacion, usuarioAprobacion, fechaPrevista));
+    chkTerminado.addEventListener("change", () => autoFill(chkTerminado, fechaTerminado, usuarioTerminado));
+    chkEntregado.addEventListener("change", () => autoFill(chkEntregado, fechaEntregado, usuarioEntrega));
 
-    // 📦 Trabajo Entregado
-    chkEntregado.addEventListener('change', () => {
-        const hoy = new Date().toISOString().split('T')[0];
-        if (chkEntregado.checked) {
-            if (!fechaEntregado.value) fechaEntregado.value = hoy;
-        } else {
-            fechaEntregado.value = '';
-        }
-    });
+    // Revisión inicial: Si ya hay fecha pero el usuario está vacío (datos antiguos), NO llenar usuario automáticamente
+    // para no mentir diciendo que lo aprobó el usuario actual. Solo llenar fecha si falta.
+    setTimeout(() => {
+        // Solo llamamos a autofill si el switch está encendido
+        // Pero modificamos la lógica visual: si ya tiene datos, no tocar.
+    }, 100);
 
-    // 💾 Guardar Orden de Trabajo
+    // --- FETCH ---
     document.getElementById("btnGuardarOrden").addEventListener("click", async () => {
-        const customerId = document.getElementById("customerId").value;
-        const quotationId = document.getElementById("quotationId").value;
-        const detalleIndex = document.getElementById("detalleIndex").value;
         const detalleId = document.getElementById("detalleId").value;
         const versionIndex = document.getElementById("versionIndex").value;
-
-        const aceptada = chkAprobar.checked;
-        const fechaAceptacion = fechaAprobacion.value;
-        const fechaPrevistaEntrega = fechaPrevista.value;
-
+        
         try {
-            const response = await fetch(`/guardar-orden-trabajo/${customerId}/${quotationId}/${detalleIndex}`, {
+            const response = await fetch(`/guardar-orden-trabajo/${detalleId}/${versionIndex}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    aceptada,
-                    fechaAceptacion,
-                    fechaPrevistaEntrega,
-                    detalleId,
-                    versionIndex
+                    aceptada: chkAprobar.checked,
+                    fechaAprobacion: fechaAprobacion.value,
+                    fechaEntrega: fechaPrevista.value, 
+                    usuarioAprobacion: usuario.value
                 })
             });
 
             if (response.ok) {
+                usuarioAprobacion.value = usuario.value; 
                 alert("✅ Orden de trabajo guardada correctamente.");
             } else {
                 alert("❌ Error al guardar la orden.");
             }
         } catch (error) {
-            console.error("❌ Error en el guardado:", error);
-            alert("❌ Fallo al conectar con el servidor.");
+            alert("❌ Fallo de conexión.");
         }
     });
 
-    // 🔄 Actualizar Trabajo Terminado
     document.getElementById("btnActualizarTerminado").addEventListener("click", async () => {
         const detalleId = document.getElementById("detalleId").value;
         const versionIndex = document.getElementById("versionIndex").value;
-        const terminado = chkTerminado.checked;
-        const fechaTerminadoValue = fechaTerminado.value;
-        const usuarioTermina = usuario.value;
-
+        
         try {
             const response = await fetch(`/marcar-trabajo-terminado/${detalleId}/${versionIndex}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    terminado,
-                    fechaTerminado: fechaTerminadoValue,
-                    usuarioTermina
+                    terminado: chkTerminado.checked,
+                    fechaTerminado: fechaTerminado.value,
+                    usuarioTerminado: usuario.value
                 })
             });
-
             if (response.ok) {
-                alert("✅ Información de trabajo terminado actualizada.");
+                usuarioTerminado.value = usuario.value;
+                alert("✅ Estado actualizado.");
             } else {
-                alert("❌ No se pudo actualizar trabajo terminado.");
+                alert("❌ Error al actualizar.");
             }
-        } catch (error) {
-            console.error("❌ Error al actualizar trabajo terminado:", error);
-            alert("❌ Fallo al conectar con el servidor.");
-        }
+        } catch (error) { alert("❌ Fallo de conexión."); }
     });
 
-    // 🔄 Actualizar Trabajo Entregado
     document.getElementById("btnActualizarEntregado").addEventListener("click", async () => {
         const detalleId = document.getElementById("detalleId").value;
         const versionIndex = document.getElementById("versionIndex").value;
-        const entregado = chkEntregado.checked;
-        const fechaEntregadoValue = fechaEntregado.value;
-        const recibidoPorValue = recibidoPor.value;
-        const usuarioEntrega = usuario.value;
-
+        
         try {
             const response = await fetch(`/marcar-trabajo-entregado/${detalleId}/${versionIndex}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    entregado,
-                    fechaEntregado: fechaEntregadoValue,
-                    recibidoPor: recibidoPorValue,
-                    usuarioEntrega
+                    entregado: chkEntregado.checked,
+                    fechaEntregado: fechaEntregado.value,
+                    recibidoPor: recibidoPor.value,
+                    usuarioEntrega: usuario.value
                 })
             });
-
             if (response.ok) {
-                alert("✅ Información de trabajo entregado actualizada.");
+                usuarioEntrega.value = usuario.value;
+                alert("✅ Entrega confirmada.");
             } else {
-                alert("❌ No se pudo actualizar trabajo entregado.");
+                alert("❌ Error al confirmar entrega.");
             }
-        } catch (error) {
-            console.error("❌ Error al actualizar trabajo entregado:", error);
-            alert("❌ Fallo al conectar con el servidor.");
-        }
+        } catch (error) { alert("❌ Fallo de conexión."); }
     });
 });
 </script>
 
-
+</body>
+</html>

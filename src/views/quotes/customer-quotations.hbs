@@ -1,65 +1,132 @@
-<div class="container">
-    <div class="row">
-        <div class="col-md-12">
-            <h2>Cotizaciones de {{customer.aliasCus}}</h2>
-            <hr>
+<div class="container mt-4">
+    
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <a href="/customers" class="text-muted mb-2 d-inline-block text-decoration-none">
+                <i class="fas fa-arrow-left mr-1"></i> Volver a Clientes
+            </a>
+            <h2 class="font-weight-bold text-dark">
+                <i class="fas fa-file-invoice-dollar text-primary mr-2"></i>Cotizaciones de <span class="text-primary">{{customer.aliasCus}}</span>
+            </h2>
+            <p class="text-muted mb-0">
+                <i class="fas fa-user-tie mr-1"></i> {{customer.nombreCus}}
+            </p>
+        </div>
+        <div class="col-md-4 text-right">
+            <a href="/customers/{{customer._id}}/quotations/new" class="btn btn-success shadow-sm btn-lg" style="border-radius: 30px;">
+                <i class="fas fa-plus-circle mr-2"></i> Nueva Cotización
+            </a>
         </div>
     </div>
 
     {{#if quotations.length}}
-        <div class="row">
-            <div class="col-md-12">
-                <table class="table table-bordered table-hover table-sm">
-                    <thead class="thead-dark text-center">
-                        <tr>
-                            <th>Código</th>
-                            <th>Fecha</th>
-                            <th>Fecha Vence</th>
-                            <th>Descripción Corta</th>
-                            <th>Usuario Creador</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#each quotations}}
-                            <tr class="text-center">
-                                <td>{{codigoCotizacion}}</td>
-                                <td>{{formatDateLocal this.fecha}}</td>
-                                <td>{{formatDateLocal this.fechaVence}}</td>
-                                <td class="text-left">{{this.descripcionCorta}}</td>
-                                <td>{{this.usuarioCreador}}</td>
-                                <td>
-                                    <a href="/customers/{{../customer._id}}/quotations/edit/{{this._id}}" 
-                                       class="btn btn-primary btn-sm">Editar</a>
-                                    <form action="/customers/{{../customer._id}}/quotations/delete/{{this._id}}?_method=DELETE" 
-                                          method="POST" style="display:inline;">
-                                        <button class="btn btn-danger btn-sm" type="submit">Eliminar</button>
-                                    </form>
-                                    <a href="/pdf/ver-cotizacion-general/{{../customer._id}}/{{this._id}}" 
-                                       target="_blank" 
-                                       class="btn btn-info btn-sm">Ver Cotización General</a>
-                                    <!--
-                                    <a href="/pdf/exportar-cotizacion-general/{{../customer._id}}/{{this._id}}" 
-                                       class="btn btn-secondary btn-sm" target="_blank">📄 PDF</a>
-                                    -->
-                                </td>
+        <div class="card border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="bg-light text-secondary">
+                            <tr>
+                                <th class="py-3 pl-4 border-0" width="10%">Código</th>
+                                <th class="py-3 border-0" width="15%">Fechas</th>
+                                <th class="py-3 border-0" width="35%">Descripción</th>
+                                <th class="py-3 border-0 text-center" width="15%">Creador</th>
+                                <th class="py-3 pr-4 border-0 text-right" width="25%">Acciones</th>
                             </tr>
-                        {{/each}}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {{#each quotations}}
+                                <tr style="border-bottom: 1px solid #f0f0f0;">
+                                    <td class="pl-4 align-middle">
+                                        <span class="badge badge-dark px-2 py-1" style="font-size: 0.9em;">
+                                            {{codigoCotizacion}}
+                                        </span>
+                                    </td>
+
+                                    <td class="align-middle">
+                                        <div class="small text-muted">
+                                            <i class="fas fa-calendar-day mr-1"></i> {{formatDateLocal this.fecha}}
+                                        </div>
+                                        {{#if this.fechaVence}}
+                                        <div class="small text-danger mt-1">
+                                            <i class="fas fa-hourglass-end mr-1"></i> Vence: {{formatDateLocal this.fechaVence}}
+                                        </div>
+                                        {{/if}}
+                                    </td>
+
+                                    <td class="align-middle">
+                                        <span class="font-weight-bold text-dark d-block">{{this.descripcionCorta}}</span>
+                                    </td>
+
+                                    <td class="align-middle text-center">
+                                        <span class="badge badge-light border text-muted">
+                                            <i class="fas fa-user mr-1"></i> {{this.usuarioCreador}}
+                                        </span>
+                                    </td>
+
+                                    <td class="pr-4 align-middle text-right">
+                                        <div class="btn-group" role="group">
+                                            <a href="/pdf/ver-cotizacion-general/{{../customer._id}}/{{this._id}}" 
+                                               target="_blank" 
+                                               class="btn btn-outline-info btn-sm" 
+                                               title="Ver Hoja de Cotización"
+                                               style="border-radius: 5px 0 0 5px;">
+                                                <i class="fas fa-eye"></i> Ver
+                                            </a>
+
+                                            <a href="/customers/{{../customer._id}}/quotations/edit/{{this._id}}" 
+                                               class="btn btn-outline-primary btn-sm"
+                                               title="Editar Cotización">
+                                                <i class="fas fa-pencil-alt"></i>
+                                            </a>
+
+                                            <form action="/customers/{{../customer._id}}/quotations/delete/{{this._id}}?_method=DELETE" 
+                                                  method="POST" 
+                                                  style="display:inline;">
+                                                <button class="btn btn-outline-danger btn-sm" 
+                                                        type="submit" 
+                                                        title="Eliminar"
+                                                        onclick="return confirm('¿Estás seguro de que deseas eliminar esta cotización?');"
+                                                        style="border-radius: 0 5px 5px 0;">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer bg-white border-0 text-muted small text-center py-3">
+                Mostrando {{quotations.length}} cotizaciones registradas.
             </div>
         </div>
+
     {{else}}
-        <div class="row">
-            <div class="col-md-12">
-                <p>No hay cotizaciones para este cliente.</p>
+        <div class="row mt-5">
+            <div class="col-md-8 offset-md-2 text-center">
+                <div class="jumbotron bg-white shadow-sm border" style="border-radius: 20px;">
+                    <div class="text-muted mb-3">
+                        <i class="fas fa-folder-open fa-4x opacity-50"></i>
+                    </div>
+                    <h3 class="text-dark">No hay cotizaciones aún</h3>
+                    <p class="lead text-muted">Este cliente no tiene historial de cotizaciones registrado.</p>
+                    <hr class="my-4">
+                    <a href="/customers/{{customer._id}}/quotations/new" class="btn btn-primary btn-lg shadow" style="border-radius: 30px;">
+                        <i class="fas fa-plus mr-2"></i> Crear la Primera Cotización
+                    </a>
+                </div>
             </div>
         </div>
     {{/if}}
-
-    <div class="row mt-3">
-        <div class="col-md-12">
-            <a href="/customers/{{customer._id}}/quotations/new" class="btn btn-success">Crear Nueva Cotización</a>
-        </div>
-    </div>
 </div>
+
+<style>
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    .btn-group .btn {
+        margin-right: 1px;
+    }
+</style>s

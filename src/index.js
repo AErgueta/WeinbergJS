@@ -85,6 +85,8 @@ app.use('/api', require('./routes/api'));
 app.use(require('./routes/calculatorTres'));
 app.use('/api/quotation-costs', require('./routes/quotationCostDetail'));
 app.use('/pdf', require('./routes/exportaPDF'));
+app.use(require('./routes/reports'));
+
 
 // Server start
 app.listen(app.get('port'), () => {

@@ -1,53 +1,97 @@
-<div class="container">
-    <!-- 🔹 Botón para agregar cliente -->
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <input type="text" id="searchInput" class="form-control" placeholder="Buscar por nombre...">
+<div class="container mt-4">
+    
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h2 class="font-weight-bold text-dark"><i class="fas fa-users mr-2 text-primary"></i>Cartera de Clientes</h2>
+            <p class="text-muted">Gestiona tus clientes y crea nuevas cotizaciones.</p>
         </div>
-        <div class="col-md-4 text-right">
-            <a href="/quotes/add" class="btn btn-success btn-block">➕ Nuevo Cliente</a>
+        <div class="col-md-6">
+            <div class="d-flex">
+                <input type="text" id="searchInput" class="form-control mr-2 shadow-sm" placeholder="🔍 Buscar cliente por nombre..." style="border-radius: 20px;">
+                <a href="/quotes/add" class="btn btn-success shadow-sm" style="border-radius: 20px; white-space: nowrap;">
+                    <i class="fas fa-plus-circle mr-1"></i> Nuevo Cliente
+                </a>
+            </div>
         </div>
     </div>
 
+    <hr>
+
     <div class="row" id="customersContainer">
         {{#each customers}}
-            <div class="col-md-3 mb-4 customer-card">
-                <div class="card">
+            <div class="col-md-4 mb-4 customer-card"> <div class="card h-100 border-0 shadow-sm hover-shadow" style="border-radius: 15px; transition: transform 0.2s;">
+                    
+                    <div class="card-header bg-white border-0 pt-3 pb-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge badge-primary px-3 py-2" style="font-size: 0.85em; border-radius: 10px;">{{aliasCus}}</span>
+                            <div class="dropdown">
+                                <button class="btn btn-link text-muted p-0" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <a class="dropdown-item text-primary" href="/customers/edit/{{_id}}"><i class="fas fa-edit mr-2"></i>Editar</a>
+                                    <form action="/customers/delete/{{_id}}?_method=DELETE" method="POST" class="d-inline">
+                                        <button type="submit" class="dropdown-item text-danger" onclick="return confirm('¿Estás seguro de eliminar este cliente?');">
+                                            <i class="fas fa-trash-alt mr-2"></i>Eliminar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="card-body">
-                        <h5 class="card-title">{{aliasCus}}</h5>
-                        <h4 class="card-text nombreCus">{{nombreCus}}</h4>
-                        <p class="card-text">Contacto: {{contactoCus}}</p>
-                        <p class="card-text">Teléfono: {{telefonoCus}}</p>
-                        <a href="/customers/edit/{{_id}}" class="btn btn-primary">Edit</a>
-                        <a href="/customers/delete/{{_id}}?_method=DELETE" class="btn btn-danger">Delete</a>
-                        <a href="/customers/{{_id}}/quotations" class="btn btn-success">Solicitud de Cotización</a>
+                        <h4 class="card-title font-weight-bold text-dark nombreCus mb-3">{{nombreCus}}</h4>
+                        
+                        <div class="text-muted mb-2">
+                            <i class="fas fa-user-tie mr-2 text-info" style="width: 20px; text-align: center;"></i> 
+                            {{#if contactoCus}}{{contactoCus}}{{else}}<span class="font-italic text-black-50">Sin contacto</span>{{/if}}
+                        </div>
+                        
+                        <div class="text-muted mb-3">
+                            <i class="fas fa-phone-alt mr-2 text-success" style="width: 20px; text-align: center;"></i> 
+                            {{#if telefonoCus}}{{telefonoCus}}{{else}}<span class="font-italic text-black-50">--</span>{{/if}}
+                        </div>
+
+                        <a href="/customers/{{_id}}/quotations" class="btn btn-outline-primary btn-block font-weight-bold shadow-sm mt-3" style="border-radius: 20px;">
+                            <i class="fas fa-file-invoice mr-2"></i> Ver Cotizaciones
+                        </a>
                     </div>
                 </div>
             </div>
         {{else}}
-            <div class="card mx-auto">
-                <div class="card-body">
-                    {{#if user}}
-                        <h1>Hello, {{user.name}}</h1>
-                    {{else}}
-                        <h1>Hello, Guest</h1>
-                    {{/if}}
-                    <p class="lead">There are no customers yet.</p>
-                    <a href="/customers/add" class="btn btn-success btn-block">Add Customer</a>
+            <div class="col-12 text-center mt-5">
+                <div class="jumbotron bg-white shadow-sm border" style="border-radius: 20px;">
+                    <img src="/img/logo_nav.png" alt="Logo" style="height: 60px; opacity: 0.5;" class="mb-3">
+                    <h3 class="text-muted">No hay clientes registrados aún.</h3>
+                    <p class="lead">Comienza agregando tu primer cliente para crear cotizaciones.</p>
+                    <a href="/quotes/add" class="btn btn-primary btn-lg shadow mt-2" style="border-radius: 30px;">
+                        <i class="fas fa-plus-circle mr-2"></i> Agregar Cliente
+                    </a>
                 </div>
             </div>
         {{/each}}
     </div>
 </div>
 
+<style>
+    .hover-shadow:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+</style>
+
 <script>
-    document.getElementById('searchInput').addEventListener('input', function() {
+    document.getElementById('searchInput').addEventListener('keyup', function() {
         const filter = this.value.toLowerCase();
         const customerCards = document.querySelectorAll('.customer-card');
 
         customerCards.forEach(card => {
+            // Buscamos tanto por Nombre como por Alias
             const nombreCus = card.querySelector('.nombreCus').textContent.toLowerCase();
-            if (nombreCus.includes(filter)) {
+            const aliasCus = card.querySelector('.badge').textContent.toLowerCase();
+            
+            if (nombreCus.includes(filter) || aliasCus.includes(filter)) {
                 card.style.display = '';
             } else {
                 card.style.display = 'none';

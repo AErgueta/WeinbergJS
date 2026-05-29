@@ -1,0 +1,265 @@
+<div class="container mt-4">
+  <h3 class="text-center mb-4 font-weight-bold text-dark">📋 Seguimiento del Trabajo</h3>
+
+  <!-- Recuadro principal -->
+  <div class="info-box border border-secondary rounded p-3 mb-4 bg-white shadow-sm">
+    <table class="table table-sm table-bordered mb-0">
+      <thead class="thead-light text-center">
+        <tr>
+          <th>Cantidad</th>
+          <th>Producto</th>
+          <th>Precio en Bs.</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="text-center align-middle">{{detalle.cantidadQuo}}</td>
+          <td class="align-middle">{{detalle.descripcionQuo}}</td>
+          <td class="text-right align-middle">
+            {{formatCurrency (sum version.lineas "monto")}}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paneles de seguimiento -->
+  <div class="row">
+    <!-- 🟢 Aceptar Cotización -->
+    <div class="col-md-4">
+      <div class="border border-success rounded p-3 shadow-sm bg-light mb-4 h-100">
+        <h5 class="text-success font-weight-bold mb-3">✔️ Aceptar Cotización</h5>
+
+        <div class="form-group form-check">
+          <input type="checkbox" id="chkAprobar" class="form-check-input" {{#if version.aceptada}}checked{{/if}}>
+          <label for="chkAprobar" class="form-check-label font-weight-bold text-success">Cotización Aprobada</label>
+        </div>
+
+        <div class="form-group">
+          <label for="fechaAprobacion">📆 Fecha de Aprobación:</label>
+          <input type="date" id="fechaAprobacion" class="form-control" value="{{fechaAceptacion}}">
+        </div>
+
+        <div class="form-group">
+          <label for="fechaPrevista">📅 Fecha Prevista de Entrega:</label>
+          <input type="date" id="fechaPrevista" class="form-control" value="{{fechaPrevistaEntrega}}">
+        </div>
+
+        <button id="btnGuardarOrden" class="btn btn-success btn-block font-weight-bold">
+          💾 Guardar Orden
+        </button>
+
+        <a href="/pdf/ver-orden-trabajo/{{detalle._id}}/{{versionIndex}}" target="_blank"
+           class="btn btn-primary btn-block font-weight-bold mt-2">
+          📝 Ver Orden
+        </a>
+
+        <!--<a href="/pdf/exportar-orden-pdf/{{detalle._id}}/{{versionIndex}}" target="_blank"
+           class="btn btn-secondary btn-block font-weight-bold mt-2">
+          📤 Exportar a PDF
+        </a>-->
+      </div>
+    </div>
+
+    <!-- 🔵 Trabajo Terminado -->
+    <div class="col-md-4">
+      <div class="border border-info rounded p-3 shadow-sm bg-light mb-4 h-100">
+        <h5 class="text-info font-weight-bold mb-3">🔧 Trabajo Terminado</h5>
+
+        <div class="form-group form-check">
+          <input type="checkbox" id="chkTerminado" class="form-check-input" {{#if version.terminado}}checked{{/if}}>
+          <label for="chkTerminado" class="form-check-label font-weight-bold text-info">Trabajo Terminado</label>
+        </div>
+
+        <div class="form-group">
+          <label for="fechaTerminado">📆 Fecha de Terminación:</label>
+          <input type="date" id="fechaTerminado" class="form-control" value="{{fechaTerminado}}">
+        </div>
+
+        <button id="btnActualizarTerminado" class="btn btn-info btn-block font-weight-bold mt-2">
+          🔄 Actualizar Información
+        </button>
+      </div>
+    </div>
+
+    <!-- 🟣 Trabajo Entregado -->
+    <div class="col-md-4">
+      <div class="border border-warning rounded p-3 shadow-sm bg-light mb-4 h-100">
+        <h5 class="text-warning font-weight-bold mb-3">📦 Trabajo Entregado</h5>
+
+        <div class="form-group form-check">
+          <input type="checkbox" id="chkEntregado" class="form-check-input" {{#if version.entregado}}checked{{/if}}>
+          <label for="chkEntregado" class="form-check-label font-weight-bold text-warning">Entregado</label>
+        </div>
+
+        <div class="form-group">
+          <label for="fechaEntregado">📆 Fecha de Entrega:</label>
+          <input type="date" id="fechaEntregado" class="form-control" value="{{fechaEntregado}}">
+        </div>
+
+        <div class="form-group">
+          <label for="recibidoPor">👤 Recibido por:</label>
+          <input type="text" id="recibidoPor" class="form-control" value="{{recibidoPor}}" placeholder="Nombre de quien recibió">
+        </div>
+
+        <button id="btnActualizarEntregado" class="btn btn-warning btn-block font-weight-bold mt-2">
+          📤 Actualizar Información
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Campos ocultos -->
+  <input type="hidden" id="customerId" value="{{customerId}}">
+  <input type="hidden" id="quotationId" value="{{quotationId}}">
+  <input type="hidden" id="detalleIndex" value="{{detalleIndex}}">
+  <input type="hidden" id="detalleId" value="{{detalle._id}}">
+  <input type="hidden" id="versionIndex" value="{{versionIndex}}">
+  <input type="hidden" id="usuario" value="{{user.name}}">
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const chkAprobar = document.getElementById('chkAprobar');
+    const fechaAprobacion = document.getElementById('fechaAprobacion');
+    const fechaPrevista = document.getElementById('fechaPrevista');
+    const chkTerminado = document.getElementById('chkTerminado');
+    const fechaTerminado = document.getElementById('fechaTerminado');
+    const chkEntregado = document.getElementById('chkEntregado');
+    const fechaEntregado = document.getElementById('fechaEntregado');
+    const recibidoPor = document.getElementById('recibidoPor');
+    const usuario = document.getElementById('usuario');
+
+    // 🟢 Aceptar cotización
+    chkAprobar.addEventListener('change', () => {
+        const hoy = new Date().toISOString().split('T')[0];
+        if (chkAprobar.checked) {
+            if (!fechaAprobacion.value) fechaAprobacion.value = hoy;
+            if (!fechaPrevista.value) fechaPrevista.focus();
+        } else {
+            fechaAprobacion.value = '';
+            fechaPrevista.value = '';
+        }
+    });
+
+    // 🔧 Trabajo Terminado
+    chkTerminado.addEventListener('change', () => {
+        const hoy = new Date().toISOString().split('T')[0];
+        if (chkTerminado.checked) {
+            if (!fechaTerminado.value) fechaTerminado.value = hoy;
+        } else {
+            fechaTerminado.value = '';
+        }
+    });
+
+    // 📦 Trabajo Entregado
+    chkEntregado.addEventListener('change', () => {
+        const hoy = new Date().toISOString().split('T')[0];
+        if (chkEntregado.checked) {
+            if (!fechaEntregado.value) fechaEntregado.value = hoy;
+        } else {
+            fechaEntregado.value = '';
+        }
+    });
+
+    // 💾 Guardar Orden de Trabajo
+    document.getElementById("btnGuardarOrden").addEventListener("click", async () => {
+        const customerId = document.getElementById("customerId").value;
+        const quotationId = document.getElementById("quotationId").value;
+        const detalleIndex = document.getElementById("detalleIndex").value;
+        const detalleId = document.getElementById("detalleId").value;
+        const versionIndex = document.getElementById("versionIndex").value;
+
+        const aceptada = chkAprobar.checked;
+        const fechaAceptacion = fechaAprobacion.value;
+        const fechaPrevistaEntrega = fechaPrevista.value;
+
+        try {
+            const response = await fetch(`/guardar-orden-trabajo/${customerId}/${quotationId}/${detalleIndex}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    aceptada,
+                    fechaAceptacion,
+                    fechaPrevistaEntrega,
+                    detalleId,
+                    versionIndex
+                })
+            });
+
+            if (response.ok) {
+                alert("✅ Orden de trabajo guardada correctamente.");
+            } else {
+                alert("❌ Error al guardar la orden.");
+            }
+        } catch (error) {
+            console.error("❌ Error en el guardado:", error);
+            alert("❌ Fallo al conectar con el servidor.");
+        }
+    });
+
+    // 🔄 Actualizar Trabajo Terminado
+    document.getElementById("btnActualizarTerminado").addEventListener("click", async () => {
+        const detalleId = document.getElementById("detalleId").value;
+        const versionIndex = document.getElementById("versionIndex").value;
+        const terminado = chkTerminado.checked;
+        const fechaTerminadoValue = fechaTerminado.value;
+        const usuarioTermina = usuario.value;
+
+        try {
+            const response = await fetch(`/marcar-trabajo-terminado/${detalleId}/${versionIndex}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    terminado,
+                    fechaTerminado: fechaTerminadoValue,
+                    usuarioTermina
+                })
+            });
+
+            if (response.ok) {
+                alert("✅ Información de trabajo terminado actualizada.");
+            } else {
+                alert("❌ No se pudo actualizar trabajo terminado.");
+            }
+        } catch (error) {
+            console.error("❌ Error al actualizar trabajo terminado:", error);
+            alert("❌ Fallo al conectar con el servidor.");
+        }
+    });
+
+    // 🔄 Actualizar Trabajo Entregado
+    document.getElementById("btnActualizarEntregado").addEventListener("click", async () => {
+        const detalleId = document.getElementById("detalleId").value;
+        const versionIndex = document.getElementById("versionIndex").value;
+        const entregado = chkEntregado.checked;
+        const fechaEntregadoValue = fechaEntregado.value;
+        const recibidoPorValue = recibidoPor.value;
+        const usuarioEntrega = usuario.value;
+
+        try {
+            const response = await fetch(`/marcar-trabajo-entregado/${detalleId}/${versionIndex}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    entregado,
+                    fechaEntregado: fechaEntregadoValue,
+                    recibidoPor: recibidoPorValue,
+                    usuarioEntrega
+                })
+            });
+
+            if (response.ok) {
+                alert("✅ Información de trabajo entregado actualizada.");
+            } else {
+                alert("❌ No se pudo actualizar trabajo entregado.");
+            }
+        } catch (error) {
+            console.error("❌ Error al actualizar trabajo entregado:", error);
+            alert("❌ Fallo al conectar con el servidor.");
+        }
+    });
+});
+</script>
+
+

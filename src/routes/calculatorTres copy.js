@@ -25,7 +25,7 @@ router.get('/calculatorTres', async (req, res) => {
         }
 
         // 🔍 1. Buscar el cliente en la base de datos
-        const customer = await Customer.findById(customerId).lean();
+        const customer = await Customer.findById(customerId);
 
         if (!customer) {
             return res.status(404).send("Cliente no encontrado");
@@ -44,9 +44,8 @@ router.get('/calculatorTres', async (req, res) => {
             : {};
 
         // 🔹 Formateamos las fechas antes de enviarlas a la vista
-        // 🔹 Formateamos las fechas antes de enviarlas a la vista
         const formattedQuotation = {
-            ...quotation, // <--- Simplemente déjalo así
+            ...quotation.toObject(), // Convertimos a objeto plano para evitar conflictos con Mongoose
             fecha: formatDate(quotation.fecha),
             fechaVence: formatDate(quotation.fechaVence)
         };
@@ -55,11 +54,10 @@ router.get('/calculatorTres', async (req, res) => {
         res.render('calculatorTres', {
             quotationId,
             customerId,
-            customer, // <--- ¡AGREGA ESTA LÍNEA!
             quotation: formattedQuotation,
             detalle,
             detalleId,
-            user: req.user
+            user: req.user //Para almacenar usuario
         });
 
     } catch (error) {

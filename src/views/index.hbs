@@ -1,24 +1,117 @@
-<div class="card">
-    <div class="card-body">
-        <div class="jumbotron mt-4 position-relative">
-            <!-- Logo NUMB arriba a la derecha -->
+{{#if user}}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>👋 Hola, {{user.name}}</h2>
+            <p class="text-muted">Aquí tienes el resumen de operaciones de hoy.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        
+        <div class="col-md-4">
+            <div class="card text-white bg-primary mb-3 shadow" style="border-radius: 15px;">
+                <div class="card-header border-0 font-weight-bold">🏭 En Producción</div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="card-title display-4 font-weight-bold mb-0">{{countProduccion}}</h1>
+                            <p class="card-text">Trabajos en curso</p>
+                        </div>
+                        <i class="fas fa-cogs fa-4x opacity-50" style="opacity: 0.3;"></i>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <small>Aprobados pero no terminados</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-warning mb-3 shadow" style="border-radius: 15px;">
+                <div class="card-header border-0 font-weight-bold text-dark">📦 Por Entregar</div>
+                <div class="card-body text-dark">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="card-title display-4 font-weight-bold mb-0">{{countPorEntregar}}</h1>
+                            <p class="card-text">Listos para entrega</p>
+                        </div>
+                        <i class="fas fa-truck fa-4x" style="opacity: 0.3;"></i>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 text-dark">
+                    <a href="/reports/seguimiento" class="text-dark font-weight-bold" target="_blank">Ver reporte detallado &rarr;</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-success mb-3 shadow" style="border-radius: 15px;">
+                <div class="card-header border-0 font-weight-bold">📅 Ventas del Mes</div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="card-title display-4 font-weight-bold mb-0">{{countCotizacionesMes}}</h1>
+                            <p class="card-text">Nuevas cotizaciones</p>
+                        </div>
+                        <i class="fas fa-file-invoice-dollar fa-4x" style="opacity: 0.3;"></i>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <small>Solicitudes registradas este mes</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Acciones Rápidas</h5>
+                    <hr>
+                    <a href="/quotes/add" class="btn btn-outline-primary btn-block text-left mb-2">
+                        <i class="fas fa-user-plus mr-2"></i> Nuevo Cliente
+                    </a>
+                    <a href="/customers" class="btn btn-outline-dark btn-block text-left mb-2">
+                        <i class="fas fa-search mr-2"></i> Buscar Cotización
+                    </a>
+                    <a href="/quotes/calculator-paper" class="btn btn-outline-secondary btn-block text-left" target="_blank">
+                        <i class="fas fa-calculator mr-2"></i> Calculadora de Pliegos
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+             <div class="jumbotron p-4 bg-light shadow-sm" style="border-radius: 10px;">
+                <div class="text-center">
+                    <img src="/img/logo_nav.png" alt="Logo" style="height: 60px; opacity: 0.8;">
+                    <p class="mt-3 text-muted">"Tranquilidad, control y legado"</p>
+                </div>
+             </div>
+        </div>
+    </div>
+</div>
+
+{{else}}
+<div class="card border-0">
+    <div class="card-body p-0">
+        <div class="jumbotron mt-4 position-relative bg-white shadow-sm border">
             <img src="/img/Logo N4.png" alt="Logo NUMB" style="position: absolute; top: 20px; right: 20px; height: 75px;">
             
-            <!-- Logo principal en el centro -->
-            <img src="/img/logo_nav.png" class="mx-auto d-block m-2 logo" alt="Weinberg">
+            <img src="/img/logo_nav.png" class="mx-auto d-block m-2 logo" alt="Weinberg" style="max-height: 120px;">
             
-            <h1 class="display-4">Imprentas - NUMB</h1>
-            <p class="lead">Tranquilidad, control y legado: 15 años de NUMB para tu imprenta.</p>
+            <h1 class="display-4 text-center mt-3">Imprentas - NUMB</h1>
+            <p class="lead text-center">Tranquilidad, control y legado: 15 años de NUMB para tu imprenta.</p>
             <hr class="my-4">
-            <p><strong>NUMB</strong> es una solución diseñada para la gestión y cotización de trabajos en imprentas, creada con el objetivo de <em>optimizar la exactitud, el seguimiento y la eficiencia en cada etapa del proceso gráfico</em>.</p>
-            <hr class="my-4">
-            <a href="http://imprentaweinberg.com/" class="btn btn-primary btn-lg" target="_blank" rel="noopener noreferrer">Imprenta Weinberg</a>
-            <!-- Botón para ir al cálculo de pliegos -->
-            <div class="text-left mt-4 mb-3"> <!-- ← margen superior agregado -->
-                <a href="/quotes/calculator-paper" class="btn btn-outline-secondary" target="_blank">
-                    📐 Cálculo de Pliegos
-                </a>
+            <p class="text-center w-75 mx-auto"><strong>NUMB</strong> es una solución diseñada para la gestión y cotización de trabajos en imprentas, creada con el objetivo de <em>optimizar la exactitud, el seguimiento y la eficiencia en cada etapa del proceso gráfico</em>.</p>
+            
+            <div class="text-center mt-5">
+                <a href="/users/signin" class="btn btn-primary btn-lg px-5 shadow">Ingresar al Sistema</a>
+                <br><br>
+                <a href="http://imprentaweinberg.com/" class="text-muted small" target="_blank" rel="noopener noreferrer">Imprenta Weinberg</a>
             </div>
         </div>
     </div>
 </div>
+{{/if}}
