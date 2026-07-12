@@ -126,9 +126,9 @@
                 <button class="btn btn-primary btn-block btn-lg shadow-sm mb-2" onclick="calculate()" style="border-radius: 30px;">
                     <i class="fas fa-calculator mr-2"></i> Calcular Cortes
                 </button>
-                <button class="btn btn-outline-info btn-block shadow-sm" onclick="toggleOrientation()" style="border-radius: 30px;">
+                <!--<button class="btn btn-outline-info btn-block shadow-sm" onclick="toggleOrientation()" style="border-radius: 30px;">
                     <i class="fas fa-sync-alt mr-2"></i> Girar Orientación
-                </button>
+                </button>-->
             </div>
 
         </div>
@@ -200,88 +200,99 @@
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
 
-    // Variables globales para el estado de rotación
-    let rotated = false;
+    // ALGORITMO CORE: Guillotine Bin Packing (Cortes Mixtos)
+    function getBestMixedLayout(W, H, w, h) {
+        let maxCount = 0;
+        let bestLayout = [];
 
-    function toggleOrientation() {
-        rotated = !rotated;
-        calculate();
+        // Función auxiliar: Rellena un área rectangular con cortes
+        function fillGrid(startX, startY, availW, availH, itemW, itemH) {
+            let cols = Math.floor(availW / itemW);
+            let rows = Math.floor(availH / itemH);
+            let rects = [];
+            for(let i=0; i<cols; i++) {
+                for(let j=0; j<rows; j++) {
+                    rects.push({x: startX + i*itemW, y: startY + j*itemH, w: itemW, h: itemH});
+                }
+            }
+            return { rects, usedW: cols*itemW, usedH: rows*itemH };
+        }
+
+        // Evaluar las dos orientaciones iniciales principales
+        const orientations = [
+            { primaryW: w, primaryH: h, secW: h, secH: w }, // Normal
+            { primaryW: h, primaryH: w, secW: w, secH: h }  // Girada
+        ];
+
+        for (let config of orientations) {
+            // 1. Llenar cuadrícula principal
+            let main = fillGrid(0, 0, W, H, config.primaryW, config.primaryH);
+            
+            // 2. Evaluar retazos usando Estrategia A (Corte de guillotina vertical primero)
+            let rightA = fillGrid(main.usedW, 0, W - main.usedW, H, config.secW, config.secH);
+            let bottomA = fillGrid(0, main.usedH, main.usedW, H - main.usedH, config.secW, config.secH);
+            let layoutA = [...main.rects, ...rightA.rects, ...bottomA.rects];
+
+            // 3. Evaluar retazos usando Estrategia B (Corte de guillotina horizontal primero)
+            let bottomB = fillGrid(0, main.usedH, W, H - main.usedH, config.secW, config.secH);
+            let rightB = fillGrid(main.usedW, 0, W - main.usedW, main.usedH, config.secW, config.secH);
+            let layoutB = [...main.rects, ...bottomB.rects, ...rightB.rects];
+
+            // Guardar el patrón ganador
+            if (layoutA.length > maxCount) {
+                maxCount = layoutA.length;
+                bestLayout = layoutA;
+            }
+            if (layoutB.length > maxCount) {
+                maxCount = layoutB.length;
+                bestLayout = layoutB;
+            }
+        }
+        return bestLayout;
     }
 
     function calculate() {
-        // Obtener valores
         const papelAncho = parseFloat(document.getElementById('papelAncho').value);
         const papelAlto = parseFloat(document.getElementById('papelAlto').value);
-        let anchoLogico = parseFloat(document.getElementById('anchoLogico').value);
-        let altoLogico = parseFloat(document.getElementById('altoLogico').value);
+        const anchoLogico = parseFloat(document.getElementById('anchoLogico').value);
+        const altoLogico = parseFloat(document.getElementById('altoLogico').value);
         const pinza = parseFloat(document.getElementById('pinza').value);
         const cantidad = parseFloat(document.getElementById('cantidad').value);
 
-        // Validar
         if (!papelAncho || !papelAlto || !anchoLogico || !altoLogico) return;
 
-        // Aplicar rotación lógica si está activado
-        if (rotated) {
-            [anchoLogico, altoLogico] = [altoLogico, anchoLogico];
-        }
-
-        // Área efectiva (restando pinza al alto del papel, asumiendo pinza va en un lado)
-        // OJO: La lógica de pinza puede variar. Aquí asumo que reduce el alto disponible.
+        // Descontamos la pinza del alto efectivo (como estaba originalmente)
         const altoEfectivo = papelAlto - pinza; 
         const anchoEfectivo = papelAncho;
 
-        // Calcular cuántos caben (Estrategia simple: Grid directo)
-        // Opción A: Normal
-        const colsA = Math.floor(anchoEfectivo / anchoLogico);
-        const rowsA = Math.floor(altoEfectivo / altoLogico);
-        const totalA = colsA * rowsA;
+        // Generar el mejor patrón mixto
+        const layout = getBestMixedLayout(anchoEfectivo, altoEfectivo, anchoLogico, altoLogico);
+        const unidadesPorPliego = layout.length;
 
-        // Opción B: Girado (dentro del área efectiva)
-        const colsB = Math.floor(anchoEfectivo / altoLogico);
-        const rowsB = Math.floor(altoEfectivo / anchoLogico);
-        const totalB = colsB * rowsB;
-
-        // Decidir cuál es mejor (o usar la orientación actual del input si el usuario ya giró)
-        // En esta calculadora simple, usaremos la orientación actual de los inputs (que ya rotamos arriba si rotated=true)
-        const cols = Math.floor(anchoEfectivo / anchoLogico);
-        const rows = Math.floor(altoEfectivo / altoLogico);
-        const unidadesPorPliego = cols * rows;
-
-        // Cálculos finales
+        // Cálculos de márgenes
         const pliegosNecesarios = Math.ceil(cantidad / (unidadesPorPliego || 1));
-        
         const areaPapel = papelAncho * papelAlto;
         const areaCortes = unidadesPorPliego * (anchoLogico * altoLogico);
         const porcentajeOcupado = ((areaCortes / areaPapel) * 100).toFixed(2);
         const porcentajeLibre = (100 - porcentajeOcupado).toFixed(2);
 
-        // --- Actualizar DOM (Inputs ocultos y visibles) ---
-        
-        // Inputs originales (ocultos o visibles)
-        document.getElementById('resultC').value = unidadesPorPliego;
-        document.getElementById('result').value = pliegosNecesarios;
-        document.getElementById('porO').value = porcentajeOcupado;
-        document.getElementById('porL').value = porcentajeLibre;
-        document.getElementById('width').value = (cols * anchoLogico).toFixed(2); // Ancho utilizado
-        document.getElementById('height').value = (rows * altoLogico).toFixed(2); // Alto utilizado
-
-        // Textos visibles bonitos
+        // Actualizar Valores en Pantalla
         document.getElementById('resultC_display').innerText = unidadesPorPliego;
         document.getElementById('result_display').innerText = pliegosNecesarios;
         document.getElementById('porO_span').innerText = porcentajeOcupado + '%';
         document.getElementById('porL_span').innerText = porcentajeLibre + '%';
-        document.getElementById('width_span').innerText = (cols * anchoLogico).toFixed(2);
-        document.getElementById('height_span').innerText = (rows * altoLogico).toFixed(2);
+        
+        // Al ser un diseño mixto, el ancho/alto usado ya no es un bloque único perfecto
+        document.getElementById('width_span').innerText = "Mixto";
+        document.getElementById('height_span').innerText = "Mixto";
 
-        // --- DIBUJAR EN CANVAS ---
-        draw(papelAncho, papelAlto, anchoLogico, altoLogico, cols, rows, pinza);
+        // Dibujar el nuevo patrón
+        draw(papelAncho, papelAlto, pinza, layout);
     }
 
-    function draw(pAncho, pAlto, cAncho, cAlto, cols, rows, pinza) {
-        // Limpiar
+    function draw(pAncho, pAlto, pinza, layoutRects) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Escala para ajustar al canvas
         const margin = 20;
         const maxWidth = canvas.width - (margin * 2);
         const maxHeight = canvas.height - (margin * 2);
@@ -290,54 +301,41 @@
         const scaleY = maxHeight / pAlto;
         const scale = Math.min(scaleX, scaleY);
 
-        // Origen (centrado)
         const drawW = pAncho * scale;
         const drawH = pAlto * scale;
         const startX = (canvas.width - drawW) / 2;
         const startY = (canvas.height - drawH) / 2;
 
-        // Dibujar Pliego Base (Gris claro)
+        // 1. Dibujar Pliego Base
         ctx.fillStyle = '#eeeeee';
         ctx.strokeStyle = '#333';
         ctx.lineWidth = 2;
         ctx.fillRect(startX, startY, drawW, drawH);
         ctx.strokeRect(startX, startY, drawW, drawH);
 
-        // Dibujar Pinza (Área roja suave arriba o abajo según lógica, aquí asumo arriba)
+        // 2. Dibujar Pinza en la parte inferior
         if (pinza > 0) {
             ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
             const pinzaH = pinza * scale;
-            // Asumiendo pinza resta al alto desde el borde (ej. inferior o superior)
-            // Dibujémosla abajo para visualización
             ctx.fillRect(startX, startY + drawH - pinzaH, drawW, pinzaH);
         }
 
-        // Dibujar Cortes (Azul)
-        ctx.fillStyle = '#bbdefb'; // Azul claro
-        ctx.strokeStyle = '#0d47a1'; // Azul oscuro borde
+        // 3. Dibujar Cortes Optimizados
+        ctx.fillStyle = '#bbdefb'; 
+        ctx.strokeStyle = '#0d47a1'; 
         ctx.lineWidth = 1;
 
-        // El área de dibujo empieza en (0,0) del pliego (arriba a la izquierda)
-        // Si la pinza está abajo, dibujamos desde arriba.
-        
-        for (let i = 0; i < cols; i++) {
-            for (let j = 0; j < rows; j++) {
-                const x = startX + (i * cAncho * scale);
-                const y = startY + (j * cAlto * scale);
-                const w = cAncho * scale;
-                const h = cAlto * scale;
+        layoutRects.forEach(rect => {
+            // Transformar coordenadas matemáticas a coordenadas visuales del canvas
+            const x = startX + (rect.x * scale);
+            const y = startY + (rect.y * scale);
+            const w = rect.w * scale;
+            const h = rect.h * scale;
 
-                // Margen pequeño entre cortes para verlos mejor
-                const gap = 1; 
-                ctx.fillRect(x + gap, y + gap, w - (gap*2), h - (gap*2));
-                ctx.strokeRect(x, y, w, h);
-                
-                // Texto de orden (opcional)
-                // ctx.fillStyle = '#000';
-                // ctx.fillText((j * cols + i + 1), x + w/2 - 5, y + h/2 + 3);
-                // ctx.fillStyle = '#bbdefb';
-            }
-        }
+            const gap = 1; 
+            ctx.fillRect(x + gap, y + gap, w - (gap*2), h - (gap*2));
+            ctx.strokeRect(x, y, w, h);
+        });
     }
 
     // Calcular al cargar

@@ -28,7 +28,7 @@
             transform: translateY(-2px);
         }
         .btn-circle {
-            width: 35px; 
+            width: 35px;
             height: 35px; 
             padding: 6px 0px;
             border-radius: 50%;
@@ -60,10 +60,78 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
-            // Cargar datos
+            // Cargar datos originales
             const details = {{{json detalles}}} || {{{json quotation.detalles}}};
-            console.log("Detalles cargados:", details); // Para depuración
             renderDetails(details);
+
+            // ==========================================
+            // LOGICA DE INTELIGENCIA ARTIFICIAL (NUEVO)
+            // ==========================================
+            const btnInterpretar = document.getElementById('btn-interpretar');
+            if(btnInterpretar) {
+                btnInterpretar.addEventListener('click', async () => {
+                    const texto = document.getElementById('texto-cliente').value;
+                    const detailsContainer = document.getElementById('detailsContainer');
+                    
+                    if (!texto.trim()) {
+                        alert('Por favor, ingresa la solicitud en la caja de texto.');
+                        return;
+                    }
+
+                    const textoOriginal = btnInterpretar.innerHTML;
+                    btnInterpretar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+                    btnInterpretar.disabled = true;
+
+                    try {
+                        const response = await fetch('/api/interpretar-pedido', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ textoCliente: texto })
+                        });
+
+                        if (!response.ok) throw new Error('Error al conectar con el servidor de IA');
+                        const datos = await response.json();
+
+                        // Armamos la descripción
+                        let descripcionArmada = `${datos.producto}\n`;
+                        if (datos.tamano) descripcionArmada += `▶ Tamaño: ${datos.tamano}\n`;
+                        if (datos.material) descripcionArmada += `▶ Material: ${datos.material}\n`;
+                        if (datos.impresion) descripcionArmada += `▶ Impresión: ${datos.impresion}\n`;
+                        if (datos.acabados && datos.acabados.length > 0) {
+                            descripcionArmada += `▶ Acabados: ${datos.acabados.join(', ')}`;
+                        }
+
+                        let ultimoDetalle = detailsContainer.lastElementChild;
+                        let inputDescActual = ultimoDetalle ? ultimoDetalle.querySelector('textarea[name$="[descripcionQuo]"]') : null;
+                        
+                        // Si no hay detalles, o el último ya tiene descripción escrita, crea uno nuevo
+                        if (!ultimoDetalle || (inputDescActual && inputDescActual.value.trim() !== "")) {
+                            addDetail(); 
+                            ultimoDetalle = detailsContainer.lastElementChild;
+                        }
+                        
+                        const inputCantidad = ultimoDetalle.querySelector('input[name$="[cantidadQuo]"]');
+                        const inputDescripcion = ultimoDetalle.querySelector('textarea[name$="[descripcionQuo]"]');
+                        
+                        if (inputCantidad && datos.cantidad) {
+                            inputCantidad.value = datos.cantidad;
+                        }
+                        if (inputDescripcion) {
+                            inputDescripcion.value = descripcionArmada.trim();
+                        }
+
+                        // Limpiar la caja de IA
+                        document.getElementById('texto-cliente').value = '';
+
+                    } catch (error) {
+                        console.error("Error AI:", error);
+                        alert('Hubo un problema al contactar con la Inteligencia Artificial.');
+                    } finally {
+                        btnInterpretar.innerHTML = textoOriginal;
+                        btnInterpretar.disabled = false;
+                    }
+                });
+            }
         });
 
         function renderDetails(details) {
@@ -95,17 +163,14 @@
             div.className = 'card mb-3 border-0 shadow-sm detail-card detail-row'; 
             div.style.borderRadius = "15px";
             
-            // 👇 CORRECCIÓN LÓGICA:
-            // Evaluamos si 'tieneCalculos' es "truthy" (true, 1, objeto, etc.)
+            // Evaluamos si 'tieneCalculos' es "truthy"
             const hasCalculations = detail.tieneCalculos ? true : false;
-            
             const resumenBtnClass = hasCalculations ? 'btn-outline-info' : 'btn-outline-secondary disabled';
             const resumenBtnAttr = hasCalculations ? '' : 'disabled title="Primero debes realizar el cálculo (botón verde)"';
-
+            
             div.innerHTML = `
                 <div class="card-body py-3">
                     <div class="row align-items-center">
-                        
                         <div class="col-md-1 col-2 mb-2 mb-md-0">
                             <label class="small text-muted font-weight-bold">#</label>
                             <input type="number" name="detalles[${index}][lineaQuo]" class="form-control form-control-sm text-center font-weight-bold" value="${detail.lineaQuo}" readonly style="background-color: #e9ecef;">
@@ -126,11 +191,10 @@
 
                         <div class="col-md-4 col-12 mb-2 mb-md-0">
                             <label class="small text-muted font-weight-bold">Descripción del Ítem</label>
-                            <textarea name="detalles[${index}][descripcionQuo]" class="form-control form-control-sm" rows="2" required placeholder="Descripción del trabajo...">${detail.descripcionQuo || ''}</textarea>
+                            <textarea name="detalles[${index}][descripcionQuo]" class="form-control form-control-sm" rows="3" required placeholder="Descripción del trabajo...">${detail.descripcionQuo || ''}</textarea>
                         </div>
 
                         <div class="col-md-3 col-12 d-flex justify-content-end align-items-end mt-2 mt-md-0">
-                            
                             <button type="button" class="btn btn-outline-success shadow-sm mr-1" onclick="redirectToCalculator(${index})" title="Calcular Precio" style="border-radius: 20px;">
                                 <i class="fas fa-calculator"></i>
                             </button>
@@ -143,7 +207,6 @@
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
-
                     </div>
                 </div>
             `;
@@ -206,9 +269,25 @@
 
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4 class="font-weight-bold text-dark"><i class="fas fa-list-ul mr-2 text-info"></i>Detalles de la Cotización</h4>
-                <button type="button" class="btn btn-primary shadow-sm" onclick="addDetail()" style="border-radius: 20px;">
-                    <i class="fas fa-plus mr-1"></i> Agregar Ítem
+                <button type="button" class="btn btn-outline-primary shadow-sm" onclick="addDetail()" style="border-radius: 20px;">
+                    <i class="fas fa-plus mr-1"></i> Línea Manual
                 </button>
+            </div>
+
+            <div class="card shadow-sm mb-4 border-info" style="border-radius: 15px;">
+                <div class="card-body bg-light" style="border-radius: 15px;">
+                    <label for="texto-cliente" class="text-dark font-weight-bold mb-2">
+                        <i class="fas fa-robot text-info mr-1"></i> Asistente de IA: Pega un nuevo requerimiento del cliente
+                    </label>
+                    <div class="input-group">
+                        <textarea id="texto-cliente" class="form-control" rows="2" style="border-radius: 10px 0 0 10px;" placeholder="Ej: Además, cotízame 2000 tarjetas de presentación plastificadas..."></textarea>
+                        <div class="input-group-append">
+                            <button type="button" id="btn-interpretar" class="btn btn-info shadow-sm px-4" style="border-radius: 0 10px 10px 0;">
+                                <i class="fas fa-magic mr-1"></i> Interpretar
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div id="detailsContainer" class="mb-4">
