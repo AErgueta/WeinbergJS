@@ -71,7 +71,7 @@ router.post('/customers/:customerId/quotations', async (req, res) => {
     );
 
     const numeroGlobal = result.value.seq;
-    const codigoCotizacion = `GRV${numeroGlobal.toString().padStart(4, '0')}-A`;
+    const codigoCotizacion = `${customer.aliasCus}${numeroGlobal.toString().padStart(4, '0')}-A`;
 
     //console.log("👉 numeroGlobal generado:", numeroGlobal);
     //console.log("👉 codigoCotizacion generado:", codigoCotizacion);

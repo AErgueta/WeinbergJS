@@ -39,6 +39,10 @@
     <input type="hidden" id="detalleId" value="{{detalle._id}}">
     <input type="hidden" id="versionIndex" value="{{versionIndex}}">
     <input type="hidden" id="usuario" value="{{user.name}}">
+
+    <input type="hidden" id="customerId" value="{{customerId}}">
+    <input type="hidden" id="quotationId" value="{{quotationId}}">
+    <input type="hidden" id="detalleIndex" value="{{detalleIndex}}">
     
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -201,16 +205,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const chkAprobar = document.getElementById("chkAprobar");
     const fechaAprobacion = document.getElementById("fechaAprobacion");
     const fechaPrevista = document.getElementById("fechaPrevista");
-    const usuarioAprobacion = document.getElementById("usuarioAprobacion");
+    const usuarioAprobacion = document.getElementById("usuarioAprobacion"); // Es null, está oculto
 
     const chkTerminado = document.getElementById("chkTerminado");
     const fechaTerminado = document.getElementById("fechaTerminado");
-    const usuarioTerminado = document.getElementById("usuarioTerminado");
+    const usuarioTerminado = document.getElementById("usuarioTerminado"); // Es null, está oculto
 
     const chkEntregado = document.getElementById("chkEntregado");
     const fechaEntregado = document.getElementById("fechaEntregado");
     const recibidoPor = document.getElementById("recibidoPor");
-    const usuarioEntrega = document.getElementById("usuarioEntrega");
+    const usuarioEntrega = document.getElementById("usuarioEntrega"); // Es null, está oculto
 
     const usuario = document.getElementById("usuario");
 
@@ -218,11 +222,16 @@ document.addEventListener("DOMContentLoaded", () => {
         return new Date().toISOString().split('T')[0];
     }
 
-    // --- Autocompletado ---
+    // --- Autocompletado (Corregido con validación de seguridad) ---
     function autoFill(checkElement, dateElement, userElement, extraDateElement = null) {
         if (checkElement.checked) {
             if (!dateElement.value) dateElement.value = getToday();
-            if (!userElement.value && usuario.value) userElement.value = usuario.value;
+            
+            // 🟢 Validamos que userElement exista antes de intentar usar su .value
+            if (userElement && !userElement.value && usuario && usuario.value) {
+                userElement.value = usuario.value;
+            }
+            
             // Autocompletar Fecha Prevista si está vacía
             if (extraDateElement && !extraDateElement.value) extraDateElement.value = getToday();
         }
@@ -232,38 +241,42 @@ document.addEventListener("DOMContentLoaded", () => {
     chkTerminado.addEventListener("change", () => autoFill(chkTerminado, fechaTerminado, usuarioTerminado));
     chkEntregado.addEventListener("change", () => autoFill(chkEntregado, fechaEntregado, usuarioEntrega));
 
-    // Revisión inicial: Si ya hay fecha pero el usuario está vacío (datos antiguos), NO llenar usuario automáticamente
-    // para no mentir diciendo que lo aprobó el usuario actual. Solo llenar fecha si falta.
     setTimeout(() => {
-        // Solo llamamos a autofill si el switch está encendido
-        // Pero modificamos la lógica visual: si ya tiene datos, no tocar.
+        // Lógica visual inicial
     }, 100);
 
     // --- FETCH ---
     document.getElementById("btnGuardarOrden").addEventListener("click", async () => {
+        const customerId = document.getElementById("customerId").value;
+        const quotationId = document.getElementById("quotationId").value;
+        const detalleIndex = document.getElementById("detalleIndex").value;
         const detalleId = document.getElementById("detalleId").value;
         const versionIndex = document.getElementById("versionIndex").value;
         
         try {
-            const response = await fetch(`/guardar-orden-trabajo/${detalleId}/${versionIndex}`, {
+            const response = await fetch(`/guardar-orden-trabajo/${customerId}/${quotationId}/${detalleIndex}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     aceptada: chkAprobar.checked,
-                    fechaAprobacion: fechaAprobacion.value,
-                    fechaEntrega: fechaPrevista.value, 
-                    usuarioAprobacion: usuario.value
+                    fechaAceptacion: fechaAprobacion.value,
+                    fechaPrevistaEntrega: fechaPrevista.value, 
+                    // 🟢 Validación de seguridad para el usuario
+                    usuarioAprobacion: usuario ? usuario.value : '',
+                    detalleId: detalleId,
+                    versionIndex: versionIndex
                 })
             });
 
             if (response.ok) {
-                usuarioAprobacion.value = usuario.value; 
+                // 🟢 Eliminamos la asignación a usuarioAprobacion.value
                 alert("✅ Orden de trabajo guardada correctamente.");
             } else {
                 alert("❌ Error al guardar la orden.");
             }
         } catch (error) {
-            alert("❌ Fallo de conexión.");
+            console.error("Error Javascript:", error);
+            alert("❌ Fallo de conexión o error interno.");
         }
     });
 
@@ -278,16 +291,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: JSON.stringify({
                     terminado: chkTerminado.checked,
                     fechaTerminado: fechaTerminado.value,
-                    usuarioTerminado: usuario.value
+                    // 🟢 Validación de seguridad para el usuario
+                    usuarioTerminado: usuario ? usuario.value : ''
                 })
             });
             if (response.ok) {
-                usuarioTerminado.value = usuario.value;
+                // 🟢 Eliminamos la asignación a usuarioTerminado.value
                 alert("✅ Estado actualizado.");
             } else {
                 alert("❌ Error al actualizar.");
             }
-        } catch (error) { alert("❌ Fallo de conexión."); }
+        } catch (error) { 
+            console.error("Error Javascript:", error);
+            alert("❌ Fallo de conexión o error interno."); 
+        }
     });
 
     document.getElementById("btnActualizarEntregado").addEventListener("click", async () => {
@@ -302,16 +319,20 @@ document.addEventListener("DOMContentLoaded", () => {
                     entregado: chkEntregado.checked,
                     fechaEntregado: fechaEntregado.value,
                     recibidoPor: recibidoPor.value,
-                    usuarioEntrega: usuario.value
+                    // 🟢 Validación de seguridad para el usuario
+                    usuarioEntrega: usuario ? usuario.value : ''
                 })
             });
             if (response.ok) {
-                usuarioEntrega.value = usuario.value;
+                // 🟢 Eliminamos la asignación a usuarioEntrega.value
                 alert("✅ Entrega confirmada.");
             } else {
                 alert("❌ Error al confirmar entrega.");
             }
-        } catch (error) { alert("❌ Fallo de conexión."); }
+        } catch (error) { 
+            console.error("Error Javascript:", error);
+            alert("❌ Fallo de conexión o error interno."); 
+        }
     });
 });
 </script>

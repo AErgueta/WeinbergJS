@@ -167,19 +167,27 @@ router.post('/guardar-orden-trabajo/:customerId/:quotationId/:detalleIndex', asy
     const customer = await Customer.findById(customerId);
     if (!customer) return res.status(404).send("Cliente no encontrado.");
 
-    const cotizacion = customer.solicitudesCotizacion.find(q => q._id.toString() === quotationId);
-    if (!cotizacion) return res.status(404).send("Cotización no encontrada.");
+    // 1. Encontramos el índice numérico exacto de la cotización
+    const cotizacionIndex = customer.solicitudesCotizacion.findIndex(q => q._id.toString() === quotationId);
+    if (cotizacionIndex === -1) return res.status(404).send("Cotización no encontrada.");
+    
+    const cotizacion = customer.solicitudesCotizacion[cotizacionIndex];
 
-    const detalle = cotizacion.detalles[detalleIndex];
+    // 2. Aseguramos que el índice del detalle sea un número
+    const dIndex = parseInt(detalleIndex, 10);
+    const detalle = cotizacion.detalles[dIndex];
     if (!detalle) return res.status(404).send("Detalle no encontrado.");
 
-    // Guardamos en el subdocumento de Customer (si lo necesitás también en Customer)
+    // Guardamos los valores
     detalle.aceptada = (aceptada === true || aceptada === 'true');
     detalle.fechaAceptacion = fechaAceptacion || null;
     detalle.fechaPrevistaEntrega = fechaPrevistaEntrega || null;
 
+    // 3. Forzamos el guardado de la ruta anidada exacta en Mongoose
+    customer.markModified(`solicitudesCotizacion.${cotizacionIndex}.detalles.${dIndex}.aceptada`);
+    
     await customer.save();
-    console.log("✅ Datos guardados en Customer.");
+    console.log("✅ Datos guardados en Customer con el booleano forzado.");
 
     // --------------------------
     // 🟦 Paso 2: Actualizar en QuotationCostDetail → dentro de calculoSchema
@@ -192,19 +200,24 @@ router.post('/guardar-orden-trabajo/:customerId/:quotationId/:detalleIndex', asy
         return res.status(404).send("Versión de cálculo inválida.");
     }
 
-    // ✅ Actualizar los campos directamente dentro de la versión
-    quotationCost.calculos[versionNum].aceptada = aceptada === true || aceptada === 'true';
+    // Actualizar los campos directamente dentro de la versión
+    quotationCost.calculos[versionNum].aceptada = (aceptada === true || aceptada === 'true');
     quotationCost.calculos[versionNum].fechaAceptacion = fechaAceptacion || null;
     quotationCost.calculos[versionNum].fechaPrevistaEntrega = fechaPrevistaEntrega || null;
 
+    // Forzar a Mongoose a detectar el cambio en este array específico
+    quotationCost.markModified(`calculos.${versionNum}`);
+
     await quotationCost.save();
     console.log("✅ Datos guardados correctamente en calculoSchema.");
+    
     res.status(200).send("Orden de trabajo guardada en ambos modelos.");
   } catch (err) {
     console.error("❌ Error al guardar orden:", err);
     res.status(500).send("Error interno al guardar.");
   }
 });
+
 router.post('/marcar-trabajo-terminado/:detalleId/:versionIndex', async (req, res) => {
   const { detalleId, versionIndex } = req.params;
   const { terminado, fechaTerminado, usuarioTermina } = req.body;
