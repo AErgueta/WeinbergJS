@@ -346,7 +346,7 @@ router.get('/exportar-cotizacion-general/:customerId/:quotationId', async (req, 
             displayHeaderFooter: true,
             headerTemplate: `
                 <div style="font-size:10px; color: gray; width: 100%; text-align: right; padding-right: 1cm;">
-                Cotizaciones NUMB
+                Cotizaciones InkNode
                 </div>
             `,
             footerTemplate: `
