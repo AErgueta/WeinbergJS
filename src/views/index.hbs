@@ -9,8 +9,28 @@
 
     <div class="row">
         
-        <div class="col-md-4">
-            <div class="card text-white bg-primary mb-3 shadow" style="border-radius: 15px;">
+        <!-- NUEVO RECUADRO: Solicitudes no cotizadas -->
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-danger shadow h-100" style="border-radius: 15px;">
+                <div class="card-header border-0 font-weight-bold">📝 Sin Cotizar</div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="card-title display-4 font-weight-bold mb-0">{{countSinCotizar}}</h1>
+                            <p class="card-text">Solicitudes pendientes</p>
+                        </div>
+                        <i class="fas fa-clipboard-list fa-4x opacity-50" style="opacity: 0.3;"></i>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 mt-auto">
+                    <small>Requieren cálculo de costos</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1. En Producción -->
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-primary shadow h-100" style="border-radius: 15px;">
                 <div class="card-header border-0 font-weight-bold">🏭 En Producción</div>
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -21,14 +41,15 @@
                         <i class="fas fa-cogs fa-4x opacity-50" style="opacity: 0.3;"></i>
                     </div>
                 </div>
-                <div class="card-footer bg-transparent border-0">
+                <div class="card-footer bg-transparent border-0 mt-auto">
                     <small>Aprobados pero no terminados</small>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card text-white bg-warning mb-3 shadow" style="border-radius: 15px;">
+        <!-- 2. Por Entregar -->
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-warning shadow h-100" style="border-radius: 15px;">
                 <div class="card-header border-0 font-weight-bold text-dark">📦 Por Entregar</div>
                 <div class="card-body text-dark">
                     <div class="d-flex justify-content-between align-items-center">
@@ -39,14 +60,15 @@
                         <i class="fas fa-truck fa-4x" style="opacity: 0.3;"></i>
                     </div>
                 </div>
-                <div class="card-footer bg-transparent border-0 text-dark">
+                <div class="card-footer bg-transparent border-0 text-dark mt-auto">
                     <a href="/reports/seguimiento" class="text-dark font-weight-bold" target="_blank">Ver reporte detallado &rarr;</a>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card text-white bg-success mb-3 shadow" style="border-radius: 15px;">
+        <!-- 3. Ventas del Mes -->
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-success shadow h-100" style="border-radius: 15px;">
                 <div class="card-header border-0 font-weight-bold">📅 Ventas del Mes</div>
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -57,11 +79,12 @@
                         <i class="fas fa-file-invoice-dollar fa-4x" style="opacity: 0.3;"></i>
                     </div>
                 </div>
-                <div class="card-footer bg-transparent border-0">
+                <div class="card-footer bg-transparent border-0 mt-auto">
                     <small>Solicitudes registradas este mes</small>
                 </div>
             </div>
         </div>
+
     </div>
 
     <div class="row mt-4">

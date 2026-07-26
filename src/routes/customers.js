@@ -7,16 +7,56 @@ const mongoose = require('mongoose');
 const Customer = require('../models/customer'); // Importar el modelo Customer
 const { isAuthenticated } = require('../helpers/auth');
 
+const QuotationCostDetail = require('../models/quotationCostDetail'); 
 
 // Leer documentos
 router.get('/customers', isAuthenticated, async (req, res) => {
     try {
-        // Obtener todos los documentos de Customer y ordenarlos por nombreCus
-        const customers = await Customer.find().sort({ nombreCus: 1 }); // 1 para orden ascendente, -1 para descendente
-        //console.log(customers);
-        res.render('quotes/all-customers', { customers }); // Renderizar la plantilla HTML con los datos
+        // 🟢 Añadimos .lean() para poder modificar el objeto de respuesta
+        const customers = await Customer.find().sort({ nombreCus: 1 }).lean(); 
+
+        const treintaDiasAtras = new Date();
+        treintaDiasAtras.setDate(treintaDiasAtras.getDate() - 30);
+
+        // 🟢 Procesamos cada cliente para buscar sus cotizaciones pendientes
+        const customersConAlertas = await Promise.all(customers.map(async (cliente) => {
+            let pendientes = 0;
+
+            if (cliente.solicitudesCotizacion && cliente.solicitudesCotizacion.length > 0) {
+                // Filtramos solicitudes creadas en los últimos 30 días
+                const recientes = cliente.solicitudesCotizacion.filter(q => new Date(q.fecha) >= treintaDiasAtras);
+
+                // Extraemos todos los IDs de los detalles de esas solicitudes
+                let detallesIds = [];
+                recientes.forEach(q => {
+                    if (q.detalles && q.detalles.length > 0) {
+                        q.detalles.forEach(d => detallesIds.push(d._id));
+                    }
+                });
+
+                if (detallesIds.length > 0) {
+                    // Contamos cuántos de esos detalles YA TIENEN un documento de costo guardado
+                    const cotizadosCount = await QuotationCostDetail.countDocuments({
+                        detalleId: { $in: detallesIds }
+                    });
+                    
+                    // La diferencia matemática son los pendientes
+                    pendientes = detallesIds.length - cotizadosCount;
+                }
+            }
+
+            // Inyectamos las variables al objeto del cliente
+            cliente.tienePendientes = pendientes > 0;
+            cliente.cantidadPendientes = pendientes;
+
+            return cliente;
+        }));
+
+        // Renderizamos la plantilla con los clientes actualizados
+        res.render('quotes/all-customers', { customers: customersConAlertas }); 
+
     } catch (error) {
-        console.error(error); // Manejo de errores
+        console.error(error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });

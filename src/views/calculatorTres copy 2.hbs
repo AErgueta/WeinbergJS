@@ -238,15 +238,11 @@
 
             // Evento para calcular "monto" y "cantidadM"
             document.addEventListener("input", function(event) {
-                // 🟢 Añadimos "precio" a la condición para que reaccione a ambos campos
-                if (event.target.name === "cantidad" || event.target.name === "precio") {
+                if (event.target.name === "cantidad") {
                     let row = event.target.closest("tr");
                     let tipoMaterial = row.querySelector("select[name='tipoMaterial']").value;
-                    
-                    // 🟢 Ahora buscamos el input directamente en la fila, para que funcione siempre
-                    let cantidadInput = row.querySelector("input[name='cantidad']"); 
+                    let cantidadInput = event.target;
                     let cantidad = parseFloat(cantidadInput.value) || 0;
-                    
                     let precio = parseFloat(row.querySelector("input[name='precio']").value) || 0;
                     let cantidadMtotInput = document.querySelector("#cantidadMtotGlobal");
                     let cantidadMtot = parseFloat(cantidadMtotInput.value) || 0;

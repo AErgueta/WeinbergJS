@@ -7,6 +7,7 @@ const Customer = require('../models/customer');
 router.get('/', async (req, res) => {
     // Variables iniciales por si el usuario no está logueado
     let dashboardData = {
+        countSinCotizar: 0, // 🟢 Agregamos la nueva variable aquí
         countProduccion: 0,
         countPorEntregar: 0,
         countCotizacionesMes: 0
@@ -38,7 +39,33 @@ router.get('/', async (req, res) => {
             ]);
             const countCotizacionesMes = resultCotizaciones.length > 0 ? resultCotizaciones[0].total : 0;
 
+            // ==========================================
+            // 🟢 4. SOLICITUDES SIN COTIZAR (Últimos 30 días)
+            // ==========================================
+            const treintaDiasAtras = new Date();
+            treintaDiasAtras.setDate(treintaDiasAtras.getDate() - 30);
+
+            // A) Obtenemos los IDs de todos los detalles solicitados en los últimos 30 días
+            const solicitudesRecientes = await Customer.aggregate([
+                { $unwind: '$solicitudesCotizacion' },
+                { $match: { 'solicitudesCotizacion.fecha': { $gte: treintaDiasAtras } } },
+                { $unwind: '$solicitudesCotizacion.detalles' },
+                { $project: { _id: 0, detalleId: '$solicitudesCotizacion.detalles._id' } }
+            ]);
+
+            const detallesIds = solicitudesRecientes.map(s => s.detalleId);
+
+            // B) Contamos cuántos de esos detalles YA TIENEN un documento de costo guardado
+            const cotizadosCount = await QuotationCostDetail.countDocuments({
+                detalleId: { $in: detallesIds }
+            });
+
+            // C) La diferencia matemática nos da los trabajos pendientes de cotizar
+            const countSinCotizar = detallesIds.length - cotizadosCount;
+
+            // Actualizamos el objeto que va hacia el frontend
             dashboardData = {
+                countSinCotizar,
                 countProduccion,
                 countPorEntregar,
                 countCotizacionesMes

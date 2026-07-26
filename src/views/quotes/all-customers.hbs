@@ -19,11 +19,19 @@
 
     <div class="row" id="customersContainer">
         {{#each customers}}
-            <div class="col-md-4 mb-4 customer-card"> <div class="card h-100 border-0 shadow-sm hover-shadow" style="border-radius: 15px; transition: transform 0.2s;">
-                    
+            <div class="col-md-4 mb-4 customer-card"> 
+                <div class="card h-100 hover-shadow {{#if tienePendientes}}card-pending{{else}}shadow-sm border-0{{/if}}" style="border-radius: 15px; transition: transform 0.2s;">  
                     <div class="card-header bg-white border-0 pt-3 pb-0">
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="badge badge-primary px-3 py-2" style="font-size: 0.85em; border-radius: 10px;">{{aliasCus}}</span>
+                            <div>
+                                <span class="badge badge-primary px-3 py-2 shadow-sm" style="font-size: 0.85em; border-radius: 10px;">{{aliasCus}}</span>
+                                <!-- 🟢 CONDICIONAL DE ALERTA -->
+                                {{#if tienePendientes}}
+                                    <span class="badge badge-danger px-2 py-2 ml-2 shadow-sm" style="font-size: 0.8em; border-radius: 10px;" title="Tiene solicitudes sin cotizar">
+                                        <i class="fas fa-exclamation-circle mr-1"></i> Pendientes ({{cantidadPendientes}})
+                                    </span>
+                                {{/if}}
+                            </div>
                             <div class="dropdown">
                                 <button class="btn btn-link text-muted p-0" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     <i class="fas fa-ellipsis-v"></i>
@@ -78,6 +86,18 @@
     .hover-shadow:hover {
         transform: translateY(-5px);
         box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+
+    /* 🟢 Efecto sutil para tarjetas con pendientes */
+    @keyframes suaveLatido {
+        0% { box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 0 0 0 rgba(220, 53, 69, 0.4); }
+        70% { box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 0 0 10px rgba(220, 53, 69, 0); }
+        100% { box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 0 0 0 rgba(220, 53, 69, 0); }
+    }
+    
+    .card-pending {
+        animation: suaveLatido 2.5s infinite;
+        border: 1px solid rgba(220, 53, 69, 0.4) !important;
     }
 </style>
 
